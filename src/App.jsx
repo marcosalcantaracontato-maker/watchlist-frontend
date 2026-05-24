@@ -5,12 +5,9 @@ import { Play, Plus, Search, Check, Trash2, Edit2, ChevronRight, ChevronLeft,
   Home, Settings, Menu } from "lucide-react";
 
 // ─── CONFIGURAÇÃO DA API ──────────────────────────────────────────────────────
-// Em produção (Vite): defina VITE_API_URL e VITE_GOOGLE_CLIENT_ID no .env
-// No artifact do Claude: fica vazio e o app roda em modo demo (window.storage)
-// Em produção, troque para: const API_URL = "https://SEU-BACKEND.railway.app";
 const API_URL = "https://web-production-99f91.up.railway.app";
 
-const GOOGLE_CLIENT_ID = "383400445525-3qjgurkm6toomftsrrtec6bgg5fr9dph.apps.googleusercontent.com"; // substitua pelo seu Google Client ID em produção
+const GOOGLE_CLIENT_ID = "383400445525-3qjgurkm6toomftsrrtec6bgg5fr9dph.apps.googleusercontent.com";
 
 // ─── STORAGE POLYFILL ─────────────────────────────────────────────────────────
 // window.storage só existe no Claude artifact.
@@ -2291,26 +2288,36 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
 
   // Load data
   useEffect(()=>{
+    let cancelled = false;
     (async()=>{
       try {
         const rc = await wlStorage.get(`wl2-cats-${userKey}`);
         const rl = await wlStorage.get(`wl2-links-${userKey}`);
         const lc = await wlStorage.get(`wl2-lastcat-${userKey}`);
-        setCats(JSON.parse(rc.value));
-        setLinks(JSON.parse(rl.value));
+        // Safely parse — if null/invalid, fall through to catch
+        const savedCats  = rc?.value  ? JSON.parse(rc.value)  : null;
+        const savedLinks = rl?.value  ? JSON.parse(rl.value)  : null;
+        if (savedCats && Array.isArray(savedCats))  setCats(savedCats);
+        else setCats(SAMPLE_CATS);
+        if (savedLinks && Array.isArray(savedLinks)) setLinks(savedLinks);
+        else setLinks(SAMPLE_LINKS);
         if (lc?.value) lastCatRef.current = lc.value;
-      } catch {
+        // Persist sample data for first-time users
+        if (!savedCats || !savedLinks) {
+          try {
+            await wlStorage.set(`wl2-cats-${userKey}`,  JSON.stringify(SAMPLE_CATS));
+            await wlStorage.set(`wl2-links-${userKey}`, JSON.stringify(SAMPLE_LINKS));
+          } catch{}
+        }
+      } catch(e) {
+        console.warn("WatchList storage error:", e);
         setCats(SAMPLE_CATS);
         setLinks(SAMPLE_LINKS);
-        try {
-          await wlStorage.set(`wl2-cats-${userKey}`, JSON.stringify(SAMPLE_CATS));
-          await wlStorage.set(`wl2-links-${userKey}`, JSON.stringify(SAMPLE_LINKS));
-        } catch{}
       }
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     })();
-    const _t = setTimeout(() => setLoading(false), 4000);
-    return () => clearTimeout(_t);
+    const _t = setTimeout(() => { if(!cancelled) setLoading(false); }, 3000);
+    return () => { cancelled = true; clearTimeout(_t); };
   },[userKey]);
 
   const saveCats = useCallback(async v=>{
