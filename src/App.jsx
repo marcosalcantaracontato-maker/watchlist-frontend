@@ -3795,8 +3795,9 @@ export default function App() {
           setUser(u);
           await loadStats(u?.id);
           setPage("app");
-          // Re-sync extension token on page reload
-          setTimeout(() => syncWithExtension(u), 1000);
+          // Re-sync extension token on page reload (with delay for service worker)
+          setTimeout(() => syncWithExtension(u), 500);
+          setTimeout(() => syncWithExtension(u), 3000);
         } else {
           setPage("landing");
         }
@@ -3877,17 +3878,26 @@ export default function App() {
   };
 
   // ── Login handler ──────────────────────────────────────────────────────────
-  // Send token to Chrome extension after login
-  const syncWithExtension = (userData) => {
+  // Send token to Chrome extension after login — with retry logic
+  const syncWithExtension = (userData, attempt = 0) => {
+    if (typeof chrome === "undefined" || !chrome?.runtime?.sendMessage) return;
+    const token = userData.jwtToken || "";
+    const user  = { name: userData.name, email: userData.email, avatar: userData.avatar, isDemo: userData.isDemo || false };
     try {
-      if (typeof chrome !== "undefined" && chrome?.runtime?.sendMessage) {
-        chrome.runtime.sendMessage("agpmepkbkjakjkabcmbkmklgmggbfghm", {
-          type: "WL_LOGIN",
-          token: userData.jwtToken || "",
-          user: { name: userData.name, email: userData.email, avatar: userData.avatar }
-        });
-      }
-    } catch(e) { /* extension not installed or inactive */ }
+      chrome.runtime.sendMessage(
+        "agpmepkbkjakjkabcmbkmklgmggbfghm",
+        { type: "WL_LOGIN", token, user },
+        (response) => {
+          const err = chrome.runtime?.lastError;
+          if (err && attempt < 4) {
+            // Service worker might be asleep — retry with backoff
+            setTimeout(() => syncWithExtension(userData, attempt + 1), 800 * (attempt + 1));
+          }
+        }
+      );
+    } catch(e) {
+      if (attempt < 4) setTimeout(() => syncWithExtension(userData, attempt + 1), 800 * (attempt + 1));
+    }
   };
 
   const handleLogin = async (userData) => {
