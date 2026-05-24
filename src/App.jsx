@@ -2286,23 +2286,42 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
   const heroSectionRef = useRef(null); // ref to <section class="hero">
   const heroIframeRef  = useRef(null); // ref to hero <iframe>
 
-  // Load data
+  // Load data — from backend if JWT available, else localStorage
   useEffect(()=>{
     let cancelled = false;
     (async()=>{
+      const jwt = user?.jwtToken || null;
+
+      // Try backend first when JWT exists (keeps extension + app in sync)
+      if (jwt && API_URL) {
+        try {
+          const [backCats, backLinks] = await Promise.all([
+            apiFetch("/api/categories", {}, jwt),
+            apiFetch("/api/links",      {}, jwt),
+          ]);
+          if (!cancelled) {
+            if (Array.isArray(backCats))  { setCats(backCats);  await wlStorage.set(`wl2-cats-${userKey}`, JSON.stringify(backCats)); }
+            if (Array.isArray(backLinks)) { setLinks(backLinks); await wlStorage.set(`wl2-links-${userKey}`, JSON.stringify(backLinks)); }
+            setLoading(false);
+          }
+          return;
+        } catch(e) {
+          console.warn("Backend load failed, falling back to localStorage:", e);
+        }
+      }
+
+      // Fallback: localStorage
       try {
         const rc = await wlStorage.get(`wl2-cats-${userKey}`);
         const rl = await wlStorage.get(`wl2-links-${userKey}`);
         const lc = await wlStorage.get(`wl2-lastcat-${userKey}`);
-        // Safely parse — if null/invalid, fall through to catch
-        const savedCats  = rc?.value  ? JSON.parse(rc.value)  : null;
-        const savedLinks = rl?.value  ? JSON.parse(rl.value)  : null;
-        if (savedCats && Array.isArray(savedCats))  setCats(savedCats);
+        const savedCats  = rc?.value ? JSON.parse(rc.value)  : null;
+        const savedLinks = rl?.value ? JSON.parse(rl.value) : null;
+        if (savedCats  && Array.isArray(savedCats))  setCats(savedCats);
         else setCats(SAMPLE_CATS);
         if (savedLinks && Array.isArray(savedLinks)) setLinks(savedLinks);
         else setLinks(SAMPLE_LINKS);
         if (lc?.value) lastCatRef.current = lc.value;
-        // Persist sample data for first-time users
         if (!savedCats || !savedLinks) {
           try {
             await wlStorage.set(`wl2-cats-${userKey}`,  JSON.stringify(SAMPLE_CATS));
@@ -2316,7 +2335,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
       }
       if (!cancelled) setLoading(false);
     })();
-    const _t = setTimeout(() => { if(!cancelled) setLoading(false); }, 3000);
+    const _t = setTimeout(() => { if(!cancelled) setLoading(false); }, 4000);
     return () => { cancelled = true; clearTimeout(_t); };
   },[userKey]);
 
@@ -2324,6 +2343,8 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
     setCats(v);
     try { await wlStorage.set(`wl2-cats-${userKey}`,JSON.stringify(v)); } catch{}
     onStatsChange?.({ cats: v, links });
+    // Sync to backend in background (best effort)
+    // Note: batch update handled by individual CRUD ops; this is just local cache sync
   },[userKey, links, onStatsChange]);
 
   const saveLinks = useCallback(async v=>{
