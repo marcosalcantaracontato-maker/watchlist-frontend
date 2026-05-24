@@ -10,7 +10,7 @@ import { Play, Plus, Search, Check, Trash2, Edit2, ChevronRight, ChevronLeft,
 // Em produção, troque para: const API_URL = "https://SEU-BACKEND.railway.app";
 const API_URL = "";
 
-const GOOGLE_CLIENT_ID = ""; // substitua pelo seu Google Client ID em produção
+const GOOGLE_CLIENT_ID = "383400445525-3qjgurkm6toomftsrrtec6bgg5fr9dph.apps.googleusercontent.com";
 
 // ─── STORAGE POLYFILL ─────────────────────────────────────────────────────────
 // window.storage só existe no Claude artifact.
