@@ -12,6 +12,39 @@ const API_URL = "";
 
 const GOOGLE_CLIENT_ID = ""; // substitua pelo seu Google Client ID em produção
 
+// ─── STORAGE POLYFILL ─────────────────────────────────────────────────────────
+// window.storage só existe no Claude artifact.
+// Em produção (Vercel/navegador normal) usa localStorage automaticamente.
+const wlStorage = {
+  async get(key) {
+    try {
+      if (typeof window !== "undefined" && window.storage && typeof window.storage.get === "function") {
+        return await wlStorage.get(key);
+      }
+      const v = localStorage.getItem(key);
+      return v !== null ? { key, value: v } : null;
+    } catch { return null; }
+  },
+  async set(key, value) {
+    try {
+      if (typeof window !== "undefined" && window.storage && typeof window.storage.set === "function") {
+        return await wlStorage.set(key, value);
+      }
+      localStorage.setItem(key, String(value));
+      return { key, value };
+    } catch { return null; }
+  },
+  async delete(key) {
+    try {
+      if (typeof window !== "undefined" && window.storage && typeof window.storage.delete === "function") {
+        return await wlStorage.delete(key);
+      }
+      localStorage.removeItem(key);
+      return { key, deleted: true };
+    } catch { return null; }
+  }
+};
+
 // API helper
 async function apiFetch(path, options = {}, token = null) {
   const headers = { "Content-Type": "application/json", ...(options.headers||{}) };
@@ -2255,9 +2288,9 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
   useEffect(()=>{
     (async()=>{
       try {
-        const rc = await window.storage.get("wl2-cats");
-        const rl = await window.storage.get("wl2-links");
-        const lc = await window.storage.get("wl2-lastcat");
+        const rc = await wlStorage.get(`wl2-cats-${userKey}`);
+        const rl = await wlStorage.get(`wl2-links-${userKey}`);
+        const lc = await wlStorage.get(`wl2-lastcat-${userKey}`);
         setCats(JSON.parse(rc.value));
         setLinks(JSON.parse(rl.value));
         if (lc?.value) lastCatRef.current = lc.value;
@@ -2265,8 +2298,8 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
         setCats(SAMPLE_CATS);
         setLinks(SAMPLE_LINKS);
         try {
-          await window.storage.set("wl2-cats", JSON.stringify(SAMPLE_CATS));
-          await window.storage.set("wl2-links", JSON.stringify(SAMPLE_LINKS));
+          await wlStorage.set(`wl2-cats-${userKey}`, JSON.stringify(SAMPLE_CATS));
+          await wlStorage.set(`wl2-links-${userKey}`, JSON.stringify(SAMPLE_LINKS));
         } catch{}
       }
       setLoading(false);
@@ -2275,17 +2308,17 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
 
   const saveCats = useCallback(async v=>{
     setCats(v);
-    try { await window.storage.set(`wl2-cats-${userKey}`,JSON.stringify(v)); } catch{}
+    try { await wlStorage.set(`wl2-cats-${userKey}`,JSON.stringify(v)); } catch{}
     onStatsChange?.({ cats: v, links });
   },[userKey, links, onStatsChange]);
 
   const saveLinks = useCallback(async v=>{
     setLinks(v);
     try {
-      await window.storage.set(`wl2-links-${userKey}`,JSON.stringify(v));
+      await wlStorage.set(`wl2-links-${userKey}`,JSON.stringify(v));
       saveCount.current += 1;
       if (saveCount.current % 10 === 0) {
-        await window.storage.set(`wl2-backup-${userKey}`, JSON.stringify({
+        await wlStorage.set(`wl2-backup-${userKey}`, JSON.stringify({
           categories: cats, links: v, exportedAt: new Date().toISOString(), autoBackup: true
         }));
       }
@@ -2365,7 +2398,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
     // Fix #3: store the EXACT categoryId (may be a subcategory ID)
     const savedCatId = data.categoryId;
     lastCatRef.current = savedCatId;
-    try { await window.storage.set(`wl2-lastcat-${userKey}`, savedCatId); } catch{}
+    try { await wlStorage.set(`wl2-lastcat-${userKey}`, savedCatId); } catch{}
     setShowAdd(false);
     // Show category name in confirmation toast
     const catName = allCats.find(c=>c.id===savedCatId)?.name || "";
@@ -3087,6 +3120,26 @@ const LANDING_CSS = `
   .land-section{padding:72px 32px;}
   .feat-grid{grid-template-columns:repeat(2,1fr);}
 }
+/* ── FORM INPUTS (needed for demo login, settings) ───────── */
+.fi{width:100%;background:#0d0d0d;border:1px solid #1a1a1a;color:#fff!important;
+  padding:12px 14px;border-radius:6px;font-size:14px;font-family:'Inter',sans-serif;
+  outline:none;transition:border-color .2s;}
+.fi::placeholder{color:#333;}
+.fi:focus{border-color:#e50914;}
+.fsel{width:100%;background:#0d0d0d;border:1px solid #1a1a1a;color:#fff;
+  padding:11px 14px;border-radius:6px;font-size:14px;font-family:'Inter',sans-serif;outline:none;}
+input[type="text"],input[type="email"],input[type="password"],input[type="search"],textarea{
+  color:#fff!important;background:#0d0d0d;-webkit-text-fill-color:#fff!important;}
+input:-webkit-autofill{-webkit-text-fill-color:#fff!important;-webkit-box-shadow:0 0 0 30px #0d0d0d inset!important;}
+.btn-save{background:#e50914;color:#fff;border:none;cursor:pointer;padding:12px 24px;
+  border-radius:6px;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;
+  display:inline-flex;align-items:center;gap:8px;transition:all .2s;}
+.btn-save:hover{background:#f40612;}
+.btn-save:disabled{opacity:.4;cursor:not-allowed;}
+.btn-cancel{background:rgba(255,255,255,.06);border:1px solid #1a1a1a;color:#a0a0a0;
+  cursor:pointer;padding:12px 20px;border-radius:6px;font-size:14px;font-weight:600;
+  font-family:'Inter',sans-serif;transition:all .2s;}
+.btn-cancel:hover{background:rgba(255,255,255,.1);color:#fff;}
 `;
 
 // ─── LANDING PAGE ─────────────────────────────────────────────────────────────
@@ -3444,7 +3497,7 @@ function LoginPage({ onLogin, onBack }) {
                 Modo demo — dados salvos apenas neste dispositivo
               </div>
               <div style={{display:"flex",gap:8}}>
-                <input className="fi" style={{background:"#0a0a0a"}} placeholder="Seu nome..." value={demoName} onChange={e=>setDemoName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleDemoLogin()} autoFocus/>
+                <input className="fi" style={{background:"#0d0d0d",color:"#fff",WebkitTextFillColor:"#fff"}} placeholder="Seu nome..." value={demoName} onChange={e=>setDemoName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleDemoLogin()} autoFocus/>
                 <button className="btn-save" style={{flex:"none",padding:"10px 16px",borderRadius:6}} onClick={handleDemoLogin} disabled={!demoName.trim()}>Entrar</button>
               </div>
             </div>
@@ -3722,7 +3775,7 @@ export default function App() {
   useEffect(()=>{
     (async()=>{
       try {
-        const r = await window.storage.get("wl-auth-user");
+        const r = await wlStorage.get("wl-auth-user");
         if (r?.value) {
           const u = JSON.parse(r.value);
           setUser(u);
@@ -3756,8 +3809,8 @@ export default function App() {
       // Try all possible user key variants to find existing data
       for (const key of keysToTry) {
         try {
-          const rc = await window.storage.get(`wl2-cats-${key}`);
-          const rl = await window.storage.get(`wl2-links-${key}`);
+          const rc = await wlStorage.get(`wl2-cats-${key}`);
+          const rl = await wlStorage.get(`wl2-links-${key}`);
           if (rc?.value && rl?.value) {
             const cats  = JSON.parse(rc.value);
             const links = JSON.parse(rl.value);
@@ -3799,8 +3852,8 @@ export default function App() {
   const loadStats = async (uid) => {
     const userKey = uid || "demo";
     try {
-      const rc = await window.storage.get(`wl2-cats-${userKey}`);
-      const rl = await window.storage.get(`wl2-links-${userKey}`);
+      const rc = await wlStorage.get(`wl2-cats-${userKey}`);
+      const rl = await wlStorage.get(`wl2-links-${userKey}`);
       const cats  = rc?.value ? JSON.parse(rc.value)  : [];
       const links = rl?.value ? JSON.parse(rl.value) : [];
       setAppStats({ cats, links });
@@ -3810,7 +3863,7 @@ export default function App() {
   // ── Login handler ──────────────────────────────────────────────────────────
   const handleLogin = async (userData) => {
     setUser(userData);
-    try { await window.storage.set("wl-auth-user", JSON.stringify(userData)); } catch{}
+    try { await wlStorage.set("wl-auth-user", JSON.stringify(userData)); } catch{}
 
     if (userData.isNew && !userData.isDemo) {
       // First login with real account → migrate local data before onboarding
@@ -3824,7 +3877,7 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    try { await window.storage.delete("wl-auth-user"); } catch{}
+    try { await wlStorage.delete("wl-auth-user"); } catch{}
     setUser(null);
     setPage("landing");
   };
