@@ -10,7 +10,7 @@ import { Play, Plus, Search, Check, Trash2, Edit2, ChevronRight, ChevronLeft,
 // Em produção, troque para: const API_URL = "https://SEU-BACKEND.railway.app";
 const API_URL = "https://web-production-99f91.up.railway.app";
 
-const GOOGLE_CLIENT_ID = "383400445525-3qjgurkm6toomftsrrtec6bgg5fr9dph.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = "383400445525-3qjgurkm6toomftsrrtec6bgg5fr9dph.apps.googleusercontent.com"; // substitua pelo seu Google Client ID em produção
 
 // ─── STORAGE POLYFILL ─────────────────────────────────────────────────────────
 // window.storage só existe no Claude artifact.
@@ -2278,6 +2278,9 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
   const [undoStack, setUndoStack]           = useState(null);
   const undoTimer = useRef(null);
   const [undoProgress, setUndoProgress]     = useState(100);
+
+  // Storage key scoped by user ID — must be declared before any useEffect
+  const userKey = user?.id || "demo";
   const undoProgInterval = useRef(null);
   const saveCount = useRef(0);
   const lastCatRef = useRef(null);
