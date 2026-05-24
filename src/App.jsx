@@ -8,7 +8,7 @@ import { Play, Plus, Search, Check, Trash2, Edit2, ChevronRight, ChevronLeft,
 // Em produção (Vite): defina VITE_API_URL e VITE_GOOGLE_CLIENT_ID no .env
 // No artifact do Claude: fica vazio e o app roda em modo demo (window.storage)
 // Em produção, troque para: const API_URL = "https://SEU-BACKEND.railway.app";
-const API_URL = "";
+const API_URL = "https://web-production-99f91.up.railway.app";
 
 const GOOGLE_CLIENT_ID = "383400445525-3qjgurkm6toomftsrrtec6bgg5fr9dph.apps.googleusercontent.com";
 
