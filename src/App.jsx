@@ -2896,7 +2896,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
 const LANDING_CSS = `
 /* ── LANDING PAGE ────────────────────────────────────────────────────────── */
 .land{background:#0a0a0a;min-height:100vh;color:#fff;font-family:'Inter',sans-serif;overflow-x:hidden;width:100%;}
-.land-nav{position:fixed;top:0;left:0;right:0;z-index:100;height:68px;padding:0 60px;display:flex;align-items:center;justify-content:space-between;background:rgba(10,10,10,.92);backdrop-filter:blur(20px);border-bottom:1px solid #1a1a1a;}
+.land-nav{position:fixed;top:0;left:0;right:0;z-index:100;height:64px;padding:0 clamp(16px,5vw,60px);display:flex;align-items:center;justify-content:space-between;background:rgba(10,10,10,.92);backdrop-filter:blur(20px);border-bottom:1px solid #1a1a1a;}
 .land-logo{font-size:22px;font-weight:900;color:#e50914;letter-spacing:-.5px;font-family:'Inter',sans-serif;text-transform:uppercase;}
 .land-logo em{color:#fff;font-style:normal;}
 .land-nav-links{display:flex;gap:8px;}
@@ -2906,12 +2906,12 @@ const LANDING_CSS = `
 .land-cta-nav:hover{background:#f40612;transform:translateY(-1px);}
 
 /* HERO */
-.land-hero{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:100px 60px 60px;position:relative;overflow:hidden;}
+.land-hero{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:clamp(72px,10vh,120px) clamp(16px,5vw,60px) clamp(40px,6vh,60px);position:relative;overflow:hidden;}
 .land-hero-grd{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(229,9,20,.12) 0%,transparent 70%);}
-.land-hero-inner{max-width:1100px;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;}
+.land-hero-inner{max-width:1100px;width:100%;display:grid;grid-template-columns:1fr;gap:40px;align-items:center;}
 .land-hero-text{}
 .land-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(229,9,20,.1);border:1px solid rgba(229,9,20,.25);color:#e50914;font-size:12px;font-weight:700;padding:5px 14px;border-radius:20px;margin-bottom:24px;text-transform:uppercase;letter-spacing:.8px;}
-.land-h1{font-size:3.6rem;font-weight:900;line-height:1.05;letter-spacing:-2px;margin-bottom:20px;font-family:'Inter',sans-serif;}
+.land-h1{font-size:clamp(2rem,5vw,3.6rem);font-weight:900;line-height:1.05;letter-spacing:-2px;margin-bottom:20px;font-family:'Inter',sans-serif;}
 .land-h1 em{color:#e50914;font-style:normal;}
 .land-sub{font-size:18px;color:#a0a0a0;line-height:1.6;margin-bottom:36px;font-weight:400;}
 .land-cta-group{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
@@ -2939,9 +2939,9 @@ const LANDING_CSS = `
 .land-badge-ico{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;}
 
 /* FEATURES */
-.land-section{padding:100px 60px;max-width:1200px;margin:0 auto;width:100%;}
+.land-section{padding:clamp(48px,8vw,100px) clamp(16px,5vw,60px);max-width:1200px;margin:0 auto;width:100%;}
 .land-section-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#e50914;margin-bottom:12px;}
-.land-section-title{font-size:2.4rem;font-weight:900;letter-spacing:-1px;margin-bottom:16px;font-family:'Inter',sans-serif;}
+.land-section-title{font-size:clamp(1.6rem,4vw,2.4rem);font-weight:900;letter-spacing:-1px;margin-bottom:16px;font-family:'Inter',sans-serif;}
 .land-section-sub{font-size:16px;color:#a0a0a0;max-width:500px;line-height:1.65;}
 .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:52px;}
 .feat-card{background:#111;border:1px solid #1a1a1a;border-radius:10px;padding:24px;transition:border-color .2s,transform .2s;}
@@ -2971,12 +2971,12 @@ const LANDING_CSS = `
 .plan-feat-ico{color:#22c55e;flex-shrink:0;}
 
 /* CTA BOTTOM */
-.land-cta-section{background:linear-gradient(135deg,rgba(229,9,20,.08) 0%,transparent 60%);border:1px solid rgba(229,9,20,.15);border-radius:16px;padding:60px;text-align:center;margin:0 60px 100px;}
+.land-cta-section{background:linear-gradient(135deg,rgba(229,9,20,.08) 0%,transparent 60%);border:1px solid rgba(229,9,20,.15);border-radius:16px;padding:clamp(32px,5vw,60px);text-align:center;margin:0 clamp(16px,5vw,60px) clamp(60px,8vh,100px);}
 .land-cta-title{font-size:2.4rem;font-weight:900;letter-spacing:-1.5px;margin-bottom:16px;}
 .land-cta-sub{font-size:16px;color:#a0a0a0;margin-bottom:36px;}
 
 /* FOOTER */
-.land-footer{border-top:1px solid #1a1a1a;padding:40px 60px;display:flex;justify-content:space-between;align-items:center;color:#555;font-size:13px;}
+.land-footer{border-top:1px solid #1a1a1a;padding:32px clamp(16px,5vw,60px);display:flex;justify-content:space-between;align-items:center;color:#555;font-size:13px;flex-wrap:wrap;gap:16px;}
 .land-footer-links{display:flex;gap:24px;}
 .land-footer-link{color:#555;text-decoration:none;transition:color .2s;}
 .land-footer-link:hover{color:#a0a0a0;}
@@ -3033,6 +3033,7 @@ const LANDING_CSS = `
 .settings-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0;}
 .settings-plan-badge{font-size:11px;font-weight:800;padding:3px 10px;border-radius:10px;text-transform:uppercase;letter-spacing:.5px;}
 
+@media(min-width:1024px){.land-hero-inner{grid-template-columns:1fr 1fr;gap:60px;}}
 @media(max-width:768px){
   .land-hero-inner{grid-template-columns:1fr;}
   .land-hero-visual{display:none;}
@@ -3090,6 +3091,16 @@ const LANDING_CSS = `
 
 // ─── LANDING PAGE ─────────────────────────────────────────────────────────────
 function LandingPage({ onGetStarted }) {
+  // React-based mobile detection — mais confiável que CSS media query
+  const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 768);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const fn = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", fn);
+    return () => window.removeEventListener("resize", fn);
+  }, []);
+
   const feats = [
     { ico:"▶", bg:"rgba(229,9,20,.15)", color:"#e50914", title:"Salve qualquer vídeo", desc:"YouTube, TikTok, Instagram, Twitter/X — cole a URL e o título é buscado automaticamente." },
     { ico:"📁", bg:"rgba(59,130,246,.15)", color:"#3b82f6", title:"Organize em categorias", desc:"Crie pastas e subpastas infinitas. Arraste para reordenar. Estrutura que faz sentido pra você." },
@@ -3103,18 +3114,61 @@ function LandingPage({ onGetStarted }) {
     <>
       <style>{LANDING_CSS}</style>
       <div className="land">
-        {/* NAV */}
+
+        {/* ── NAV ── */}
         <nav className="land-nav">
           <div className="land-logo">Watch<em>List</em></div>
-          <div className="land-nav-links">
-            <button className="land-nav-link">Funcionalidades</button>
-            <button className="land-nav-link">Preços</button>
-            <button className="land-nav-link">Blog</button>
-          </div>
-          <button className="land-cta-nav" onClick={onGetStarted}>Começar grátis</button>
+
+          {/* Desktop: links + CTA */}
+          {!isMobile && (
+            <>
+              <div className="land-nav-links">
+                <button className="land-nav-link">Funcionalidades</button>
+                <button className="land-nav-link">Preços</button>
+              </div>
+              <button className="land-cta-nav" onClick={onGetStarted}>Começar grátis</button>
+            </>
+          )}
+
+          {/* Mobile: só CTA + hamburguer */}
+          {isMobile && (
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <button className="land-cta-nav" style={{fontSize:12,padding:"8px 14px"}} onClick={onGetStarted}>
+                Começar grátis
+              </button>
+              <button onClick={()=>setMenuOpen(m=>!m)}
+                style={{background:"rgba(255,255,255,.07)",border:"1px solid #1a1a1a",color:"#fff",
+                  width:36,height:36,borderRadius:8,cursor:"pointer",fontSize:18,display:"flex",
+                  alignItems:"center",justifyContent:"center"}}>
+                {menuOpen ? "✕" : "☰"}
+              </button>
+            </div>
+          )}
         </nav>
 
-        {/* HERO */}
+        {/* Mobile dropdown menu */}
+        {isMobile && menuOpen && (
+          <div style={{
+            position:"fixed",top:56,left:0,right:0,bottom:0,
+            background:"rgba(10,10,10,.98)",zIndex:99,
+            display:"flex",flexDirection:"column",alignItems:"center",
+            justifyContent:"center",gap:24,fontFamily:"'Inter',sans-serif",
+          }}>
+            {["Funcionalidades","Preços","Blog"].map(l=>(
+              <button key={l} onClick={()=>setMenuOpen(false)}
+                style={{background:"none",border:"none",color:"#fff",fontSize:24,
+                  fontWeight:700,cursor:"pointer",letterSpacing:"-1px"}}>
+                {l}
+              </button>
+            ))}
+            <button className="land-cta-nav" style={{marginTop:16,fontSize:16,padding:"14px 40px"}}
+              onClick={()=>{setMenuOpen(false);onGetStarted();}}>
+              Começar grátis
+            </button>
+          </div>
+        )}
+
+        {/* ── HERO ── */}
         <section className="land-hero">
           <div className="land-hero-grd"/>
           <div className="land-hero-inner">
@@ -3129,51 +3183,59 @@ function LandingPage({ onGetStarted }) {
               <div className="land-social-proof">
                 <div className="land-avatars">
                   {["#e50914","#3b82f6","#22c55e","#f5a623"].map((c,i)=>(
-                    <div key={i} className="land-avatar" style={{background:c,marginLeft:i===0?0:-8}}>
-                      {["J","A","M","R"][i]}
-                    </div>
+                    <div key={i} className="land-avatar" style={{background:c,marginLeft:i===0?0:-8}}>{["J","A","M","R"][i]}</div>
                   ))}
                 </div>
                 <span>+2.400 pessoas organizando seus vídeos</span>
               </div>
             </div>
-            <div className="land-hero-visual">
-              <div className="land-screen">
-                <div className="land-screen-bar">
-                  <div className="land-dot" style={{background:"#e50914"}}/>
-                  <div className="land-dot" style={{background:"#f5a623"}}/>
-                  <div className="land-dot" style={{background:"#22c55e"}}/>
-                </div>
-                <div className="land-screen-body">
-                  <div className="land-mock-hero">
-                    <div className="land-mock-title">Champions League — Melhores Momentos</div>
+            {/* Visual só no desktop */}
+            {!isMobile && (
+              <div className="land-hero-visual">
+                <div className="land-screen">
+                  <div className="land-screen-bar">
+                    <div className="land-dot" style={{background:"#e50914"}}/>
+                    <div className="land-dot" style={{background:"#f5a623"}}/>
+                    <div className="land-dot" style={{background:"#22c55e"}}/>
                   </div>
-                  {[["EDUCAÇÃO","#3b82f6"],["ENTRETENIMENTO","#8b5cf6"]].map(([label,color])=>(
-                    <div key={label} className="land-mock-row">
-                      <div className="land-mock-row-label" style={{color}}>{label}</div>
-                      <div className="land-mock-cards">
-                        {[color+"44",color+"33",color+"22",color+"18"].map((bg,i)=>(
-                          <div key={i} className="land-mock-card" style={{background:`linear-gradient(135deg,${bg},${color}11)`}}/>
-                        ))}
+                  <div className="land-screen-body">
+                    <div className="land-mock-hero" style={{height:110,marginBottom:14,position:"relative",overflow:"hidden"}}>
+                      <div style={{position:"absolute",inset:0,background:"linear-gradient(135deg,#1a0000 0%,#7a0008 50%,#c62828 100%)",opacity:.7}}/>
+                      <div style={{position:"absolute",bottom:0,left:0,right:0,background:"linear-gradient(to top,rgba(0,0,0,.9),transparent)",padding:"12px 14px"}}>
+                        <div style={{fontSize:7,color:"#e50914",fontWeight:800,textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>⭐ EM DESTAQUE</div>
+                        <div className="land-mock-title" style={{fontSize:11}}>Champions League — Melhores Momentos</div>
+                        <div style={{display:"flex",gap:5,marginTop:6}}>
+                          <div style={{background:"#fff",borderRadius:3,padding:"2px 8px",fontSize:7,fontWeight:800,color:"#000"}}>▶ Assistir</div>
+                          <div style={{background:"rgba(255,255,255,.15)",borderRadius:3,padding:"2px 8px",fontSize:7,fontWeight:700,color:"#fff"}}>✓ Assistido</div>
+                        </div>
                       </div>
                     </div>
-                  ))}
+                    {[["EDUCAÇÃO","#3b82f6",["#1a2a4a","#1a3a4a","#1a1a4a","#2a1a4a"]],["🎮 ENTRETENIMENTO","#8b5cf6",["#2a1a3a","#3a1a3a","#2a2a2a","#1a2a2a"]]].map(([label,color,bgs])=>(
+                      <div key={label} className="land-mock-row">
+                        <div className="land-mock-row-label" style={{color,fontSize:8}}>{label}</div>
+                        <div className="land-mock-cards">
+                          {bgs.map((bg,i)=>(
+                            <div key={i} className="land-mock-card" style={{background:`linear-gradient(135deg,${bg},${color}22)`}}/>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="land-badge" style={{top:-16,right:-16,animation:"popIn .4s .2s both"}}>
+                  <div className="land-badge-ico" style={{background:"rgba(34,197,94,.15)"}}>✓</div>
+                  <div><div style={{fontSize:11,fontWeight:700,color:"#22c55e"}}>Marcado!</div><div style={{fontSize:10,color:"#555"}}>React Avançado</div></div>
+                </div>
+                <div className="land-badge" style={{bottom:-16,left:-16,animation:"popIn .4s .4s both"}}>
+                  <div className="land-badge-ico" style={{background:"rgba(229,9,20,.15)"}}>▶</div>
+                  <div><div style={{fontSize:11,fontWeight:700,color:"#e50914"}}>Pré-visualizando</div><div style={{fontSize:10,color:"#555"}}>Passe o mouse</div></div>
                 </div>
               </div>
-              {/* Floating badges */}
-              <div className="land-badge" style={{top:-16,right:-16,animation:"popIn .4s .2s both"}}>
-                <div className="land-badge-ico" style={{background:"rgba(34,197,94,.15)"}}>✓</div>
-                <div><div style={{fontSize:11,fontWeight:700,color:"#22c55e"}}>Marcado!</div><div style={{fontSize:10,color:"#555"}}>React Avançado</div></div>
-              </div>
-              <div className="land-badge" style={{bottom:-16,left:-16,animation:"popIn .4s .4s both"}}>
-                <div className="land-badge-ico" style={{background:"rgba(229,9,20,.15)"}}>▶</div>
-                <div><div style={{fontSize:11,fontWeight:700,color:"#e50914"}}>Pré-visualizando</div><div style={{fontSize:10,color:"#555"}}>Passe o mouse</div></div>
-              </div>
-            </div>
+            )}
           </div>
         </section>
 
-        {/* FEATURES */}
+        {/* ── FEATURES ── */}
         <div className="land-section">
           <div className="land-section-label">Funcionalidades</div>
           <h2 className="land-section-title">Tudo que você precisa<br/>para organizar seu conteúdo</h2>
@@ -3189,16 +3251,12 @@ function LandingPage({ onGetStarted }) {
           </div>
         </div>
 
-        {/* HOW IT WORKS */}
+        {/* ── HOW IT WORKS ── */}
         <div className="land-section" style={{paddingTop:0}}>
           <div className="land-section-label">Como funciona</div>
           <h2 className="land-section-title">Em 3 passos simples</h2>
           <div className="steps">
-            {[
-              ["1","Cole a URL","Cole qualquer link do YouTube, TikTok, Instagram ou qualquer site. Título e thumbnail são buscados automaticamente."],
-              ["2","Organize","Crie categorias, adicione tags pessoais, escreva notas. Sua lista, do seu jeito."],
-              ["3","Assista quando quiser","Pré-visualize no hover. Abra direto no site original. Marque como assistido com animação."],
-            ].map(([n,t,d])=>(
+            {[["1","Cole a URL","Cole qualquer link do YouTube, TikTok, Instagram ou qualquer site. Título e thumbnail são buscados automaticamente."],["2","Organize","Crie categorias, adicione tags pessoais, escreva notas. Sua lista, do seu jeito."],["3","Assista quando quiser","Pré-visualize no hover. Abra direto no site original. Marque como assistido com animação."]].map(([n,t,d])=>(
               <div key={n}>
                 <div className="step-num">{n}</div>
                 <div className="step-title">{t}</div>
@@ -3208,26 +3266,19 @@ function LandingPage({ onGetStarted }) {
           </div>
         </div>
 
-        {/* PRICING */}
+        {/* ── PRICING ── */}
         <div className="land-section" style={{paddingTop:0,textAlign:"center"}}>
           <div className="land-section-label">Preços</div>
           <h2 className="land-section-title">Simples e transparente</h2>
           <div className="pricing-grid">
-            {[
-              { name:"Free", price:"R$0", period:"/mês", desc:"Para começar", feats:["Até 300 vídeos","Categorias ilimitadas","Pré-visualização YouTube","Export/Import JSON","Suporte por email"], featured:false, cta:"Começar agora" },
-              { name:"Premium", price:"R$19", period:"/mês", desc:"Para quem consome muito conteúdo", feats:["Vídeos ilimitados","Tudo do Free","Sync multi-dispositivo","Extensão Chrome","Backup automático","Suporte prioritário"], featured:true, cta:"Assinar Premium" },
-            ].map(p=>(
+            {[{name:"Free",price:"R$0",period:"/mês",desc:"Para começar",feats:["Até 300 vídeos","Categorias ilimitadas","Pré-visualização YouTube","Export/Import JSON","Suporte por email"],featured:false,cta:"Começar agora"},{name:"Premium",price:"R$19",period:"/mês",desc:"Para quem consome muito conteúdo",feats:["Vídeos ilimitados","Tudo do Free","Sync multi-dispositivo","Extensão Chrome","Backup automático","Suporte prioritário"],featured:true,cta:"Assinar Premium"}].map(p=>(
               <div key={p.name} className={`plan-card${p.featured?" featured":""}`}>
                 {p.featured && <div className="plan-badge">Mais popular</div>}
                 <div className="plan-name">{p.name}</div>
                 <div className="plan-price">{p.price}<span>{p.period}</span></div>
                 <div className="plan-desc">{p.desc}</div>
                 <div className="plan-features">
-                  {p.feats.map(f=>(
-                    <div key={f} className="plan-feat">
-                      <span className="plan-feat-ico">✓</span>{f}
-                    </div>
-                  ))}
+                  {p.feats.map(f=><div key={f} className="plan-feat"><span className="plan-feat-ico">✓</span>{f}</div>)}
                 </div>
                 <button className={`btn-land-p${p.featured?"":" btn-land-o"}`} style={{width:"100%",marginTop:20,justifyContent:"center"}} onClick={onGetStarted}>{p.cta}</button>
               </div>
@@ -3235,8 +3286,8 @@ function LandingPage({ onGetStarted }) {
           </div>
         </div>
 
-        {/* CTA BOTTOM */}
-        <div style={{padding:"0 60px 0"}}>
+        {/* ── CTA BOTTOM ── */}
+        <div style={{padding:"0 clamp(16px,5vw,60px) 0"}}>
           <div className="land-cta-section">
             <h2 className="land-cta-title">Pronto para organizar<br/>seus vídeos?</h2>
             <p className="land-cta-sub">Gratuito para começar. Sem cartão de crédito.</p>
@@ -3244,7 +3295,7 @@ function LandingPage({ onGetStarted }) {
           </div>
         </div>
 
-        {/* FOOTER */}
+        {/* ── FOOTER ── */}
         <footer className="land-footer">
           <div className="land-logo" style={{fontSize:16}}>Watch<em>List</em></div>
           <div className="land-footer-links">
@@ -3252,8 +3303,9 @@ function LandingPage({ onGetStarted }) {
             <a href="#" className="land-footer-link">Privacidade</a>
             <a href="#" className="land-footer-link">Contato</a>
           </div>
-          <span>© 2025 WatchList. Todos os direitos reservados.</span>
+          <span>© 2025 WatchList.</span>
         </footer>
+
       </div>
     </>
   );
