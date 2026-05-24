@@ -156,6 +156,8 @@ body{background:#0a0a0a;color:#fff;font-family:'Inter',sans-serif;min-height:100
 .wl{background:#0a0a0a;min-height:100vh;}
 
 /* ── HEADER ─────────────────────────────────────────────── */
+html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
+*{box-sizing:border-box;min-width:0;}
 .hdr{position:fixed;top:0;left:0;right:0;z-index:900;height:64px;padding:0 48px;display:flex;align-items:center;justify-content:space-between;background:rgba(10,10,10,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid #1a1a1a;transition:transform .3s ease;}
 .hdr.up{transform:translateY(0);}.hdr.dn{transform:translateY(-100%);}
 .logo{font-size:20px;font-weight:900;color:#e50914;letter-spacing:-.5px;cursor:pointer;flex-shrink:0;font-family:'Inter',sans-serif;text-transform:uppercase;}
@@ -2304,7 +2306,9 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
       }
       setLoading(false);
     })();
-  },[]);
+    const _t = setTimeout(() => setLoading(false), 4000);
+    return () => clearTimeout(_t);
+  },[userKey]);
 
   const saveCats = useCallback(async v=>{
     setCats(v);
