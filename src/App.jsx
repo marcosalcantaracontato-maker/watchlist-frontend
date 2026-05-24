@@ -1,14 +1,16 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Play, Plus, Search, Check, Trash2, Edit2, ChevronRight, ChevronLeft,
   Download, Upload, X, Loader2, Youtube, Link, FolderPlus, MoreVertical,
-  Eye, EyeOff, BarChart2, Folder, Volume2, VolumeX, Sparkles, RefreshCw } from "lucide-react";
+  Eye, EyeOff, BarChart2, Folder, Volume2, VolumeX, Sparkles, RefreshCw,
+  Home, Settings, Menu } from "lucide-react";
 
 // ─── CONFIGURAÇÃO DA API ──────────────────────────────────────────────────────
 // Em produção (Vite): defina VITE_API_URL e VITE_GOOGLE_CLIENT_ID no .env
 // No artifact do Claude: fica vazio e o app roda em modo demo (window.storage)
 // Em produção, troque para: const API_URL = "https://SEU-BACKEND.railway.app";
-const API_URL = "https://web-production-99f91.up.railway.app";
-const GOOGLE_CLIENT_ID = "383400445525-3qjgurkm6toomftsrrtec6bgg5fr9dph.apps.googleusercontent.com";
+const API_URL = "";
+
+const GOOGLE_CLIENT_ID = ""; // substitua pelo seu Google Client ID em produção
 
 // API helper
 async function apiFetch(path, options = {}, token = null) {
@@ -209,7 +211,7 @@ body{background:#0a0a0a;color:#fff;font-family:'Inter',sans-serif;min-height:100
 .row-fill{height:100%;background:#e50914;border-radius:2px;transition:width .6s ease;}
 .row-fill.full{background:#4caf50;}
 .row-wrap{position:relative;}
-.row-scroll{display:flex;gap:12px;overflow-x:auto;padding:4px 48px 12px;scroll-behavior:smooth;scrollbar-width:none;}
+.row-scroll{display:flex;gap:12px;overflow-x:auto;padding:4px 48px 12px;scroll-behavior:smooth;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
 .row-scroll::-webkit-scrollbar{display:none;}
 .row-wrap::before,.row-wrap::after{content:'';position:absolute;top:0;bottom:12px;width:100px;pointer-events:none;z-index:5;}
 .row-wrap::before{left:0;background:linear-gradient(to right,#0a0a0a,transparent);}
@@ -527,6 +529,273 @@ body{background:#0a0a0a;color:#fff;font-family:'Inter',sans-serif;min-height:100
   transition: opacity .1s;
 }
 .cat-drop-bar.nest-bar { background: #4caf50; }
+
+/* ═══════════════════════════════════════════════════════════
+   MOBILE-FIRST RESPONSIVE SYSTEM
+   Mobile  < 640px   (base)
+   Tablet  640–1023px
+   Desktop ≥ 1024px
+═══════════════════════════════════════════════════════════ */
+
+/* ── BOTTOM NAVIGATION (mobile only) ─────────────────────── */
+.bottom-nav{
+  display:none; /* hidden by default on desktop */
+  position:fixed;bottom:0;left:0;right:0;z-index:500;
+  background:rgba(10,10,10,.97);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid #1a1a1a;
+  padding:8px 0 max(8px,env(safe-area-inset-bottom));
+  height:60px;
+}
+.bnav-inner{display:flex;align-items:center;justify-content:space-around;height:100%;padding:0 8px;}
+.bnav-btn{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;background:none;border:none;color:#555;cursor:pointer;
+  padding:6px 12px;border-radius:8px;transition:all .2s;flex:1;min-width:0;
+}
+.bnav-btn.active{color:#e50914;}
+.bnav-btn span{font-size:9px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.4px;font-family:'Inter',sans-serif;white-space:nowrap;}
+.bnav-btn:hover{color:#fff;}
+.bnav-add-btn{
+  width:46px;height:46px;border-radius:50%;
+  background:#e50914;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 16px rgba(229,9,20,.5);
+  transition:all .2s;flex-shrink:0;
+}
+.bnav-add-btn:hover{background:#f40612;transform:scale(1.08);}
+
+/* ── MOBILE SEARCH OVERLAY ────────────────────────────────── */
+.mobile-search-overlay{
+  position:fixed;inset:0;z-index:600;
+  background:rgba(10,10,10,.98);
+  display:flex;flex-direction:column;
+  padding:16px;
+  animation:popIn .15s ease;
+}
+.mobile-search-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.mobile-search-input{
+  flex:1;background:#111;border:1px solid #1a1a1a;color:#fff;
+  padding:14px 16px;border-radius:10px;font-size:16px;
+  font-family:'Inter',sans-serif;outline:none;
+}
+.mobile-search-input:focus{border-color:#e50914;}
+.mobile-search-cancel{
+  background:none;border:none;color:#a0a0a0;cursor:pointer;
+  font-size:14px;font-weight:600;font-family:'Inter',sans-serif;
+  padding:8px;white-space:nowrap;
+}
+
+/* ── HEADER RESPONSIVE ────────────────────────────────────── */
+@media (max-width: 767px) {
+  .hdr{padding:0 16px;height:56px;}
+  .logo{font-size:18px;}
+  .hdr-nav{display:none;}
+  /* Hide desktop controls in header on mobile */
+  .hdr-r .srch-wrap,
+  .hdr-r .filter-chip,
+  .hdr-r .btn-primary{display:none!important;}
+  /* Show hamburger */
+  .hdr-menu-btn{display:flex!important;}
+  /* Show bottom nav */
+  .bottom-nav{display:block;}
+  /* Add padding to main content so bottom nav doesn't cover it */
+  .main-scroll{padding-bottom:72px!important;}
+}
+.hdr-menu-btn{
+  display:none;
+  background:rgba(255,255,255,.06);border:1px solid #1a1a1a;
+  color:#fff;cursor:pointer;width:36px;height:36px;border-radius:8px;
+  align-items:center;justify-content:center;transition:all .2s;
+}
+
+/* ── HERO RESPONSIVE ──────────────────────────────────────── */
+@media (max-width: 767px) {
+  .hero{min-height:56vw;max-height:72vw;padding:0;}
+  .hero-body{padding:16px 16px 20px;}
+  .hero-title{font-size:1.4rem!important;letter-spacing:-.5px;margin-bottom:10px;}
+  .hero-acts{flex-wrap:wrap;gap:8px;}
+  .btn-hero-p{padding:10px 20px;font-size:13px;}
+  .btn-hero-o{padding:10px 16px;font-size:13px;}
+  .hero-mute-btn{width:32px;height:32px;}
+  .hero-dots{bottom:16px;right:16px;}
+  .hero-tags{margin-bottom:8px;}
+}
+@media (min-width: 768px) and (max-width:1023px) {
+  .hero{min-height:52vh;}
+  .hero-title{font-size:2.2rem!important;}
+}
+
+/* ── ROWS RESPONSIVE ──────────────────────────────────────── */
+@media (max-width: 767px) {
+  .row-sec{padding:0 0 20px;}
+  .row-hdr{padding:0 16px;margin-bottom:10px;}
+  .row-title{font-size:13px;}
+  .row-scroll-wrap{padding:0 16px;}
+  .row-cards{gap:10px;}
+  /* Hide prev/next arrows on mobile (use touch scroll) */
+  .row-arrow{display:none!important;}
+}
+@media (min-width: 768px) and (max-width:1023px) {
+  .row-sec{padding:0 0 28px;}
+  .row-hdr{padding:0 32px;}
+  .row-scroll-wrap{padding:0 32px;}
+}
+
+/* ── CARDS RESPONSIVE ─────────────────────────────────────── */
+@media (max-width: 479px) {
+  .card{width:130px;}
+  .card-img{height:73px;}
+  .card-title{font-size:10px;}
+}
+@media (min-width:480px) and (max-width:767px) {
+  .card{width:150px;}
+  .card-img{height:84px;}
+}
+@media (min-width:768px) and (max-width:1023px) {
+  .card{width:170px;}
+  .card-img{height:95px;}
+}
+
+/* ── MODALS RESPONSIVE ────────────────────────────────────── */
+@media (max-width: 767px) {
+  .modal-bg{align-items:flex-end;padding:0;}
+  .modal{
+    width:100%!important;max-width:100%!important;
+    border-radius:20px 20px 0 0;
+    max-height:92vh;overflow-y:auto;
+    padding:20px 16px 32px;
+    border-left:none;border-right:none;border-bottom:none;
+    animation:slideUp .25s cubic-bezier(.32,.72,0,1);
+  }
+  @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .modal::before{
+    content:'';display:block;width:36px;height:4px;
+    background:#1a1a1a;border-radius:2px;margin:0 auto 20px;
+  }
+  .modal-t{font-size:17px;}
+  .modal-x{top:12px;right:12px;}
+  /* Full-width buttons in modals */
+  .modal-foot{flex-direction:column;}
+  .modal-foot .btn-save,.modal-foot .btn-cancel{width:100%;justify-content:center;}
+}
+
+/* ── POPUP RESPONSIVE (hover preview → tap on mobile) ──────── */
+@media (max-width: 767px) {
+  .pop{
+    position:fixed!important;
+    bottom:72px!important;left:8px!important;right:8px!important;
+    top:auto!important;width:auto!important;
+    border-radius:12px;
+    z-index:490;
+  }
+}
+
+/* ── CINEMA MODAL RESPONSIVE ──────────────────────────────── */
+@media (max-width: 767px) {
+  .cinema-bg{padding:0;align-items:flex-end;}
+  .cinema-wrap{max-width:100%;border-radius:20px 20px 0 0;
+    background:#111;padding:16px 16px 32px;}
+  .cinema-title{font-size:14px;}
+  .cinema-video{border-radius:8px;}
+  .cinema-ftr{display:none;}
+}
+
+/* ── CATEGORY TREE RESPONSIVE ─────────────────────────────── */
+@media (max-width: 767px) {
+  .cat-list{max-height:55vh;}
+  .cat-item.root-item{padding:12px;}
+  .cat-subtree{padding-left:28px;}
+}
+
+/* ── ADVANCED SEARCH RESPONSIVE ───────────────────────────── */
+@media (max-width: 767px) {
+  .advsearch{padding:12px 16px;gap:8px;}
+  .filter-chip{font-size:11px;padding:5px 10px;}
+}
+
+/* ── SETTINGS PAGE RESPONSIVE ─────────────────────────────── */
+@media (max-width: 767px) {
+  .settings-hdr{padding:0 16px;height:56px;}
+  .settings-body{padding:72px 16px 100px;}
+  .settings-row{padding:14px 16px;flex-wrap:wrap;gap:10px;}
+}
+
+/* ── UNDO TOAST RESPONSIVE ────────────────────────────────── */
+@media (max-width: 767px) {
+  .undo-toast{
+    bottom:72px;left:8px;right:8px;
+    transform:none;min-width:0;width:auto;
+  }
+}
+
+/* ── LANDING PAGE RESPONSIVE (additional) ─────────────────── */
+@media (max-width: 639px) {
+  .land-nav{padding:0 16px;height:56px;}
+  .land-nav-links{display:none;}
+  .land-hero{padding:72px 16px 48px;min-height:auto;}
+  .land-h1{font-size:2rem;letter-spacing:-1px;}
+  .land-sub{font-size:15px;}
+  .land-cta-group{flex-direction:column;}
+  .btn-land-p,.btn-land-o{width:100%;justify-content:center;text-align:center;}
+  .land-hero-visual{display:none;}
+  .land-hero-inner{grid-template-columns:1fr;}
+  .land-section{padding:60px 16px;}
+  .feat-grid{grid-template-columns:1fr;}
+  .steps{grid-template-columns:1fr;gap:24px;}
+  .steps::before{display:none;}
+  .pricing-grid{grid-template-columns:1fr;}
+  .land-cta-section{margin:0 16px 60px;padding:36px 20px;}
+  .land-cta-title{font-size:1.8rem;}
+  .land-footer{flex-direction:column;gap:16px;text-align:center;padding:32px 16px;}
+  .land-footer-links{flex-wrap:wrap;justify-content:center;}
+}
+@media (min-width:640px) and (max-width:1023px) {
+  .feat-grid{grid-template-columns:repeat(2,1fr);}
+  .land-hero-inner{grid-template-columns:1fr;}
+  .land-hero-visual{display:none;}
+}
+
+/* ── LOGIN / ONBOARDING RESPONSIVE ────────────────────────── */
+@media (max-width: 639px) {
+  .login-card{border-radius:0;min-height:100vh;
+    display:flex;flex-direction:column;justify-content:center;
+    border:none;padding:32px 24px;}
+  .onboard-card{border-radius:0;min-height:100vh;
+    display:flex;flex-direction:column;justify-content:center;
+    border:none;padding:32px 24px;}
+}
+
+/* ── MAIN APP EMPTY STATE ─────────────────────────────────── */
+@media (max-width: 767px) {
+  .main-scroll > div[style*="padding:80px"]{padding:48px 24px!important;}
+  .main-scroll > div[style*="padding:72px"]{padding:48px 24px!important;}
+}
+
+/* ── TOUCH IMPROVEMENTS ────────────────────────────────────── */
+@media (hover: none) and (pointer: coarse) {
+  /* Touch devices: remove hover-only states */
+  .cat-actions{opacity:1!important;}
+  .row-arrow{opacity:.7!important;}
+  /* Larger tap targets */
+  .cat-act-btn{padding:8px 10px!important;}
+  .bnav-btn{padding:8px!important;}
+}
+
+/* ── TABLET LAYOUT ────────────────────────────────────────── */
+@media (min-width:768px) and (max-width:1023px) {
+  .hdr{padding:0 24px;}
+  .main-scroll{padding:0;}
+  .hero-body{padding:24px 32px 32px;}
+  .row-hdr,.row-scroll-wrap{padding-left:32px;padding-right:32px;}
+}
+
+/* Safe area for notched phones */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .bottom-nav{padding-bottom:calc(8px + env(safe-area-inset-bottom));}
+  .modal{padding-bottom:calc(32px + env(safe-area-inset-bottom));}
+}
 `;
 
 // ─── SAMPLE DATA ─────────────────────────────────────────────────────────────
@@ -1924,6 +2193,31 @@ function CatModal({ categories, links, onSave, onClose }) {
 }
 
 
+// ─── BOTTOM NAV (mobile) ─────────────────────────────────────────────────────
+function BottomNav({ activePage, onHome, onSearch, onAdd, onCats, onSettings }) {
+  return (
+    <nav className="bottom-nav">
+      <div className="bnav-inner">
+        <button className={`bnav-btn${activePage==="home"?" active":""}`} onClick={onHome}>
+          <Home size={20}/><span>Início</span>
+        </button>
+        <button className={`bnav-btn${activePage==="search"?" active":""}`} onClick={onSearch}>
+          <Search size={20}/><span>Buscar</span>
+        </button>
+        <button className="bnav-add-btn" onClick={onAdd} title="Adicionar vídeo">
+          <Plus size={22} color="#fff"/>
+        </button>
+        <button className={`bnav-btn${activePage==="cats"?" active":""}`} onClick={onCats}>
+          <Folder size={20}/><span>Pastas</span>
+        </button>
+        <button className={`bnav-btn${activePage==="settings"?" active":""}`} onClick={onSettings}>
+          <Settings size={20}/><span>Perfil</span>
+        </button>
+      </div>
+    </nav>
+  );
+}
+
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
 function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChange }) {
   const [cats, setCats]   = useState([]);
@@ -1934,13 +2228,15 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
   const [headerUp, setHeaderUp] = useState(true);
   const [notif, setNotif]       = useState(null);
   const [popup, setPopup]       = useState(null);
-  const [showAdd, setShowAdd]       = useState(false);
-  const [showCats, setShowCats]     = useState(false);
-  const [editLink, setEditLink]     = useState(null);
-  const [cinemaLink, setCinemaLink] = useState(null);
-  const [importData, setImportData] = useState(null);
+  const [showAdd, setShowAdd]           = useState(false);
+  const [showCats, setShowCats]         = useState(false);
+  const [editLink, setEditLink]         = useState(null);
+  const [cinemaLink, setCinemaLink]     = useState(null);
+  const [importData, setImportData]     = useState(null);
   const [currentCatId, setCurrentCatId] = useState(null);
   const [showAdvSearch, setShowAdvSearch] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [mobileNavPage, setMobileNavPage] = useState("home");
   const [filterPlatform, setFilterPlatform] = useState("all");
   const [filterDate, setFilterDate]         = useState("all");
   const [filterTags, setFilterTags]         = useState([]);
@@ -2284,6 +2580,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
             <button className="nav-btn" onClick={()=>setShowCats(true)}>Categorias</button>
           </nav>
           <div className="hdr-r">
+            {/* Desktop: search + filters + add + user */}
             <div className="srch-wrap">
               <input className="srch-inp" placeholder="Buscar título, URL, notas..." value={search} onChange={e=>setSearch(e.target.value)}/>
               <span className="srch-ico"><Search size={14}/></span>
@@ -2295,7 +2592,6 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
               title="Filtros avançados"
             >⚙ Filtros{(filterPlatform!=="all"||filterDate!=="all"||filterTags.length>0)?` (${[filterPlatform!=="all"?1:0,filterDate!=="all"?1:0,filterTags.length].reduce((a,b)=>a+b,0)})`:""}</button>
             <button className="btn-primary" onClick={()=>setShowAdd(true)}><Plus size={14}/> Adicionar</button>
-            {/* User menu */}
             <div style={{display:"flex",alignItems:"center",gap:8,marginLeft:4,paddingLeft:12,borderLeft:"1px solid #1a1a1a"}}>
               {user?.avatar
                 ? <img src={user.avatar} alt="" style={{width:30,height:30,borderRadius:"50%",objectFit:"cover"}}/>
@@ -2304,6 +2600,10 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
               <button className="nav-btn" style={{padding:"6px 10px",fontSize:13}} onClick={onSettings} title="Configurações">⚙</button>
               <button className="nav-btn" style={{padding:"6px 10px",fontSize:13,color:"#555"}} onClick={onLogout} title="Sair">⏻</button>
             </div>
+            {/* Mobile: search icon + menu */}
+            <button className="hdr-menu-btn" onClick={()=>setShowMobileSearch(true)} title="Buscar">
+              <Search size={18}/>
+            </button>
           </div>
         </header>
 
@@ -2527,6 +2827,48 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
 
         {/* EDIT MODAL */}
         {editLink && <EditModal link={editLink} categories={cats} onSave={saveEdit} onClose={()=>setEditLink(null)}/>}
+
+        {/* MOBILE SEARCH OVERLAY */}
+        {showMobileSearch && (
+          <div className="mobile-search-overlay">
+            <div className="mobile-search-header">
+              <input
+                className="mobile-search-input"
+                placeholder="Buscar vídeos, URLs, notas..."
+                value={search}
+                onChange={e=>setSearch(e.target.value)}
+                autoFocus
+              />
+              <button className="mobile-search-cancel" onClick={()=>setShowMobileSearch(false)}>
+                Cancelar
+              </button>
+            </div>
+            {/* Filter chips */}
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              {["all","youtube","tiktok","instagram","twitter"].map(p=>(
+                <button key={p} className={`filter-chip${filterPlatform===p?" on":""}`}
+                  onClick={()=>setFilterPlatform(p)}>
+                  {p==="all"?"Todas":(PLAT[p]?.label||p)}
+                </button>
+              ))}
+            </div>
+            {search && (
+              <div style={{marginTop:20,color:"#555",fontSize:13,fontFamily:"'Inter',sans-serif",textAlign:"center"}}>
+                Mostrando resultados para <strong style={{color:"#fff"}}>"{search}"</strong>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* BOTTOM NAV — mobile only */}
+        <BottomNav
+          activePage={mobileNavPage}
+          onHome={()=>{ setMobileNavPage("home"); setFilter("all"); setSearch(""); }}
+          onSearch={()=>{ setMobileNavPage("search"); setShowMobileSearch(true); }}
+          onAdd={()=>{ setMobileNavPage("home"); setShowAdd(true); }}
+          onCats={()=>{ setMobileNavPage("cats"); setShowCats(true); }}
+          onSettings={()=>{ setMobileNavPage("settings"); onSettings(); }}
+        />
 
         {/* CAT MANAGER */}
         {showCats && <CatModal categories={cats} links={links} onSave={c=>{saveCats(c);setShowCats(false);notify("✓ Categorias salvas!");}} onClose={()=>setShowCats(false)}/>}
