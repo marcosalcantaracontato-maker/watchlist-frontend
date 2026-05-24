@@ -243,7 +243,9 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
 .row-fill{height:100%;background:#e50914;border-radius:2px;transition:width .6s ease;}
 .row-fill.full{background:#4caf50;}
 .row-wrap{position:relative;}
-.row-scroll{display:flex;gap:12px;overflow-x:auto;padding:4px 48px 12px;scroll-behavior:smooth;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.row-scroll-outer{overflow-x:auto;overflow-y:clip;scroll-behavior:smooth;scrollbar-width:none;}
+.row-scroll-outer::-webkit-scrollbar{display:none;}
+.row-scroll{display:flex;gap:16px;padding:4px 48px 120px;-webkit-overflow-scrolling:touch;overflow:visible;}
 .row-scroll::-webkit-scrollbar{display:none;}
 .row-wrap::before,.row-wrap::after{content:'';position:absolute;top:0;bottom:12px;width:100px;pointer-events:none;z-index:5;}
 .row-wrap::before{left:0;background:linear-gradient(to right,#0a0a0a,transparent);}
@@ -254,8 +256,95 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
 .sl{left:4px;}.sr{right:4px;}
 
 /* ── CARD ────────────────────────────────────────────────── */
-.card{position:relative;flex:0 0 272px;width:272px;height:153px;border-radius:6px;overflow:hidden;cursor:pointer;background:#111111;border:1px solid #1a1a1a;transition:transform .22s ease,box-shadow .22s ease,z-index 0s .22s;}
-.card:hover{transform:scale(1.08);box-shadow:0 20px 60px rgba(0,0,0,.85);z-index:8;transition:transform .22s ease,box-shadow .22s ease;}
+/* ── NETFLIX CARD EXPANSION ─────────────────────────────────────────────── */
+.card{
+  position:relative;
+  flex:0 0 272px;width:272px;height:153px;
+  border-radius:8px;
+  overflow:visible; /* allow detail panel to extend below */
+  cursor:pointer;
+  background:#111111;
+  border:1px solid #1a1a1a;
+  z-index:1;
+  /* Delay before animating — avoids triggering on accidental mouse pass */
+  transition:
+    transform .45s cubic-bezier(.4,0,.2,1) .12s,
+    box-shadow .45s cubic-bezier(.4,0,.2,1) .12s,
+    z-index 0s .57s;
+}
+/* Clip the thumbnail within the card */
+.card-bg-wrap{
+  position:absolute;inset:0;
+  border-radius:8px;
+  overflow:hidden;
+  transition:border-radius .45s cubic-bezier(.4,0,.2,1) .12s;
+}
+.card:hover{
+  transform:scale(1.62);
+  z-index:200;
+  box-shadow:0 28px 80px rgba(0,0,0,.95), 0 0 0 2px rgba(255,255,255,.14);
+  transition:
+    transform .45s cubic-bezier(.4,0,.2,1) .12s,
+    box-shadow .45s cubic-bezier(.4,0,.2,1) .12s,
+    z-index 0s .12s;
+}
+.card:hover .card-bg-wrap{border-radius:8px 8px 0 0;}
+
+/* ── DETAIL PANEL — slides below on hover ──────────────────────────────── */
+.card-detail{
+  position:absolute;
+  top:calc(100% - 2px);left:0;right:0;
+  background:#111;
+  border:1px solid rgba(255,255,255,.1);
+  border-top:1px solid rgba(255,255,255,.07);
+  border-radius:0 0 8px 8px;
+  padding:0;
+  max-height:0;
+  overflow:hidden;
+  opacity:0;
+  transition:
+    max-height .4s cubic-bezier(.4,0,.2,1) .15s,
+    opacity .3s ease .2s,
+    padding .3s ease .15s;
+  pointer-events:none;
+}
+.card:hover .card-detail{
+  max-height:180px;
+  opacity:1;
+  padding:10px 12px 12px;
+  pointer-events:all;
+}
+.card-detail-title{
+  font-size:12px;font-weight:700;color:#fff;font-family:'Inter',sans-serif;
+  line-height:1.35;margin-bottom:8px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.card-detail-meta{
+  display:flex;align-items:center;gap:6px;margin-bottom:9px;flex-wrap:wrap;
+}
+.card-detail-plat{
+  font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;
+  padding:2px 7px;border-radius:3px;
+}
+.card-detail-tag{
+  font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;
+  border:1px solid;
+}
+.card-detail-acts{
+  display:flex;gap:6px;
+}
+.card-detail-btn{
+  flex:1;padding:7px 0;border-radius:5px;font-size:11px;font-weight:700;
+  font-family:'Inter',sans-serif;cursor:pointer;border:none;
+  display:flex;align-items:center;justify-content:center;gap:4px;
+  transition:all .15s;
+}
+.card-detail-btn.primary{background:#fff;color:#000;}
+.card-detail-btn.primary:hover{background:#e0e0e0;}
+.card-detail-btn.secondary{background:rgba(255,255,255,.1);color:#fff;border:1.5px solid rgba(255,255,255,.25);}
+.card-detail-btn.secondary:hover{background:rgba(255,255,255,.2);}
+.card-detail-btn.danger{background:rgba(248,113,113,.12);color:#f87171;border:1.5px solid rgba(248,113,113,.25);}
+.card-detail-btn.danger:hover{background:rgba(248,113,113,.25);}
 .card-bg-grad{position:absolute;inset:0;}
 .card-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transition:opacity .4s;}
 .card-grd{position:absolute;bottom:0;left:0;right:0;height:75%;background:linear-gradient(to top,rgba(0,0,0,.96) 0%,rgba(0,0,0,.55) 50%,transparent 100%);pointer-events:none;z-index:1;}
@@ -497,7 +586,8 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
   .hdr{padding:0 20px;}.nav{display:none;}
   .hero-body{padding:0 24px 52px;}.hero-title{font-size:2rem;}
   .row-hdr,.row-prog-wrap{padding:0 20px;}
-  .row-scroll{padding:4px 20px 12px;}
+  .row-scroll{padding:4px 16px 100px;}
+  .row-scroll-outer{margin:0;}
   .stats{padding:28px 20px 60px;}
   .stats-g{grid-template-columns:repeat(2,1fr);}
 }
@@ -820,7 +910,8 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
   .hdr{padding:0 24px;}
   .main-scroll{padding:0;}
   .hero-body{padding:24px 32px 32px;}
-  .row-hdr,.row-scroll-wrap{padding-left:32px;padding-right:32px;}
+  .row-hdr,.row-scroll-wrap,.row-scroll-outer{padding-left:32px;padding-right:32px;}
+  .row-scroll-outer .row-scroll{padding-left:0;padding-right:0;}
 }
 
 /* Safe area for notched phones */
@@ -1231,6 +1322,29 @@ function Card({ link, catIdx, onPreviewShow, onPreviewHide, onToggle, onDelete, 
 
       {/* Green flash on mark */}
       {justWatched && <div className="card-flash"/>}
+
+      {/* ── NETFLIX EXPANSION DETAIL PANEL ── */}
+      <div className="card-detail" onClick={e=>e.stopPropagation()}>
+        <div className="card-detail-title">{link.title}</div>
+        <div className="card-detail-meta">
+          {(() => { const p=PLAT[link.platform]||PLAT.other; return <span className="card-detail-plat" style={{background:p.bg,color:p.color}}>{p.label}</span>; })()}
+          {(link.tags||[]).slice(0,2).map(t=>{ const pt=PRESET_TAGS.find(p=>p.label===t); return <span key={t} className="card-detail-tag" style={{color:pt?.color||"#a0a0a0",borderColor:(pt?.color||"#333")+"44",background:(pt?.color||"#333")+"18"}}>{t}</span>; })}
+        </div>
+        <div className="card-detail-acts">
+          <a href={link.url} target="_blank" rel="noopener noreferrer" className="card-detail-btn primary" onClick={e=>e.stopPropagation()} style={{textDecoration:"none"}}>
+            <Play size={10} fill="#000" color="#000"/>Assistir
+          </a>
+          <button className="card-detail-btn secondary" onClick={()=>onToggle(link.id)}>
+            {link.watched ? <><EyeOff size={10}/>Desfazer</> : <><Check size={10}/>Assistido</>}
+          </button>
+          {link.videoId && onCinema && (
+            <button className="card-detail-btn secondary" onClick={()=>onCinema(link)} title="Cinema">🎬</button>
+          )}
+          <button className="card-detail-btn danger" onClick={()=>onDelete(link.id)}>
+            <Trash2 size={10}/>
+          </button>
+        </div>
+      </div>
 
       {/* 3-dot menu — secondary actions only */}
       <button
