@@ -3044,6 +3044,48 @@ const LANDING_CSS = `
   .land-nav{padding:0 24px;}
   .land-h1{font-size:2.4rem;}
 }
+/* ── LANDING RESPONSIVE (inside LANDING_CSS) ───────────── */
+@media (max-width: 767px) {
+  .land-nav{padding:0 16px;height:56px;}
+  .land-nav-links{display:none!important;}
+  .land-cta-nav{padding:8px 16px;font-size:13px;}
+  .land-hero{padding:72px 16px 40px;min-height:auto;}
+  .land-hero-inner{grid-template-columns:1fr;gap:32px;}
+  .land-hero-visual{display:none;}
+  .land-h1{font-size:2rem;letter-spacing:-1px;}
+  .land-sub{font-size:15px;margin-bottom:24px;}
+  .land-cta-group{flex-direction:column;align-items:stretch;}
+  .btn-land-p,.btn-land-o{width:100%;justify-content:center;padding:14px 20px;}
+  .land-social-proof{justify-content:center;}
+  .land-section{padding:52px 16px;}
+  .land-section-title{font-size:1.8rem;}
+  .feat-grid{grid-template-columns:1fr;gap:12px;}
+  .feat-card{padding:18px;}
+  .steps{grid-template-columns:1fr;gap:20px;}
+  .steps::before{display:none;}
+  .pricing-grid{grid-template-columns:1fr;max-width:100%;}
+  .land-cta-section{margin:0 16px 60px;padding:32px 16px;border-radius:12px;}
+  .land-cta-title{font-size:1.6rem;}
+  .land-footer{flex-direction:column;gap:14px;text-align:center;padding:28px 16px;}
+  .land-footer-links{flex-wrap:wrap;justify-content:center;gap:16px;}
+  .login-page{padding:0;}
+  .login-card{border-radius:0;min-height:100dvh;padding:40px 20px;border:none;display:flex;flex-direction:column;justify-content:center;}
+  .onboard-page{padding:0;}
+  .onboard-card{border-radius:0;min-height:100dvh;padding:32px 20px;border:none;display:flex;flex-direction:column;justify-content:center;}
+  .settings-hdr{padding:0 16px;}
+  .settings-body{padding:72px 16px 100px;}
+  .settings-row{padding:14px 16px;flex-wrap:wrap;gap:8px;}
+  .settings-row-action{width:100%;}
+  .import-stats{grid-template-columns:repeat(3,1fr);}
+}
+@media (min-width:768px) and (max-width:1023px) {
+  .land-nav{padding:0 32px;}
+  .land-hero{padding:88px 32px 52px;}
+  .land-hero-inner{gap:40px;}
+  .land-hero-visual{display:block;}
+  .land-section{padding:72px 32px;}
+  .feat-grid{grid-template-columns:repeat(2,1fr);}
+}
 `;
 
 // ─── LANDING PAGE ─────────────────────────────────────────────────────────────
