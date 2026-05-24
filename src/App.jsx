@@ -3795,6 +3795,8 @@ export default function App() {
           setUser(u);
           await loadStats(u?.id);
           setPage("app");
+          // Re-sync extension token on page reload
+          setTimeout(() => syncWithExtension(u), 1000);
         } else {
           setPage("landing");
         }
@@ -3875,9 +3877,24 @@ export default function App() {
   };
 
   // ── Login handler ──────────────────────────────────────────────────────────
+  // Send token to Chrome extension after login
+  const syncWithExtension = (userData) => {
+    try {
+      if (typeof chrome !== "undefined" && chrome?.runtime?.sendMessage) {
+        chrome.runtime.sendMessage("agpmepkbkjakjkabcmbkmklgmggbfghm", {
+          type: "WL_LOGIN",
+          token: userData.jwtToken || "",
+          user: { name: userData.name, email: userData.email, avatar: userData.avatar }
+        });
+      }
+    } catch(e) { /* extension not installed or inactive */ }
+  };
+
   const handleLogin = async (userData) => {
     setUser(userData);
     try { await wlStorage.set("wl-auth-user", JSON.stringify(userData)); } catch{}
+    // Sync token with Chrome extension
+    syncWithExtension(userData);
 
     if (userData.isNew && !userData.isDemo) {
       // First login with real account → migrate local data before onboarding
@@ -3892,6 +3909,12 @@ export default function App() {
 
   const handleLogout = async () => {
     try { await wlStorage.delete("wl-auth-user"); } catch{}
+    // Tell extension to clear token
+    try {
+      if (typeof chrome !== "undefined" && chrome?.runtime?.sendMessage) {
+        chrome.runtime.sendMessage("agpmepkbkjakjkabcmbkmklgmggbfghm", { type: "WL_LOGOUT" });
+      }
+    } catch{}
     setUser(null);
     setPage("landing");
   };
