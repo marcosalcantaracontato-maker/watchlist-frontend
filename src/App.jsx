@@ -144,7 +144,7 @@ body{background:#0a0a0a;color:#fff;font-family:'Inter',sans-serif;min-height:100
 
 /* ── HERO VIDEO ──────────────────────────────────────────── */
 .hero-bg{position:absolute;inset:0;background-size:cover;background-position:center top;filter:brightness(.32) saturate(.75);transform:scale(1.06);transition:background-image .4s,opacity .8s ease;}
-.hero-video-wrap{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1;}
+.hero-video-wrap{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1;clip-path:inset(0);}
 .hero-iframe{
   position:absolute;top:50%;left:50%;
   /* Extend beyond container to clip YouTube play button / controls / logo */
@@ -321,7 +321,7 @@ body{background:#0a0a0a;color:#fff;font-family:'Inter',sans-serif;min-height:100
 .btn-export:hover{background:rgba(255,255,255,.08);color:#fff;border-color:#333;}
 
 /* ── MODAL ───────────────────────────────────────────────── */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal-bg{position:fixed;inset:0;overflow:hidden;background:rgba(0,0,0,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;}
 .modal{background:#111111;border:1px solid #1a1a1a;border-radius:12px;width:100%;max-width:500px;padding:28px 32px;position:relative;animation:popIn .22s ease;max-height:90vh;overflow-y:auto;}
 .modal-t{font-size:21px;font-weight:800;margin-bottom:6px;font-family:'Inter',sans-serif;letter-spacing:-.3px;}
 .modal-sub{font-size:13px;color:#a0a0a0;margin-bottom:24px;line-height:1.5;}
@@ -612,7 +612,7 @@ body{background:#0a0a0a;color:#fff;font-family:'Inter',sans-serif;min-height:100
 
 /* ── HERO RESPONSIVE ──────────────────────────────────────── */
 @media (max-width: 767px) {
-  .hero{min-height:56vw;max-height:72vw;padding:0;}
+  .hero{min-height:52vw;max-height:70vw;padding:0;overflow:hidden;}
   .hero-body{padding:16px 16px 20px;}
   .hero-title{font-size:1.4rem!important;letter-spacing:-.5px;margin-bottom:10px;}
   .hero-acts{flex-wrap:wrap;gap:8px;}
@@ -686,7 +686,7 @@ body{background:#0a0a0a;color:#fff;font-family:'Inter',sans-serif;min-height:100
   .pop{
     position:fixed!important;
     bottom:72px!important;left:8px!important;right:8px!important;
-    top:auto!important;width:auto!important;
+    top:auto!important;width:auto!important;max-width:calc(100vw - 16px)!important;
     border-radius:12px;
     z-index:490;
   }
@@ -2895,7 +2895,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
 
 const LANDING_CSS = `
 /* ── LANDING PAGE ────────────────────────────────────────────────────────── */
-.land{background:#0a0a0a;min-height:100vh;color:#fff;font-family:'Inter',sans-serif;}
+.land{background:#0a0a0a;min-height:100vh;color:#fff;font-family:'Inter',sans-serif;overflow-x:hidden;width:100%;}
 .land-nav{position:fixed;top:0;left:0;right:0;z-index:100;height:68px;padding:0 60px;display:flex;align-items:center;justify-content:space-between;background:rgba(10,10,10,.92);backdrop-filter:blur(20px);border-bottom:1px solid #1a1a1a;}
 .land-logo{font-size:22px;font-weight:900;color:#e50914;letter-spacing:-.5px;font-family:'Inter',sans-serif;text-transform:uppercase;}
 .land-logo em{color:#fff;font-style:normal;}
@@ -2939,7 +2939,7 @@ const LANDING_CSS = `
 .land-badge-ico{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;}
 
 /* FEATURES */
-.land-section{padding:100px 60px;max-width:1200px;margin:0 auto;}
+.land-section{padding:100px 60px;max-width:1200px;margin:0 auto;width:100%;}
 .land-section-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#e50914;margin-bottom:12px;}
 .land-section-title{font-size:2.4rem;font-weight:900;letter-spacing:-1px;margin-bottom:16px;font-family:'Inter',sans-serif;}
 .land-section-sub{font-size:16px;color:#a0a0a0;max-width:500px;line-height:1.65;}
