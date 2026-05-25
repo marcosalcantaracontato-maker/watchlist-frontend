@@ -4054,9 +4054,23 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
   const [showCreateTag, setShowCreateTag] = useState(false);
   const [creatingCat, setCreatingCat] = useState(false);
 
-  // Show all cats including orphaned ones (parentId pointing to non-existent cat)
+  // Build flat list of all cats with their level — shows EVERYTHING
   const existingIds = new Set(cats.map(c => c.id));
-  const allAsRoots = cats.filter(c => !c.parentId || !existingIds.has(c.parentId));
+  function buildFlatList(parentId, depth) {
+    return cats
+      .filter(c => (c.parentId || null) === parentId)
+      .sort((a,b) => a.order - b.order)
+      .flatMap(c => [{...c, _depth: depth}, ...buildFlatList(c.id, depth+1)]);
+  }
+  // True roots: parentId null/empty
+  const trueRoots = cats.filter(c => !c.parentId);
+  // Orphans: parentId set but parent doesn't exist
+  const orphans = cats.filter(c => c.parentId && !existingIds.has(c.parentId));
+  // Build display list: tree from roots + orphans at end
+  const flatCats = [
+    ...buildFlatList(null, 0),
+    ...orphans.map(c => ({...c, _depth: 0, _orphan: true}))
+  ];
 
   async function handleCreateCat() {
     if (!newCatName.trim()) return;
@@ -4132,32 +4146,29 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
 
             {/* Category list */}
             <div style={{flex:1,overflowY:"auto",padding:8}}>
-              {allAsRoots.length===0?(
+              {flatCats.length===0?(
                 <div style={{textAlign:"center",padding:"32px 16px",color:"#555"}}>
                   <div style={{fontSize:28,marginBottom:8,opacity:.2}}>□</div>
                   <div style={{fontSize:13,fontWeight:700,color:"#888",marginBottom:4}}>Nenhuma categoria</div>
                   <div style={{fontSize:11}}>Clique em "+ Nova" para criar.</div>
                 </div>
-              ):allAsRoots.map(cat=>{
-                const subs = cats.filter(s=>s.parentId===cat.id);
+              ):flatCats.map(cat=>{
+                const indent = cat._depth * 18;
+                const hasSubs = cats.some(c => c.parentId === cat.id);
                 return (
-                  <div key={cat.id} style={{marginBottom:4}}>
-                    <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:7,background:"#0a0a0a",border:"1px solid #1a1a1a"}}>
-                      <span style={{fontSize:14}}>📁</span>
-                      <span style={{flex:1,fontSize:13,fontWeight:600}}>{cat.name}</span>
-                      <button onClick={()=>{if(confirm(`Excluir "${cat.name}"${subs.length>0?" e suas subcategorias":""  }?`))onDeleteCat(cat.id);}}
-                        style={{background:"none",border:"none",cursor:"pointer",color:"#333",fontSize:12,padding:"2px 6px",borderRadius:4,transition:"all .15s"}}
-                        onMouseEnter={e=>e.target.style.color="#f87171"} onMouseLeave={e=>e.target.style.color="#333"}>🗑</button>
+                  <div key={cat.id} style={{marginBottom:3,marginLeft:indent}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:7,
+                      background: cat._orphan ? "rgba(245,166,35,.06)" : "#0a0a0a",
+                      border: cat._orphan ? "1px solid rgba(245,166,35,.2)" : "1px solid #1a1a1a"}}>
+                      <span style={{fontSize:13}}>📁</span>
+                      <span style={{flex:1,fontSize:13,fontWeight:600,color: cat._orphan ? "#f5a623" : "#fff"}}>{cat.name}</span>
+                      {cat._orphan && <span style={{fontSize:9,color:"#f5a623",padding:"1px 6px",border:"1px solid rgba(245,166,35,.3)",borderRadius:4}}>órfã</span>}
+                      <button
+                        onClick={()=>{if(confirm(`Excluir "${cat.name}"${hasSubs?" e suas subcategorias":""  }?`))onDeleteCat(cat.id);}}
+                        style={{background:"none",border:"none",cursor:"pointer",color:"#333",fontSize:12,padding:"4px 8px",borderRadius:4,transition:"all .15s"}}
+                        onMouseEnter={e=>e.currentTarget.style.color="#f87171"}
+                        onMouseLeave={e=>e.currentTarget.style.color="#333"}>🗑</button>
                     </div>
-                    {subs.map(sub=>(
-                      <div key={sub.id} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px 7px 28px",marginTop:2}}>
-                        <span style={{fontSize:12}}>📁</span>
-                        <span style={{flex:1,fontSize:12,color:"#888"}}>{sub.name}</span>
-                        <button onClick={()=>{if(confirm(`Excluir "${sub.name}"?`))onDeleteCat(sub.id);}}
-                          style={{background:"none",border:"none",cursor:"pointer",color:"#333",fontSize:11,padding:"2px 6px",borderRadius:4}}
-                          onMouseEnter={e=>e.target.style.color="#f87171"} onMouseLeave={e=>e.target.style.color="#333"}>🗑</button>
-                      </div>
-                    ))}
                   </div>
                 );
               })}
