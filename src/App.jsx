@@ -3123,97 +3123,31 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
         {/* EDIT MODAL */}
         {editLink && <EditModal link={editLink} categories={cats} onSave={saveEdit} onClose={()=>setEditLink(null)}/>}
 
-        {/* ORGANIZAR MODAL — dual-pane Categorias + Tags */}
+                {/* ORGANIZAR MODAL — dual-pane Categorias + Tags */}
         {showOrganizar && (
-          <div className="modal-bg" onClick={()=>setShowOrganizar(false)}>
-            <div className="modal" style={{width:"min(860px,95vw)",maxHeight:"85vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
-              {/* Header */}
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
-                <div>
-                  <h2 style={{fontSize:20,fontWeight:900,letterSpacing:"-.5px",marginBottom:4}}>Organizar</h2>
-                  <p style={{fontSize:12,color:"#555"}}>
-                    Categorias dizem <em style={{color:"#e50914",fontStyle:"normal",fontWeight:700}}>onde</em> mora. Tags dizem <em style={{color:"#3b82f6",fontStyle:"normal",fontWeight:700}}>como</em> é.
-                  </p>
-                </div>
-                <button className="modal-x" onClick={()=>setShowOrganizar(false)}><X size={18}/></button>
-              </div>
-
-              {/* Dual-pane */}
-              <div style={{display:"flex",gap:16,minHeight:400}}>
-                {/* CATEGORIES */}
-                <div style={{flex:1,background:"#111",border:"1px solid #1a1a1a",borderRadius:10,overflow:"hidden",display:"flex",flexDirection:"column"}}>
-                  <div style={{padding:"12px 16px",borderBottom:"1px solid #1a1a1a",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                    <span style={{fontSize:13,fontWeight:800,display:"flex",alignItems:"center",gap:7}}>
-                      <span style={{color:"#e50914"}}>□</span> Categorias <span style={{color:"#555",fontWeight:400}}>{cats.length}</span>
-                    </span>
-                    <button onClick={()=>setShowCats(true)} style={{background:"#e50914",border:"none",color:"#fff",cursor:"pointer",padding:"5px 12px",borderRadius:6,fontSize:11,fontWeight:800,fontFamily:"'Inter',sans-serif"}}>+ Nova</button>
-                  </div>
-                  <div style={{flex:1,overflowY:"auto",padding:"8px"}}>
-                    {cats.filter(c=>!c.parentId).map(cat=>{
-                      const subs=cats.filter(s=>s.parentId===cat.id);
-                      return (
-                        <div key={cat.id} style={{marginBottom:4}}>
-                          <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:7,background:"#0a0a0a",border:"1px solid #1a1a1a"}}>
-                            <span style={{fontSize:14}}>📁</span>
-                            <span style={{flex:1,fontSize:13,fontWeight:600}}>{cat.name}</span>
-                          </div>
-                          {subs.map(sub=>(
-                            <div key={sub.id} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px 7px 28px",borderRadius:7,marginTop:2,background:"transparent",border:"1px solid transparent"}}>
-                              <span style={{fontSize:12}}>📁</span>
-                              <span style={{flex:1,fontSize:12,color:"#888"}}>{sub.name}</span>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div style={{padding:"8px 12px",borderTop:"1px solid #1a1a1a",fontSize:10,color:"#2a2a2a",textAlign:"center"}}>
-                    Gerenciamento completo nas Categorias
-                  </div>
-                </div>
-
-                {/* TAGS */}
-                <div style={{flex:1,background:"#111",border:"1px solid #1a1a1a",borderRadius:10,overflow:"hidden",display:"flex",flexDirection:"column"}}>
-                  <div style={{padding:"12px 16px",borderBottom:"1px solid #1a1a1a",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                    <span style={{fontSize:13,fontWeight:800,display:"flex",alignItems:"center",gap:7}}>
-                      <span style={{color:"#3b82f6"}}>#</span> Tags <span style={{color:"#555",fontWeight:400}}>{customTags.length}</span>
-                    </span>
-                    <button onClick={()=>{
-                      const name=prompt("Nome da nova tag:");
-                      if(!name?.trim())return;
-                      const COLORS=["#FF6B6B","#FFB74D","#64B5F6","#81C784","#BA68C8","#F06292","#FF8A65","#90A4AE"];
-                      const color=COLORS[customTags.length%COLORS.length];
-                      setCustomTags(prev=>[...prev,{id:"t-"+Date.now(),label:name.trim(),color,icon:"◈",count:0}]);
-                    }} style={{background:"#3b82f6",border:"none",color:"#fff",cursor:"pointer",padding:"5px 12px",borderRadius:6,fontSize:11,fontWeight:800,fontFamily:"'Inter',sans-serif"}}>+ Nova</button>
-                  </div>
-                  <div style={{flex:1,overflowY:"auto",padding:"10px 12px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,alignContent:"start"}}>
-                    {customTags.length===0?(
-                      <div style={{gridColumn:"1/-1",textAlign:"center",padding:"32px 16px",color:"#555"}}>
-                        <div style={{fontSize:28,marginBottom:8,opacity:.3}}>#</div>
-                        <div style={{fontSize:13,fontWeight:700,color:"#888",marginBottom:4}}>Nenhuma tag ainda</div>
-                        <div style={{fontSize:11,lineHeight:1.5}}>Crie tags para classificar como um item é.<br/>Ex: Favorito, Urgente, Ver depois.</div>
-                      </div>
-                    ):customTags.map(tag=>(
-                      <div key={tag.id||tag.label} style={{borderLeft:`3px solid ${tag.color}`,background:"#0a0a0a",border:`1px solid #1a1a1a`,borderLeft:`3px solid ${tag.color}`,borderRadius:7,padding:"9px 10px",display:"flex",alignItems:"center",gap:8,transition:"all .15s",cursor:"default"}}>
-                        <span style={{color:tag.color,fontSize:14}}>{tag.icon||"◈"}</span>
-                        <div style={{flex:1,minWidth:0}}>
-                          <div style={{fontSize:12,fontWeight:700,color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{tag.label}</div>
-                          <div style={{fontSize:10,color:"#555"}}>{tag.count||0} itens</div>
-                        </div>
-                        <button onClick={()=>setCustomTags(prev=>prev.filter(t=>t.id!==tag.id&&t.label!==tag.label))}
-                          style={{background:"none",border:"none",cursor:"pointer",color:"#333",fontSize:11,padding:"2px 4px",borderRadius:3}}>✕</button>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{padding:"8px 12px",borderTop:"1px solid #1a1a1a",fontSize:10,color:"#2a2a2a",display:"flex",alignItems:"center",gap:5}}>
-                    <span style={{width:5,height:5,borderRadius:"50%",background:"#22c55e",display:"inline-block"}}/>
-                    {customTags.length} tag{customTags.length!==1?"s":""}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <OrganizarModal
+            cats={cats} customTags={customTags}
+            onClose={()=>setShowOrganizar(false)}
+            onDeleteCat={async(id)=>{
+              try{
+                await apiFetch(`/api/categories/${id}`,{method:"DELETE"},user?.jwtToken);
+                const fresh=await apiFetch("/api/categories",{},user?.jwtToken);
+                saveCats(Array.isArray(fresh)?fresh:cats.filter(c=>c.id!==id&&c.parentId!==id));
+              }catch{saveCats(cats.filter(c=>c.id!==id&&c.parentId!==id));}
+            }}
+            onCreateCat={async(name,parentId)=>{
+              try{
+                const res=await apiFetch("/api/categories",{method:"POST",body:JSON.stringify({name,parentId:parentId||null,order:cats.filter(c=>!c.parentId).length})},user?.jwtToken);
+                const fresh=await apiFetch("/api/categories",{},user?.jwtToken);
+                saveCats(Array.isArray(fresh)?fresh:[...cats,{id:res.catId,name,parentId:parentId||null,order:0}]);
+              }catch(e){alert("Erro ao criar categoria: "+e);}
+            }}
+            onCreateTag={(tag)=>setCustomTags(prev=>[...prev,tag])}
+            onDeleteTag={(id)=>setCustomTags(prev=>prev.filter(t=>t.id!==id&&t.label!==id))}
+          />
         )}
+
+        
 
         {/* MOBILE SEARCH OVERLAY */}
         {showMobileSearch && (
@@ -4110,6 +4044,205 @@ function MigrationModal({ status, result }) {
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ─── ORGANIZAR MODAL ────────────────────────────────────────────────────────────
+const TAG_COLORS_CYCLE = ["#FF6B6B","#FFB74D","#64B5F6","#81C784","#BA68C8","#F06292","#FF8A65","#90A4AE"];
+
+function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, onCreateTag, onDeleteTag }) {
+  const [newCatName, setNewCatName] = useState("");
+  const [newCatParent, setNewCatParent] = useState("");
+  const [showCreateCat, setShowCreateCat] = useState(false);
+  const [newTagName, setNewTagName] = useState("");
+  const [newTagColor, setNewTagColor] = useState(TAG_COLORS_CYCLE[customTags.length % TAG_COLORS_CYCLE.length]);
+  const [showCreateTag, setShowCreateTag] = useState(false);
+  const [creatingCat, setCreatingCat] = useState(false);
+
+  // Show all cats including orphaned ones (parentId pointing to non-existent cat)
+  const existingIds = new Set(cats.map(c => c.id));
+  const allAsRoots = cats.filter(c => !c.parentId || !existingIds.has(c.parentId));
+
+  async function handleCreateCat() {
+    if (!newCatName.trim()) return;
+    setCreatingCat(true);
+    await onCreateCat(newCatName.trim(), newCatParent||null);
+    setNewCatName(""); setNewCatParent(""); setShowCreateCat(false); setCreatingCat(false);
+  }
+
+  function handleCreateTag() {
+    if (!newTagName.trim()) return;
+    if (customTags.find(t => t.label.toLowerCase() === newTagName.trim().toLowerCase())) {
+      alert("Já existe uma tag com esse nome."); return;
+    }
+    onCreateTag({ id:"t-"+Date.now(), label:newTagName.trim(), color:newTagColor, icon:"◈", count:0 });
+    setNewTagName(""); setShowCreateTag(false);
+    setNewTagColor(TAG_COLORS_CYCLE[(customTags.length+1) % TAG_COLORS_CYCLE.length]);
+  }
+
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" style={{width:"min(880px,95vw)",maxHeight:"88vh",overflowY:"auto",padding:24}} onClick={e=>e.stopPropagation()}>
+        {/* Header */}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
+          <div>
+            <h2 style={{fontSize:20,fontWeight:900,letterSpacing:"-.5px",marginBottom:4}}>Organizar</h2>
+            <p style={{fontSize:12,color:"#555"}}>
+              Categorias dizem <em style={{color:"#e50914",fontStyle:"normal",fontWeight:700}}>onde</em> mora. Tags dizem <em style={{color:"#3b82f6",fontStyle:"normal",fontWeight:700}}>como</em> é.
+            </p>
+          </div>
+          <button className="modal-x" onClick={onClose}><X size={18}/></button>
+        </div>
+
+        {/* Dual pane */}
+        <div style={{display:"flex",gap:16,minHeight:420}}>
+
+          {/* ── CATEGORIES ─────────────────────────────────────────────── */}
+          <div style={{flex:1,background:"#111",border:"1px solid #1a1a1a",borderRadius:10,overflow:"hidden",display:"flex",flexDirection:"column"}}>
+            <div style={{padding:"12px 16px",borderBottom:"1px solid #1a1a1a",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+              <span style={{fontSize:13,fontWeight:800,display:"flex",alignItems:"center",gap:7}}>
+                <span style={{color:"#e50914"}}>□</span> Categorias
+                <span style={{color:"#555",fontWeight:400,fontSize:12}}>{cats.length}</span>
+              </span>
+              <button onClick={()=>setShowCreateCat(s=>!s)}
+                style={{background:"#e50914",border:"none",color:"#fff",cursor:"pointer",padding:"5px 12px",borderRadius:6,fontSize:11,fontWeight:800,fontFamily:"'Inter',sans-serif"}}>
+                {showCreateCat?"✕ Cancelar":"+ Nova"}
+              </button>
+            </div>
+
+            {/* Inline create form */}
+            {showCreateCat && (
+              <div style={{padding:"12px 14px",borderBottom:"1px solid #1a1a1a",background:"#0d0d0d",flexShrink:0}}>
+                <div style={{fontSize:9,fontWeight:800,textTransform:"uppercase",letterSpacing:".7px",color:"#e50914",marginBottom:8}}>NOVA CATEGORIA</div>
+                <select value={newCatParent} onChange={e=>setNewCatParent(e.target.value)}
+                  style={{width:"100%",background:"#111",border:"1px solid #1a1a1a",color:"#fff",padding:"8px 10px",borderRadius:6,fontSize:12,fontFamily:"'Inter',sans-serif",outline:"none",marginBottom:8}}>
+                  <option value="">Nenhuma (pasta raiz)</option>
+                  {cats.filter(c=>!c.parentId||!existingIds.has(c.parentId)).map(c=>(
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <div style={{display:"flex",gap:8}}>
+                  <input value={newCatName} onChange={e=>setNewCatName(e.target.value)}
+                    onKeyDown={e=>e.key==="Enter"&&handleCreateCat()}
+                    placeholder="Nome da categoria..."
+                    autoFocus
+                    style={{flex:1,background:"#111",border:"1px solid #1a1a1a",color:"#fff",padding:"9px 12px",borderRadius:7,fontSize:13,fontFamily:"'Inter',sans-serif",outline:"none"}}/>
+                  <button onClick={handleCreateCat} disabled={creatingCat||!newCatName.trim()}
+                    style={{background:"#e50914",border:"none",color:"#fff",cursor:"pointer",padding:"9px 16px",borderRadius:7,fontSize:12,fontWeight:700,fontFamily:"'Inter',sans-serif",opacity:(creatingCat||!newCatName.trim())?0.4:1}}>
+                    {creatingCat?"...":"Criar"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Category list */}
+            <div style={{flex:1,overflowY:"auto",padding:8}}>
+              {allAsRoots.length===0?(
+                <div style={{textAlign:"center",padding:"32px 16px",color:"#555"}}>
+                  <div style={{fontSize:28,marginBottom:8,opacity:.2}}>□</div>
+                  <div style={{fontSize:13,fontWeight:700,color:"#888",marginBottom:4}}>Nenhuma categoria</div>
+                  <div style={{fontSize:11}}>Clique em "+ Nova" para criar.</div>
+                </div>
+              ):allAsRoots.map(cat=>{
+                const subs = cats.filter(s=>s.parentId===cat.id);
+                return (
+                  <div key={cat.id} style={{marginBottom:4}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:7,background:"#0a0a0a",border:"1px solid #1a1a1a"}}>
+                      <span style={{fontSize:14}}>📁</span>
+                      <span style={{flex:1,fontSize:13,fontWeight:600}}>{cat.name}</span>
+                      <button onClick={()=>{if(confirm(`Excluir "${cat.name}"${subs.length>0?" e suas subcategorias":""  }?`))onDeleteCat(cat.id);}}
+                        style={{background:"none",border:"none",cursor:"pointer",color:"#333",fontSize:12,padding:"2px 6px",borderRadius:4,transition:"all .15s"}}
+                        onMouseEnter={e=>e.target.style.color="#f87171"} onMouseLeave={e=>e.target.style.color="#333"}>🗑</button>
+                    </div>
+                    {subs.map(sub=>(
+                      <div key={sub.id} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px 7px 28px",marginTop:2}}>
+                        <span style={{fontSize:12}}>📁</span>
+                        <span style={{flex:1,fontSize:12,color:"#888"}}>{sub.name}</span>
+                        <button onClick={()=>{if(confirm(`Excluir "${sub.name}"?`))onDeleteCat(sub.id);}}
+                          style={{background:"none",border:"none",cursor:"pointer",color:"#333",fontSize:11,padding:"2px 6px",borderRadius:4}}
+                          onMouseEnter={e=>e.target.style.color="#f87171"} onMouseLeave={e=>e.target.style.color="#333"}>🗑</button>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ── TAGS ───────────────────────────────────────────────────── */}
+          <div style={{flex:1,background:"#111",border:"1px solid #1a1a1a",borderRadius:10,overflow:"hidden",display:"flex",flexDirection:"column"}}>
+            <div style={{padding:"12px 16px",borderBottom:"1px solid #1a1a1a",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+              <span style={{fontSize:13,fontWeight:800,display:"flex",alignItems:"center",gap:7}}>
+                <span style={{color:"#e50914"}}>#</span> Tags
+                <span style={{color:"#555",fontWeight:400,fontSize:12}}>{customTags.length}</span>
+              </span>
+              <button onClick={()=>setShowCreateTag(s=>!s)}
+                style={{background:"#e50914",border:"none",color:"#fff",cursor:"pointer",padding:"5px 12px",borderRadius:6,fontSize:11,fontWeight:800,fontFamily:"'Inter',sans-serif"}}>
+                {showCreateTag?"✕ Cancelar":"+ Nova"}
+              </button>
+            </div>
+
+            {/* Inline tag create form */}
+            {showCreateTag && (
+              <div style={{padding:"12px 14px",borderBottom:"1px solid #1a1a1a",background:"#0d0d0d",flexShrink:0}}>
+                <div style={{fontSize:9,fontWeight:800,textTransform:"uppercase",letterSpacing:".7px",color:"#e50914",marginBottom:8}}>NOVA TAG</div>
+                {/* Color picker */}
+                <div style={{display:"flex",gap:8,marginBottom:10,flexWrap:"wrap"}}>
+                  {TAG_COLORS_CYCLE.map(c=>(
+                    <button key={c} onClick={()=>setNewTagColor(c)}
+                      style={{width:24,height:24,borderRadius:"50%",background:c,border:`2px solid ${c===newTagColor?"#fff":"transparent"}`,cursor:"pointer",transition:"all .15s"}}/>
+                  ))}
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  <input value={newTagName} onChange={e=>setNewTagName(e.target.value)}
+                    onKeyDown={e=>e.key==="Enter"&&handleCreateTag()}
+                    placeholder="Nome da tag..."
+                    autoFocus
+                    style={{flex:1,background:"#111",border:`1px solid ${newTagColor}44`,color:"#fff",padding:"9px 12px",borderRadius:7,fontSize:13,fontFamily:"'Inter',sans-serif",outline:"none"}}/>
+                  <button onClick={handleCreateTag} disabled={!newTagName.trim()}
+                    style={{background:newTagColor,border:"none",color:"#fff",cursor:"pointer",padding:"9px 16px",borderRadius:7,fontSize:12,fontWeight:700,fontFamily:"'Inter',sans-serif",opacity:!newTagName.trim()?0.4:1}}>
+                    Criar
+                  </button>
+                </div>
+                {newTagName && (
+                  <div style={{marginTop:8,display:"inline-flex",alignItems:"center",gap:6,padding:"4px 12px",borderRadius:20,border:`1.5px solid ${newTagColor}`,color:newTagColor,fontSize:11,fontWeight:700}}>
+                    ◈ {newTagName}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Tags list */}
+            <div style={{flex:1,overflowY:"auto",padding:"10px 12px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,alignContent:"start"}}>
+              {customTags.length===0?(
+                <div style={{gridColumn:"1/-1",textAlign:"center",padding:"32px 16px",color:"#555"}}>
+                  <div style={{fontSize:28,marginBottom:8,opacity:.3}}>#</div>
+                  <div style={{fontSize:13,fontWeight:700,color:"#888",marginBottom:4}}>Nenhuma tag ainda</div>
+                  <div style={{fontSize:11,lineHeight:1.5}}>Tags classificam como o item é.<br/>Ex: Favorito, Urgente, Ver depois.</div>
+                </div>
+              ):customTags.map(tag=>(
+                <div key={tag.id||tag.label}
+                  style={{borderLeft:`3px solid ${tag.color}`,background:"#0a0a0a",border:"1px solid #1a1a1a",borderLeft:`3px solid ${tag.color}`,borderRadius:7,padding:"9px 10px",display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{color:tag.color,fontSize:14}}>{tag.icon||"◈"}</span>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:12,fontWeight:700,color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{tag.label}</div>
+                    <div style={{fontSize:10,color:"#555"}}>{tag.count||0} itens</div>
+                  </div>
+                  <button onClick={()=>onDeleteTag(tag.id||tag.label)}
+                    style={{background:"none",border:"none",cursor:"pointer",color:"#333",fontSize:12,padding:"2px 6px",borderRadius:3,transition:"color .15s"}}
+                    onMouseEnter={e=>e.target.style.color="#f87171"} onMouseLeave={e=>e.target.style.color="#333"}>✕</button>
+                </div>
+              ))}
+            </div>
+
+            <div style={{padding:"8px 12px",borderTop:"1px solid #1a1a1a",fontSize:10,color:"#2a2a2a",display:"flex",alignItems:"center",gap:5,flexShrink:0}}>
+              <span style={{width:5,height:5,borderRadius:"50%",background:"#22c55e",display:"inline-block"}}/>
+              {customTags.length} tag{customTags.length!==1?"s":""}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
