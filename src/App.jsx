@@ -4054,23 +4054,13 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
   const [showCreateTag, setShowCreateTag] = useState(false);
   const [creatingCat, setCreatingCat] = useState(false);
 
-  // Build flat list of all cats with their level — shows EVERYTHING
+  // Show EVERY category — no filtering, no tree logic
   const existingIds = new Set(cats.map(c => c.id));
-  function buildFlatList(parentId, depth) {
-    return cats
-      .filter(c => (c.parentId || null) === parentId)
-      .sort((a,b) => a.order - b.order)
-      .flatMap(c => [{...c, _depth: depth}, ...buildFlatList(c.id, depth+1)]);
-  }
-  // True roots: parentId null/empty
-  const trueRoots = cats.filter(c => !c.parentId);
-  // Orphans: parentId set but parent doesn't exist
-  const orphans = cats.filter(c => c.parentId && !existingIds.has(c.parentId));
-  // Build display list: tree from roots + orphans at end
-  const flatCats = [
-    ...buildFlatList(null, 0),
-    ...orphans.map(c => ({...c, _depth: 0, _orphan: true}))
-  ];
+  const flatCats = cats.map(c => ({
+    ...c,
+    _depth: 0,
+    _orphan: !!(c.parentId && !existingIds.has(c.parentId))
+  }));
 
   async function handleCreateCat() {
     if (!newCatName.trim()) return;
