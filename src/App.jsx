@@ -2470,10 +2470,17 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
     // Note: batch update handled by individual CRUD ops; this is just local cache sync
   },[userKey, links, onStatsChange]);
 
-  const saveLinks = useCallback(async v=>{
+  const saveLinks = useCallback(async (v, deletedIds=[])=>{
     setLinks(v);
     try {
       await wlStorage.set(`wl2-links-${userKey}`,JSON.stringify(v));
+      // Sync deletions to backend so they don't come back on next load
+      const jwt = user?.jwtToken;
+      if (jwt && API_URL && deletedIds.length > 0) {
+        for (const id of deletedIds) {
+          apiFetch(`/api/links/${id}`, { method:"DELETE" }, jwt).catch(()=>{});
+        }
+      }
       saveCount.current += 1;
       if (saveCount.current % 10 === 0) {
         await wlStorage.set(`wl2-backup-${userKey}`, JSON.stringify({
@@ -2686,7 +2693,8 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
   const heroTimerRef = useRef(null);
   const heroProgRef  = useRef(null);
 
-  const hero        = heroPool[heroIdx % Math.max(heroPool.length, 1)] || null;
+  // Only show hero when fully loaded and there are valid displayable links
+  const hero        = (!loading && heroPool.length > 0) ? (heroPool[heroIdx % heroPool.length] || null) : null;
   const heroThumb   = hero?.videoId ? ytThumb(hero.videoId,"maxresdefault") : thumbUrl(hero?.rawThumb||"");
   const heroCatName = hero ? cats.find(c=>c.id===hero.categoryId)?.name||"" : "";
   const heroPlat    = hero ? (PLAT[hero.platform]||PLAT.other) : null;
@@ -2938,6 +2946,40 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
             <Breadcrumbs catId={currentCatId} cats={cats} onNavigate={setCurrentCatId}/>
           )}
 
+          {/* If links exist but nothing visible in rows, show a direct all-items view */}
+          {!loading && links.length > 0 && rowData.filter(r=>!r.isOrphaned).length === 0 && !currentCatId && (
+            <div style={{padding:"16px 48px 0",display:"flex",alignItems:"center",gap:12}}>
+              <div style={{background:"rgba(245,166,35,.1)",border:"1px solid rgba(245,166,35,.3)",borderRadius:8,padding:"10px 16px",display:"flex",alignItems:"center",gap:10,color:"#f5a623",fontSize:13}}>
+                <span>⚠</span>
+                <span><strong>{links.length} item{links.length!==1?"s":""}</strong> salvo{links.length!==1?"s":""} sem categoria válida.</span>
+                <button onClick={()=>setShowAdd(true)} style={{background:"rgba(245,166,35,.2)",border:"1px solid rgba(245,166,35,.4)",color:"#f5a623",cursor:"pointer",padding:"4px 12px",borderRadius:5,fontSize:11,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>Adicionar categoria</button>
+              </div>
+            </div>
+          )}
+          {!loading && links.length > 0 && rowData.filter(r=>!r.isOrphaned).length === 0 && !currentCatId && (
+            <div className="row-sec" style={{padding:"8px 0 24px"}}>
+              <div className="row-hdr" style={{padding:"0 48px 8px"}}>
+                <div className="row-hdr-l">
+                  <div className="row-title" style={{color:"#f5a623"}}>Todos os itens</div>
+                  <span style={{fontSize:11,color:"#666",marginLeft:8}}>{links.length} sem categoria</span>
+                </div>
+              </div>
+              <div className="row-scroll-outer row-scroll-wrap" style={{padding:"0 48px"}}>
+                <div className="row-scroll">
+                  {links.map((link,i)=>(
+                    <Card key={link.id} link={link} catIdx={i%6}
+                      onToggle={lnk=>saveLinks(links.map(l=>l.id===lnk?{...l,watched:!l.watched}:l))}
+                      onDelete={id=>saveLinks(links.filter(l=>l.id!==id),[id])}
+                      onEdit={lnk=>setEditLink(lnk)}
+                      onCinema={lnk=>setCinemaLink(lnk)}
+                      onPreviewShow={()=>{}} onPreviewHide={()=>{}}
+                      onDragStart={()=>{}} onDragOver={()=>{}} onDrop={()=>{}} onDragEnd={()=>{}}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
           {loading ? ([0,1,2].map(i=>(
             <div key={i} className="row-sec">
               <div className="row-hdr"><div className="skel" style={{width:200,height:24}}/></div>
