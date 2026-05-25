@@ -280,13 +280,15 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
   transition:border-radius .45s cubic-bezier(.4,0,.2,1) .12s;
 }
 .card:hover{
-  transform:scale(1.62);
+  transform:scale(1.58);
   z-index:200;
-  box-shadow:0 28px 80px rgba(0,0,0,.95), 0 0 0 2px rgba(255,255,255,.14);
+  box-shadow:0 32px 80px rgba(0,0,0,.95),
+             0 0 0 2px #e50914,
+             0 0 40px rgba(229,9,20,.25);
   transition:
-    transform .45s cubic-bezier(.4,0,.2,1) .12s,
-    box-shadow .45s cubic-bezier(.4,0,.2,1) .12s,
-    z-index 0s .12s;
+    transform .3s cubic-bezier(.2,0,0,1) .2s,
+    box-shadow .3s cubic-bezier(.2,0,0,1) .2s,
+    z-index 0s .2s;
 }
 .card:hover .card-bg-wrap{border-radius:8px 8px 0 0;}
 
@@ -314,6 +316,32 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
   padding:10px 12px 12px;
   pointer-events:all;
 }
+/* ── TAG BAR — colored stripe at bottom showing assigned tags ─────────── */
+.card-tag-bar{
+  position:absolute;bottom:0;left:0;right:0;height:3px;
+  display:flex;gap:1px;border-radius:0 0 8px 8px;overflow:hidden;
+  opacity:.7;transition:opacity .3s;
+}
+.card:hover .card-tag-bar{opacity:0;} /* hide when detail panel is open */
+.card-tag-segment{flex:1;height:100%;}
+
+/* Watched overlay */
+.card-watched-overlay{
+  position:absolute;inset:0;
+  background:rgba(0,0,0,.55);
+  display:flex;align-items:center;justify-content:center;
+  border-radius:8px;
+  pointer-events:none;
+  opacity:0;transition:opacity .3s;
+}
+.card.watched-card .card-watched-overlay{opacity:1;}
+.card-watched-check{
+  width:32px;height:32px;border-radius:50%;
+  background:rgba(34,197,94,.9);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;color:#fff;
+}
+
 .card-detail-title{
   font-size:12px;font-weight:700;color:#fff;font-family:'Inter',sans-serif;
   line-height:1.35;margin-bottom:8px;
@@ -1251,13 +1279,15 @@ function Card({ link, catIdx, onPreviewShow, onPreviewHide, onToggle, onDelete, 
   return (
     <div
       ref={ref}
-      className={`card${isDragging?" card-dragging":""}${isDragOver?" card-drag-over":""}`}
+      className={`card${isDragging?" card-dragging":""}${isDragOver?" card-drag-over":""}${link.watched?" watched-card":""}`}
       onMouseEnter={onEnter} onMouseLeave={onLeave} onClick={openUrl}
       draggable onDragStart={e=>onDragStart&&onDragStart(e,link.id)}
       onDragOver={e=>{e.preventDefault();onDragOver&&onDragOver(e,link.id);}}
       onDrop={e=>onDrop&&onDrop(e,link.id)}
       onDragEnd={()=>onDragEnd&&onDragEnd()}
     >
+      {/* card-bg-wrap clips thumbnail while card can overflow for detail panel */}
+      <div className="card-bg-wrap">
       {/* Background gradient */}
       <div className="card-bg" style={{ background: grad }} />
       {/* Thumbnail */}
@@ -1322,6 +1352,16 @@ function Card({ link, catIdx, onPreviewShow, onPreviewHide, onToggle, onDelete, 
 
       {/* Green flash on mark */}
       {justWatched && <div className="card-flash"/>}
+
+      {/* Tag bar — colored stripes at bottom for assigned tags */}
+      {(link.tags||[]).length > 0 && (() => {
+        const TAG_COLORS_MAP = {"Favorito":"#FF6B6B","Urgente":"#FFB74D","Ver depois":"#64B5F6","Recomendado":"#81C784","Em progresso":"#BA68C8"};
+        const colors = (link.tags||[]).map(t=>TAG_COLORS_MAP[t]||"#555");
+        return (<div className="card-tag-bar">{colors.map((c,i)=><div key={i} className="card-tag-segment" style={{background:c}}/>)}</div>);
+      })()}
+      {/* Watched overlay */}
+      {link.watched && <div className="card-watched-overlay"><div className="card-watched-check">✓</div></div>}
+      </div>{/* end card-bg-wrap */}
 
       {/* ── NETFLIX EXPANSION DETAIL PANEL ── */}
       <div className="card-detail" onClick={e=>e.stopPropagation()}>
@@ -2787,7 +2827,6 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
             {[["all","Início"],["unwatched","Para Assistir"],["watched","Assistidos"]].map(([f,l])=>(
               <button key={f} className={`nav-btn${filter===f?" on":""}`} onClick={()=>setFilter(f)}>{l}</button>
             ))}
-            <button className="nav-btn" onClick={()=>setShowCats(true)}>Categorias</button>
             <button className="nav-btn" onClick={()=>setShowOrganizar(true)}>⊞ Organizar</button>
           </nav>
           <div className="hdr-r">
