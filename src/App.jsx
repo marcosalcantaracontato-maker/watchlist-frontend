@@ -224,9 +224,9 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
 .btn-hero-o{background:rgba(255,255,255,.1);color:#fff;border:2px solid rgba(255,255,255,.35);cursor:pointer;padding:13px 32px;border-radius:6px;font-size:15px;font-weight:700;font-family:'Inter',sans-serif;transition:all .2s;display:flex;align-items:center;gap:8px;letter-spacing:.2px;}
 .btn-hero-o:hover{border-color:#fff;background:rgba(255,255,255,.18);}
 .btn-hero-o.done{border-color:#4caf50;color:#4caf50;background:rgba(76,175,80,.1);}
-.hero-empty{height:82vh;min-height:480px;padding-top:64px;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 55%,#111 0%,#0a0a0a 72%);margin-bottom:40px;}
-.hero-empty-inner{text-align:center;max-width:420px;}
-.hero-empty-ico{font-size:60px;margin-bottom:16px;opacity:.15;}
+.hero-empty{height:calc(100vh - 64px);min-height:480px;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 40%,#111 0%,#0a0a0a 70%);}
+.hero-empty-inner{text-align:center;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:0;}
+.hero-empty-ico{font-size:72px;margin-bottom:20px;opacity:.2;}
 .hero-empty-t{font-size:26px;font-weight:800;margin-bottom:8px;font-family:'Inter',sans-serif;letter-spacing:-.5px;}
 .hero-empty-s{font-size:14px;color:#a0a0a0;margin-bottom:28px;line-height:1.65;}
 
@@ -2960,7 +2960,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
         ) : (
           <div className="hero-empty">
             <div className="hero-empty-inner">
-              <div className="hero-empty-ico">🎬</div>
+              <div className="hero-empty-ico">📺</div>
               <div className="hero-empty-t">
                 {links.length > 0 && heroPool.length === 0
                   ? "Organize seus itens em categorias"
@@ -2972,7 +2972,9 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
                   : "Salve vídeos do YouTube, TikTok, Instagram e qualquer URL para assistir depois."}
               </div>
               {(links.length === 0 || heroPool.length > 0) && (
-                <button className="btn-primary" onClick={()=>setShowAdd(true)}><Plus size={14}/>Adicionar primeiro vídeo</button>
+                <button className="btn-primary" style={{padding:"12px 28px",fontSize:15,marginTop:4}} onClick={()=>setShowAdd(true)}>
+                  <Plus size={15}/>Adicionar primeiro vídeo
+                </button>
               )}
             </div>
           </div>
@@ -3037,7 +3039,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
               onCinema={setCinemaLink}
               onReorderLinks={reorderLinks}
             />
-          )) : (
+          )) : links.length === 0 ? null /* hero handles the true empty state */ : (
             <div style={{padding:"72px 48px",textAlign:"center",fontFamily:"'Inter',sans-serif"}}>
               <div style={{fontSize:52,marginBottom:20,opacity:.35}}>
                 {search ? "🔍" : filter==="watched" ? "✅" : "📺"}
@@ -3049,29 +3051,20 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
                     ? "Nenhum vídeo marcado como assistido"
                     : filter==="unwatched"
                       ? "Todos os vídeos foram assistidos 🎉"
-                      : "Sua WatchList está vazia"}
+                      : "Nenhum item nesta categoria"}
               </div>
               <div style={{fontSize:14,color:"#555",lineHeight:1.7,maxWidth:380,margin:"0 auto 28px"}}>
                 {search
                   ? "Tente buscar por outro título, URL ou nota."
                   : filter==="watched"
                     ? "Marque vídeos como assistidos para vê-los aqui."
-                    : "Salve vídeos do YouTube, TikTok e qualquer outro site para assistir depois."}
+                    : "Adicione conteúdos ou mude o filtro."}
               </div>
-              {!search && filter==="all" && (
+              {!search && (
                 <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
                   <button className="btn-primary" style={{padding:"12px 28px"}} onClick={()=>setShowAdd(true)}>
-                    <Plus size={14}/> Adicionar vídeo
+                    <Plus size={14}/> Adicionar
                   </button>
-                  {cats.length===0 && (
-                    <button onClick={()=>setShowCats(true)} style={{
-                      background:"transparent",border:"1px solid #1a1a1a",color:"#a0a0a0",
-                      padding:"12px 24px",borderRadius:6,cursor:"pointer",fontSize:14,fontWeight:600,
-                      fontFamily:"'Inter',sans-serif",display:"flex",alignItems:"center",gap:8,transition:"all .2s"
-                    }}>
-                      <FolderPlus size={14}/> Criar categoria
-                    </button>
-                  )}
                 </div>
               )}
               {search && (
