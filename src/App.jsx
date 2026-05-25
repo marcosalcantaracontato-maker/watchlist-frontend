@@ -2921,7 +2921,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
               </div>
               <div className="hero-empty-s">
                 {links.length > 0 && heroPool.length === 0
-                  ? "Você tem itens salvos mas sem categoria válida. Veja a seção "⚠ Sem Categoria" abaixo para organizá-los ou excluí-los."
+                  ? "Você tem itens salvos mas sem categoria válida. Veja a seção ⚠ Sem Categoria abaixo para organizá-los ou excluí-los."
                   : "Salve vídeos do YouTube, TikTok, Instagram e qualquer URL para assistir depois."}
               </div>
               {(links.length === 0 || heroPool.length > 0) && (
