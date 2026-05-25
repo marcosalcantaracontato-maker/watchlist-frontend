@@ -2383,6 +2383,9 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
   const [showAdvSearch, setShowAdvSearch] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [mobileNavPage, setMobileNavPage] = useState("home");
+  const [showOrganizar, setShowOrganizar] = useState(false);
+  const [orgTab, setOrgTab] = useState("cats"); // "cats" | "tags"
+  const [customTags, setCustomTags] = useState(()=>{try{return JSON.parse(localStorage.getItem("wl-custom-tags")||"[]");}catch{return [];}});
   const [filterPlatform, setFilterPlatform] = useState("all");
   const [filterDate, setFilterDate]         = useState("all");
   const [filterTags, setFilterTags]         = useState([]);
@@ -2399,6 +2402,11 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
   const lastY      = useRef(0);
   const heroSectionRef = useRef(null); // ref to <section class="hero">
   const heroIframeRef  = useRef(null); // ref to hero <iframe>
+
+  // Persist custom tags
+  useEffect(()=>{
+    try{localStorage.setItem("wl-custom-tags", JSON.stringify(customTags));}catch{}
+  },[customTags]);
 
   // Load data — from backend if JWT available, else localStorage
   useEffect(()=>{
@@ -2760,6 +2768,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
               <button key={f} className={`nav-btn${filter===f?" on":""}`} onClick={()=>setFilter(f)}>{l}</button>
             ))}
             <button className="nav-btn" onClick={()=>setShowCats(true)}>Categorias</button>
+            <button className="nav-btn" onClick={()=>setShowOrganizar(true)}>⊞ Organizar</button>
           </nav>
           <div className="hdr-r">
             {/* Desktop: search + filters + add + user */}
@@ -3009,6 +3018,98 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
 
         {/* EDIT MODAL */}
         {editLink && <EditModal link={editLink} categories={cats} onSave={saveEdit} onClose={()=>setEditLink(null)}/>}
+
+        {/* ORGANIZAR MODAL — dual-pane Categorias + Tags */}
+        {showOrganizar && (
+          <div className="modal-bg" onClick={()=>setShowOrganizar(false)}>
+            <div className="modal" style={{width:"min(860px,95vw)",maxHeight:"85vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
+              {/* Header */}
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
+                <div>
+                  <h2 style={{fontSize:20,fontWeight:900,letterSpacing:"-.5px",marginBottom:4}}>Organizar</h2>
+                  <p style={{fontSize:12,color:"#555"}}>
+                    Categorias dizem <em style={{color:"#e50914",fontStyle:"normal",fontWeight:700}}>onde</em> mora. Tags dizem <em style={{color:"#3b82f6",fontStyle:"normal",fontWeight:700}}>como</em> é.
+                  </p>
+                </div>
+                <button className="modal-x" onClick={()=>setShowOrganizar(false)}><X size={18}/></button>
+              </div>
+
+              {/* Dual-pane */}
+              <div style={{display:"flex",gap:16,minHeight:400}}>
+                {/* CATEGORIES */}
+                <div style={{flex:1,background:"#111",border:"1px solid #1a1a1a",borderRadius:10,overflow:"hidden",display:"flex",flexDirection:"column"}}>
+                  <div style={{padding:"12px 16px",borderBottom:"1px solid #1a1a1a",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                    <span style={{fontSize:13,fontWeight:800,display:"flex",alignItems:"center",gap:7}}>
+                      <span style={{color:"#e50914"}}>□</span> Categorias <span style={{color:"#555",fontWeight:400}}>{cats.length}</span>
+                    </span>
+                    <button onClick={()=>setShowCats(true)} style={{background:"#e50914",border:"none",color:"#fff",cursor:"pointer",padding:"5px 12px",borderRadius:6,fontSize:11,fontWeight:800,fontFamily:"'Inter',sans-serif"}}>+ Nova</button>
+                  </div>
+                  <div style={{flex:1,overflowY:"auto",padding:"8px"}}>
+                    {cats.filter(c=>!c.parentId).map(cat=>{
+                      const subs=cats.filter(s=>s.parentId===cat.id);
+                      return (
+                        <div key={cat.id} style={{marginBottom:4}}>
+                          <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:7,background:"#0a0a0a",border:"1px solid #1a1a1a"}}>
+                            <span style={{fontSize:14}}>📁</span>
+                            <span style={{flex:1,fontSize:13,fontWeight:600}}>{cat.name}</span>
+                          </div>
+                          {subs.map(sub=>(
+                            <div key={sub.id} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px 7px 28px",borderRadius:7,marginTop:2,background:"transparent",border:"1px solid transparent"}}>
+                              <span style={{fontSize:12}}>📁</span>
+                              <span style={{flex:1,fontSize:12,color:"#888"}}>{sub.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div style={{padding:"8px 12px",borderTop:"1px solid #1a1a1a",fontSize:10,color:"#2a2a2a",textAlign:"center"}}>
+                    Gerenciamento completo nas Categorias
+                  </div>
+                </div>
+
+                {/* TAGS */}
+                <div style={{flex:1,background:"#111",border:"1px solid #1a1a1a",borderRadius:10,overflow:"hidden",display:"flex",flexDirection:"column"}}>
+                  <div style={{padding:"12px 16px",borderBottom:"1px solid #1a1a1a",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                    <span style={{fontSize:13,fontWeight:800,display:"flex",alignItems:"center",gap:7}}>
+                      <span style={{color:"#3b82f6"}}>#</span> Tags <span style={{color:"#555",fontWeight:400}}>{customTags.length}</span>
+                    </span>
+                    <button onClick={()=>{
+                      const name=prompt("Nome da nova tag:");
+                      if(!name?.trim())return;
+                      const COLORS=["#FF6B6B","#FFB74D","#64B5F6","#81C784","#BA68C8","#F06292","#FF8A65","#90A4AE"];
+                      const color=COLORS[customTags.length%COLORS.length];
+                      setCustomTags(prev=>[...prev,{id:"t-"+Date.now(),label:name.trim(),color,icon:"◈",count:0}]);
+                    }} style={{background:"#3b82f6",border:"none",color:"#fff",cursor:"pointer",padding:"5px 12px",borderRadius:6,fontSize:11,fontWeight:800,fontFamily:"'Inter',sans-serif"}}>+ Nova</button>
+                  </div>
+                  <div style={{flex:1,overflowY:"auto",padding:"10px 12px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,alignContent:"start"}}>
+                    {customTags.length===0?(
+                      <div style={{gridColumn:"1/-1",textAlign:"center",padding:"32px 16px",color:"#555"}}>
+                        <div style={{fontSize:28,marginBottom:8,opacity:.3}}>#</div>
+                        <div style={{fontSize:13,fontWeight:700,color:"#888",marginBottom:4}}>Nenhuma tag ainda</div>
+                        <div style={{fontSize:11,lineHeight:1.5}}>Crie tags para classificar como um item é.<br/>Ex: Favorito, Urgente, Ver depois.</div>
+                      </div>
+                    ):customTags.map(tag=>(
+                      <div key={tag.id||tag.label} style={{borderLeft:`3px solid ${tag.color}`,background:"#0a0a0a",border:`1px solid #1a1a1a`,borderLeft:`3px solid ${tag.color}`,borderRadius:7,padding:"9px 10px",display:"flex",alignItems:"center",gap:8,transition:"all .15s",cursor:"default"}}>
+                        <span style={{color:tag.color,fontSize:14}}>{tag.icon||"◈"}</span>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontSize:12,fontWeight:700,color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{tag.label}</div>
+                          <div style={{fontSize:10,color:"#555"}}>{tag.count||0} itens</div>
+                        </div>
+                        <button onClick={()=>setCustomTags(prev=>prev.filter(t=>t.id!==tag.id&&t.label!==tag.label))}
+                          style={{background:"none",border:"none",cursor:"pointer",color:"#333",fontSize:11,padding:"2px 4px",borderRadius:3}}>✕</button>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{padding:"8px 12px",borderTop:"1px solid #1a1a1a",fontSize:10,color:"#2a2a2a",display:"flex",alignItems:"center",gap:5}}>
+                    <span style={{width:5,height:5,borderRadius:"50%",background:"#22c55e",display:"inline-block"}}/>
+                    {customTags.length} tag{customTags.length!==1?"s":""}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* MOBILE SEARCH OVERLAY */}
         {showMobileSearch && (
