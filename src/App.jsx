@@ -1477,7 +1477,7 @@ function Popup({ link, rect, catIdx, onToggle, onDelete, onEnter, onLeave, onCin
 }
 
 // ─── ROW ──────────────────────────────────────────────────────────────────────
-function Row({ cat, subCats=[], links, catIdx, allCats, allLinks, onToggle, onDelete, onEdit, onPreviewShow, onPreviewHide, onNavigate, onCinema, onReorderLinks }) {
+function Row({ cat, subCats=[], links, catIdx, isOrphaned, allCats, allLinks, onToggle, onDelete, onEdit, onPreviewShow, onPreviewHide, onNavigate, onCinema, onReorderLinks }) {
   const ref = useRef(null);
   const scroll = dir => ref.current?.scrollBy({left:dir*580,behavior:"smooth"});
   const wd = links.filter(l=>l.watched).length;
@@ -1500,8 +1500,9 @@ function Row({ cat, subCats=[], links, catIdx, allCats, allLinks, onToggle, onDe
     <div className="row-sec">
       <div className="row-hdr">
         <div className="row-hdr-l">
-          <div className="row-title" onClick={() => onNavigate && subCats.length > 0 && onNavigate(cat.id)} style={subCats.length>0?{cursor:"pointer"}:{}}>
+          <div className="row-title" onClick={() => onNavigate && subCats.length > 0 && onNavigate(cat.id)} style={{...(subCats.length>0?{cursor:"pointer"}:{}),color:isOrphaned?"#f5a623":""}}>
             {cat.name}
+            {isOrphaned && <span style={{fontSize:11,color:"#666",marginLeft:8,fontWeight:400}}>— selecione um item e exclua com o botão 🗑</span>}
           </div>
           {links.length > 0 && <div className="row-cnt">{wd} de {links.length} assistidos</div>}
           {subCats.length > 0 && <div className="row-cnt" style={{color:"#f5a623"}}>{subCats.length} pasta{subCats.length!==1?"s":""}</div>}
@@ -2623,12 +2624,19 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
     if (currentCatId === null) {
       // ROOT: top-level categories, each row shows subfolders + direct links
       const roots = cats.filter(c => !c.parentId).sort((a,b) => a.order-b.order);
-      return roots.map((cat, ci) => {
+      const rows = roots.map((cat, ci) => {
         const subCats = cats.filter(c => c.parentId === cat.id).sort((a,b) => a.order-b.order);
         const catLinks = shown.filter(l => l.categoryId === cat.id);
         if (subCats.length === 0 && catLinks.length === 0 && search) return null;
         return { cat, subCats, links: catLinks, catIdx: ci };
       }).filter(Boolean);
+      // Orphaned links (categoryId not matching any existing category)
+      const catIds = new Set(cats.map(c => c.id));
+      const orphaned = shown.filter(l => !catIds.has(l.categoryId));
+      if (orphaned.length > 0) {
+        rows.push({ cat: { id:"__orphaned__", name:"⚠ Sem Categoria (itens para excluir)", parentId:null, order:9999 }, subCats:[], links:orphaned, catIdx:rows.length, isOrphaned:true });
+      }
+      return rows;
     } else {
       // INSIDE A FOLDER: show its subfolders as rows + direct links row
       const parentCat = cats.find(c => c.id === currentCatId);
@@ -2654,17 +2662,21 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
     }
   }, [cats, shown, currentCatId, search]);
 
-  // ── Hero pool: top-5 recently-added unwatched (fallback: recently added) ──
+  // ── Hero pool: only links with VALID category (not orphaned) ──────────────
   const heroPool = useMemo(() => {
-    const unwatched = [...links]
+    const catIds = new Set(cats.map(c => c.id));
+    // Only links whose category actually exists in our cats list
+    const validLinks = links.filter(l => catIds.has(l.categoryId));
+    if (validLinks.length === 0) return []; // no valid links = no hero
+    const unwatched = [...validLinks]
       .filter(l => !l.watched)
       .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, 5);
     if (unwatched.length > 0) return unwatched;
-    return [...links]
+    return [...validLinks]
       .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, 5);
-  }, [links]);
+  }, [links, cats]);
 
   const [heroIdx,        setHeroIdx]        = useState(0);
   const [heroMuted,      setHeroMuted]      = useState(true);
@@ -2902,9 +2914,19 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
           <div className="hero-empty">
             <div className="hero-empty-inner">
               <div className="hero-empty-ico">🎬</div>
-              <div className="hero-empty-t">Sua WatchList está vazia</div>
-              <div className="hero-empty-s">Salve vídeos do YouTube, TikTok, Instagram e qualquer URL para assistir depois.</div>
-              <button className="btn-primary" onClick={()=>setShowAdd(true)}><Plus size={14}/>Adicionar primeiro vídeo</button>
+              <div className="hero-empty-t">
+                {links.length > 0 && heroPool.length === 0
+                  ? "Organize seus itens em categorias"
+                  : "Sua WatchList está vazia"}
+              </div>
+              <div className="hero-empty-s">
+                {links.length > 0 && heroPool.length === 0
+                  ? "Você tem itens salvos mas sem categoria válida. Veja a seção "⚠ Sem Categoria" abaixo para organizá-los ou excluí-los."
+                  : "Salve vídeos do YouTube, TikTok, Instagram e qualquer URL para assistir depois."}
+              </div>
+              {(links.length === 0 || heroPool.length > 0) && (
+                <button className="btn-primary" onClick={()=>setShowAdd(true)}><Plus size={14}/>Adicionar primeiro vídeo</button>
+              )}
             </div>
           </div>
         )}
@@ -2924,8 +2946,9 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
                 {[0,1,2,3].map(j=><div key={j} className="skel" style={{flex:"0 0 280px",height:157}}/>)}
               </div>
             </div>
-          ))) : rowData.length>0 ? rowData.map(({cat,subCats,links:ls,catIdx})=>(
+          ))) : rowData.length>0 ? rowData.map(({cat,subCats,links:ls,catIdx,isOrphaned})=>(
             <Row key={cat.id} cat={cat} subCats={subCats||[]} links={ls} catIdx={catIdx}
+              isOrphaned={!!isOrphaned}
               allCats={cats} allLinks={links}
               onToggle={toggleWatched} onDelete={deleteLink} onEdit={setEditLink}
               onPreviewShow={showPopup} onPreviewHide={startHide}
