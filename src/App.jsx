@@ -1532,7 +1532,7 @@ function Row({ cat, subCats=[], links, catIdx, isOrphaned, allCats, allLinks, on
                     onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} onCinema={onCinema}
                     onDragStart={handleLinkDragStart} onDragOver={handleLinkDragOver}
                     onDrop={handleLinkDrop} onDragEnd={handleLinkDragEnd}
-                    isDragging={dragLinkId===l.id} isDragOver={dragOverLinkId===l.id}
+                    isDragging={dragLinkId===l.id} isDragOver={false}
                   />
                 ))}
               </>
@@ -2407,7 +2407,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
       <div className="wl">
 
         {/* HEADER */}
-        <header className={`hdr ${headerUp?"up":"dn"}`}>
+        <header className={"hdr up"}>
           <div className="logo" onClick={()=>window.location.reload()} style={{cursor:"pointer"}}>Watch<em>List</em></div>
           <nav className="nav">
             {[["all","Início"],["unwatched","Para Assistir"],["watched","Assistidos"]].map(([f,l])=>(
@@ -2422,7 +2422,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
               <span className="srch-ico"><Search size={14}/></span>
             </div>
             <button
-              className={`filter-chip${showAdvSearch?" on":""}`}
+              className="filter-chip"
               style={{border:"1.5px solid",fontSize:12,padding:"7px 14px",borderRadius:6,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontWeight:600}}
               onClick={()=>setShowAdvSearch(s=>!s)}
               title="Filtros avançados"
@@ -2442,37 +2442,6 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
             </button>
           </div>
         </header>
-
-        {/* ADVANCED SEARCH PANEL */}
-        {showAdvSearch && (
-          <div className="advsearch" style={{marginTop:64}}>
-            <span className="filter-label">Plataforma:</span>
-            {["all","youtube","tiktok","instagram","twitter","twitch"].map(p=>(
-              <button key={p} className={`filter-chip${filterPlatform===p?" on":""}`} onClick={()=>setFilterPlatform(p)}>
-                {p==="all"?"Todas":(PLAT[p]?.label||p)}
-              </button>
-            ))}
-            <div className="filter-sep"/>
-            <span className="filter-label">Período:</span>
-            {[["all","Tudo"],["week","Semana"],["month","Mês"]].map(([v,l])=>(
-              <button key={v} className={`filter-chip${filterDate===v?" on":""}`} onClick={()=>setFilterDate(v)}>{l}</button>
-            ))}
-            <div className="filter-sep"/>
-            <span className="filter-label">Tags:</span>
-            {(()=>{try{return JSON.parse(localStorage.getItem("wl-custom-tags")||"[]");}catch{return[];}})().map(pt=>(
-              <button key={pt.label} className={`filter-chip${filterTags.includes(pt.label)?" on":""}`}
-                onClick={()=>setFilterTags(prev=>prev.includes(pt.label)?prev.filter(t=>t!==pt.label):[...prev,pt.label])}
-                style={filterTags.includes(pt.label)?{borderColor:pt.color,color:pt.color,background:pt.color+"18"}:{}}
-              >{pt.label}</button>
-            ))}
-            {(filterPlatform!=="all"||filterDate!=="all"||filterTags.length>0) && (
-              <button className="filter-chip" style={{color:"#f87171",borderColor:"rgba(248,113,113,.3)"}}
-                onClick={()=>{setFilterPlatform("all");setFilterDate("all");setFilterTags([]);}}>
-                ✕ Limpar filtros
-              </button>
-            )}
-          </div>
-        )}
 
         {/* HERO */}
         {loading ? (
@@ -2750,41 +2719,9 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
 
         
 
-        {/* MOBILE SEARCH OVERLAY */}
-        {showMobileSearch && (
-          <div className="mobile-search-overlay">
-            <div className="mobile-search-header">
-              <input
-                className="mobile-search-input"
-                placeholder="Buscar vídeos, URLs, notas..."
-                value={search}
-                onChange={e=>setSearch(e.target.value)}
-                autoFocus
-              />
-              <button className="mobile-search-cancel" onClick={()=>setShowMobileSearch(false)}>
-                Cancelar
-              </button>
-            </div>
-            {/* Filter chips */}
-            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-              {["all","youtube","tiktok","instagram","twitter"].map(p=>(
-                <button key={p} className={`filter-chip${filterPlatform===p?" on":""}`}
-                  onClick={()=>setFilterPlatform(p)}>
-                  {p==="all"?"Todas":(PLAT[p]?.label||p)}
-                </button>
-              ))}
-            </div>
-            {search && (
-              <div style={{marginTop:20,color:"#555",fontSize:13,fontFamily:"'Inter',sans-serif",textAlign:"center"}}>
-                Mostrando resultados para <strong style={{color:"#fff"}}>"{search}"</strong>
-              </div>
-            )}
-          </div>
-        )}
-
         {/* BOTTOM NAV — mobile only */}
         <BottomNav
-          activePage={mobileNavPage}
+          activePage="home"
           onHome={()=>{ setFilter("all"); setSearch(""); }}
           onSearch={()=>{ }}
           onAdd={()=>{ setShowAdd(true); }}
@@ -4020,7 +3957,7 @@ export default function App() {
     <>
       {/* Migration overlay — aparece automaticamente durante migração */}
       {migrationStatus && (
-        <MigrationModal status={migrationStatus} result={migrationResult}/>
+        <MigrationModal status={migrationStatus} result={null}/>
       )}
 
       {page === "landing"    && <LandingPage onGetStarted={()=>setPage("login")}/>}
