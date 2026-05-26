@@ -3272,7 +3272,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
 
         {/* BOTTOM NAV — mobile only */}
         <BottomNav
-          activePage={mobileNavPage}
+          activePage={filter==="unwatched"?"watch":filter==="watched"?"watched":"home"}
           onHome={()=>{ setFilter("all"); setSearch(""); }}
           onSearch={()=>{ setShowMobileSearch(true); }}
           onAdd={()=>{ setShowAdd(true); }}
