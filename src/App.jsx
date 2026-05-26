@@ -3200,14 +3200,18 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
                   headers: jwt ? { Authorization: `Bearer ${jwt}` } : {}
                 });
                 const body = await res.json().catch(() => ({}));
+                console.log("[WL Delete]", res.status, JSON.stringify(body));
                 if (!res.ok || body.deleted === 0) {
-                  console.error("Delete failed — server:", res.status, body);
-                  // Rollback: re-fetch real state from server
+                  console.error("[WL Delete] FAILED — status:", res.status, "body:", body);
+                  // Show visible error so user knows
+                  const errMsg = `Erro ao deletar (${res.status}). Motivo: ${JSON.stringify(body)}`;
+                  alert(errMsg);
+                  // Rollback
                   const fresh = await apiFetch("/api/categories", {}, jwt).catch(() => null);
                   if (fresh) saveCats(fresh);
                   return;
                 }
-                // Confirmed deleted — keep optimistic state and sync extension
+                console.log("[WL Delete] SUCCESS — deleted:", body.deleted);
                 try { new BroadcastChannel("watchlist-sync").postMessage({type:"CATS_UPDATED", cats: cats.filter(c=>!toRemove.has(c.id))}); }catch{}
               } catch(e) { console.error("Delete network error:", e); }
             }}
