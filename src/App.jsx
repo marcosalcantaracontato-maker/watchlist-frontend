@@ -2466,8 +2466,9 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
     try{localStorage.setItem("wl-custom-tags", JSON.stringify(customTags));}catch{}
   },[customTags]);
 
-  // Listen for tag updates pushed by extension via content.js StorageEvent
+  // Listen for tag updates from extension + listen for extension link additions
   useEffect(()=>{
+    // StorageEvent: extension pushed tags via content.js
     const onStorage = (e) => {
       if(e.key === "wl-custom-tags" && e.newValue){
         try{
@@ -2477,7 +2478,27 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
       }
     };
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+
+    // BroadcastChannel: receive all sync events from extension
+    let bc;
+    try {
+      bc = new BroadcastChannel("watchlist-sync");
+      bc.onmessage = (e) => {
+        const {type} = e.data || {};
+        if(type === "EXT_LINK_ADDED") {
+          // Extension saved a new link — refresh links list
+          freshLinks && freshLinks();
+        }
+        if(type === "CATS_UPDATED" && Array.isArray(e.data.cats)) {
+          setCats(e.data.cats);
+        }
+      };
+    } catch{}
+
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      try { bc?.close(); } catch{}
+    };
   }, []);
 
   // Load data — from backend if JWT available, else localStorage
@@ -2543,6 +2564,8 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
 
   const saveLinks = useCallback(async (v, deletedIds=[])=>{
     setLinks(v);
+    // Broadcast to extension immediately
+    try { new BroadcastChannel("watchlist-sync").postMessage({type:"LINKS_UPDATED",links:v}); }catch{}
     try {
       await wlStorage.set(`wl2-links-${userKey}`,JSON.stringify(v));
       // Sync deletions to backend so they don't come back on next load
@@ -3154,33 +3177,35 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
             onClose={()=>setShowOrganizar(false)}
             onDeleteCat={async(id)=>{
               const jwt = user?.jwtToken;
-              // Backend handles cascade automatically — just DELETE the parent once
-              // Optimistic: remove parent + all its descendants from UI immediately
-              const allDescendants = (pid) => cats
-                .filter(c => c.parentId === pid)
-                .flatMap(c => [c.id, ...allDescendants(c.id)]);
-              const toRemove = new Set([id, ...allDescendants(id)]);
+              // Iterative BFS to collect all descendants (avoids stack overflow on circular refs)
+              const toRemove = new Set([id]);
+              const queue = [id];
+              while (queue.length > 0) {
+                const pid = queue.shift();
+                cats.forEach(c => {
+                  if (c.parentId === pid && !toRemove.has(c.id)) {
+                    toRemove.add(c.id);
+                    queue.push(c.id);
+                  }
+                });
+              }
+              // Optimistic UI update
               saveCats(cats.filter(c => !toRemove.has(c.id)));
-              // Single DELETE call — server cascades children+links
+              // Single DELETE — backend handles cascade
               try {
                 const res = await fetch(`${API_URL}/api/categories/${id}`, {
                   method: "DELETE",
                   headers: jwt ? { Authorization: `Bearer ${jwt}` } : {}
                 });
                 if (!res.ok) {
-                  const msg = await res.text().catch(() => res.status);
-                  console.error("Delete category failed:", res.status, msg);
-                  // Rollback optimistic update
-                  const fresh = await apiFetch("/api/categories", {}, jwt).catch(() => null);
+                  console.error("Delete failed:", res.status, await res.text().catch(()=>""));
+                  const fresh = await apiFetch("/api/categories",{},jwt).catch(()=>null);
                   if (fresh) saveCats(fresh);
                   return;
                 }
-                // Success — sync to extension via BroadcastChannel
                 const updated = cats.filter(c => !toRemove.has(c.id));
-                try { new BroadcastChannel("watchlist-sync").postMessage({type:"CATS_UPDATED", cats: updated}); } catch{}
-              } catch(e) {
-                console.error("Network error on delete:", e);
-              }
+                try { new BroadcastChannel("watchlist-sync").postMessage({type:"CATS_UPDATED",cats:updated}); }catch{}
+              } catch(e) { console.error("Delete network error:", e); }
             }}
             onCreateCat={async(name,parentId)=>{
               try{
