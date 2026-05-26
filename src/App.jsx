@@ -2556,6 +2556,8 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
 
   const saveCats = useCallback(async v=>{
     setCats(v);
+    // Write sync key so content.js picks it up and pushes to extension
+    try { localStorage.setItem("wl-cats-sync", JSON.stringify(v)); } catch{}
     try { await wlStorage.set(`wl2-cats-${userKey}`,JSON.stringify(v)); } catch{}
     onStatsChange?.({ cats: v, links });
     // Sync to backend in background (best effort)
