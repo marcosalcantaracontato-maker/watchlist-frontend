@@ -2498,20 +2498,20 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
         const savedCats  = rc?.value ? JSON.parse(rc.value)  : null;
         const savedLinks = rl?.value ? JSON.parse(rl.value) : null;
         if (savedCats  && Array.isArray(savedCats))  setCats(savedCats);
-        else setCats(SAMPLE_CATS);
+        else setCats([]);
         if (savedLinks && Array.isArray(savedLinks)) setLinks(savedLinks);
-        else setLinks(SAMPLE_LINKS);
+        else setLinks([]);
         if (lc?.value) lastCatRef.current = lc.value;
         if (!savedCats || !savedLinks) {
           try {
-            await wlStorage.set(`wl2-cats-${userKey}`,  JSON.stringify(SAMPLE_CATS));
-            await wlStorage.set(`wl2-links-${userKey}`, JSON.stringify(SAMPLE_LINKS));
+            await wlStorage.set(`wl2-cats-${userKey}`,  JSON.stringify([]));
+            await wlStorage.set(`wl2-links-${userKey}`, JSON.stringify([]));
           } catch{}
         }
       } catch(e) {
         console.warn("WatchList storage error:", e);
-        setCats(SAMPLE_CATS);
-        setLinks(SAMPLE_LINKS);
+        setCats([]);
+        setLinks([]);
       }
       if (!cancelled) setLoading(false);
     })();
@@ -3139,40 +3139,40 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
             cats={cats} customTags={customTags}
             onClose={()=>setShowOrganizar(false)}
             onDeleteCat={async(id)=>{
-              // Collect ALL descendants recursively (deepest first)
+              const jwt = user?.jwtToken;
+              // Collect ALL descendants recursively — deepest first so FK constraints pass
               function getDescendants(parentId) {
-                const children = cats.filter(c => c.parentId === parentId);
-                return children.flatMap(c => [...getDescendants(c.id), c.id]);
+                return cats
+                  .filter(c => c.parentId === parentId)
+                  .flatMap(c => [...getDescendants(c.id), c.id]);
               }
               const toDelete = [...getDescendants(id), id];
-              // Optimistic: remove from UI immediately
+              // Immediate optimistic UI update
               saveCats(cats.filter(c => !toDelete.includes(c.id)));
-              // Delete from backend sequentially — deepest children first
-              let anyFailed = false;
+              // Sequential deletes: children → parent
               for(const catId of toDelete){
-                try{
-                  await apiFetch(`/api/categories/${catId}`,{method:"DELETE"},user?.jwtToken);
-                }catch(e){
-                  console.warn("DELETE /api/categories/"+catId+" failed:", e?.message||e);
-                  // Try with force param in case backend needs it
-                  try{
-                    await apiFetch(`/api/categories/${catId}?force=true`,{method:"DELETE"},user?.jwtToken);
-                  }catch(e2){
-                    console.warn("Force delete also failed:", e2?.message||e2);
-                    anyFailed = true;
+                try {
+                  const res = await fetch(API_URL + `/api/categories/${catId}`, {
+                    method: "DELETE",
+                    headers: { "Content-Type":"application/json", ...(jwt?{Authorization:`Bearer ${jwt}`}:{}) }
+                  });
+                  if(!res.ok) {
+                    const body = await res.text().catch(()=>"");
+                    console.warn(`DELETE ${catId} → ${res.status}:`, body);
                   }
+                } catch(e) {
+                  console.warn("Network error deleting", catId, e);
                 }
               }
-              // Re-fetch to confirm state
-              try{
-                const fresh = await apiFetch("/api/categories",{},user?.jwtToken);
-                if(Array.isArray(fresh)){
+              // Re-fetch truth from server
+              try {
+                const fresh = await apiFetch("/api/categories", {}, jwt);
+                if(Array.isArray(fresh)) {
                   saveCats(fresh);
-                  try{ new BroadcastChannel("watchlist-sync").postMessage({type:"CATS_UPDATED",cats:fresh}); }catch{}
+                  try { new BroadcastChannel("watchlist-sync").postMessage({type:"CATS_UPDATED",cats:fresh}); } catch{}
                 }
-              }catch{}
-              if(anyFailed){
-                alert("Algumas categorias não puderam ser excluídas pelo servidor. Tente novamente.");
+              } catch(e) {
+                console.warn("Re-fetch after delete failed:", e);
               }
             }}
             onCreateCat={async(name,parentId)=>{
@@ -4155,7 +4155,7 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
     <>
     {confirmState && <ConfirmModal message={confirmState.message} onConfirm={confirmState.onConfirm} onCancel={()=>setConfirmState(null)}/>}
     <div className="modal-bg" onClick={onClose}>
-      <div className="modal" style={{width:"min(880px,95vw)",maxHeight:"88vh",overflowY:"auto",padding:24}} onClick={e=>e.stopPropagation()}>
+      <div className="modal" style={{width:"min(1100px,96vw)",maxHeight:"92vh",overflowY:"auto",padding:28}} onClick={e=>e.stopPropagation()}>
         {/* Header */}
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
           <div>
@@ -4168,7 +4168,7 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
         </div>
 
         {/* Dual pane */}
-        <div style={{display:"flex",gap:16,minHeight:420}}>
+        <div style={{display:"flex",gap:16,minHeight:520}}>
 
           {/* ── CATEGORIES ─────────────────────────────────────────────── */}
           <div style={{flex:1,background:"#111",border:"1px solid #1a1a1a",borderRadius:10,overflow:"hidden",display:"flex",flexDirection:"column"}}>
@@ -4283,7 +4283,7 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
             )}
 
             {/* Tags list */}
-            <div style={{flex:1,overflowY:"auto",padding:"10px 12px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,alignContent:"start"}}>
+            <div style={{flex:1,overflowY:"auto",padding:"10px 12px",display:"grid",gridTemplateColumns:"1fr",gap:6,alignContent:"start"}}>
               {customTags.length===0?(
                 <div style={{gridColumn:"1/-1",textAlign:"center",padding:"32px 16px",color:"#555"}}>
                   <div style={{fontSize:28,marginBottom:8,opacity:.3}}>#</div>
@@ -4292,11 +4292,11 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
                 </div>
               ):customTags.map(tag=>(
                 <div key={tag.id||tag.label}
-                  style={{borderLeft:`3px solid ${tag.color}`,background:"#0a0a0a",border:"1px solid #1a1a1a",borderLeft:`3px solid ${tag.color}`,borderRadius:7,padding:"9px 10px",display:"flex",alignItems:"center",gap:8}}>
-                  <span style={{color:tag.color,fontSize:14}}>{tag.icon||"◈"}</span>
+                  style={{borderLeft:`3px solid ${tag.color}`,background:"#0f0f0f",border:"1px solid #1a1a1a",borderLeft:`3px solid ${tag.color}`,borderRadius:8,padding:"12px 14px",display:"flex",alignItems:"center",gap:12}}>
+                  <span style={{color:tag.color,fontSize:18,flexShrink:0}}>{tag.icon||"◈"}</span>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:12,fontWeight:700,color:"#fff",wordBreak:"break-word",lineHeight:1.3}}>{tag.label}</div>
-                    <div style={{fontSize:10,color:"#555"}}>{tag.count||0} itens</div>
+                    <div style={{fontSize:14,fontWeight:700,color:"#fff",whiteSpace:"normal",lineHeight:1.4,wordBreak:"break-word"}}>{tag.label}</div>
+                    <div style={{fontSize:11,color:"#555",marginTop:2}}>{tag.count||0} itens</div>
                   </div>
                   <button onClick={()=>askConfirm(`Excluir tag "${tag.label}"?`, ()=>{ setConfirmState(null); onDeleteTag(tag.id||tag.label); })}
                     style={{background:"none",border:"none",cursor:"pointer",color:"#333",fontSize:12,padding:"2px 6px",borderRadius:3,transition:"color .15s"}}
