@@ -2423,6 +2423,12 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
   const [showAdvSearch, setShowAdvSearch] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [showOrganizar, setShowOrganizar] = useState(false);
+  // Notes
+  const [notes, setNotes] = useState([]);
+  const [selectedNoteId, setSelectedNoteId] = useState(null);
+  const [noteFilter, setNoteFilter] = useState("inbox");
+  const [noteSearch, setNoteSearch] = useState("");
+  const [appPage, setAppPage] = useState("home"); // "home" | "notes"
   // Re-fetch cats from backend whenever Organizar modal opens
   useEffect(() => {
     if (!showOrganizar) return;
@@ -2432,6 +2438,12 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
       .then(fresh => { if (Array.isArray(fresh)) saveCats(fresh); })
       .catch(() => {});
   }, [showOrganizar]);
+
+  // Load notes when notes page opens
+  useEffect(() => {
+    if (appPage !== "notes") return;
+    freshNotes();
+  }, [appPage]);
   const [orgTab, setOrgTab] = useState("cats"); // "cats" | "tags"
   const [customTags, setCustomTags] = useState(()=>{try{return JSON.parse(localStorage.getItem("wl-custom-tags")||"[]");}catch{return [];}});
   const [filterPlatform, setFilterPlatform] = useState("all");
@@ -2890,6 +2902,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
             {[["all","Início"],["unwatched","Para Assistir"],["watched","Assistidos"]].map(([f,l])=>(
               <button key={f} className={`nav-btn${filter===f?" on":""}`} onClick={()=>setFilter(f)}>{l}</button>
             ))}
+            <button className={`nav-btn${appPage==="notes"?" on":""}`} onClick={()=>setAppPage("notes")}>📝 Notas</button>
             <button className="nav-btn" onClick={()=>setShowOrganizar(true)}>⊞ Organizar</button>
           </nav>
           <div className="hdr-r">
@@ -2951,6 +2964,19 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
           </div>
         )}
 
+        {/* ── NOTES PAGE ── */}
+        {appPage === "notes" && (
+          <NotesPage
+            notes={notes} links={links} cats={cats}
+            selectedNoteId={selectedNoteId} setSelectedNoteId={setSelectedNoteId}
+            filter={noteFilter} setFilter={setNoteFilter}
+            search={noteSearch} setSearch={setNoteSearch}
+            jwt={user?.jwtToken} onRefresh={freshNotes}
+          />
+        )}
+
+        {/* HERO (hidden when notes page open) */}
+        {appPage !== "notes" && <div style={{display:"contents"}}>
         {/* HERO */}
         {loading ? (
           <div className="skel-hero"/>
@@ -3179,7 +3205,9 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
         {/* EDIT MODAL */}
         {editLink && <EditModal link={editLink} categories={cats} onSave={saveEdit} onClose={()=>setEditLink(null)}/>}
 
-                {/* ORGANIZAR MODAL — dual-pane Categorias + Tags */}
+        </div> /* end non-notes content */}
+
+        {/* ORGANIZAR MODAL — dual-pane Categorias + Tags */}
         {showOrganizar && (
           <OrganizarModal
             cats={cats} customTags={customTags}
@@ -3270,7 +3298,9 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
           </div>
         )}
 
+
         {/* BOTTOM NAV — mobile only */}
+
         <BottomNav
           activePage={filter==="unwatched"?"watch":filter==="watched"?"watched":"home"}
           onHome={()=>{ setFilter("all"); setSearch(""); }}
@@ -4155,6 +4185,339 @@ function ConfirmModal({ message, onConfirm, onCancel }) {
   );
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// NOTES PAGE — 3-pane Todoist-style
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── Quick-add parser ────────────────────────────────────────────────────────────
+function parseNoteInput(text) {
+  let title = text, priority = 4, tags = [], dueDate = null;
+  // Priority
+  const prioMap = [/\b(p1|!!!)\b/i, /\b(p2|!!)\b/i, /\b(p3|!)\b/i, /\b(p4)\b/i];
+  prioMap.forEach((re, i) => {
+    if (re.test(title)) { priority = i+1; title = title.replace(re, '').trim(); }
+  });
+  // Tags
+  const tagRe = /#([\wÀ-ÿ][\wÀ-ÿ-]*)/g;
+  let m;
+  while ((m = tagRe.exec(title)) !== null) tags.push(m[1].toLowerCase());
+  title = title.replace(/#[\wÀ-ÿ][\wÀ-ÿ-]*/g, '').trim();
+  // Dates (simple PT)
+  const dateMap = {
+    'hoje': 0, 'amanhã': 1, 'amanha': 1,
+    'depois de amanhã': 2, 'semana que vem': 7,
+    'próxima semana': 7, 'proxima semana': 7,
+  };
+  for (const [word, days] of Object.entries(dateMap)) {
+    const re = new RegExp(`\\b${word}\\b`, 'i');
+    if (re.test(title)) {
+      const d = new Date(); d.setDate(d.getDate() + days);
+      dueDate = d.toISOString().split('T')[0];
+      title = title.replace(re, '').trim();
+      break;
+    }
+  }
+  return { title: title || 'Sem título', priority, tags, dueDate };
+}
+
+// ── Note checklist renderer ─────────────────────────────────────────────────────
+function NoteContent({ content, noteId, onToggle }) {
+  const lines = (content || '').split('\n');
+  return (
+    <div style={{lineHeight:1.7,fontSize:14}}>
+      {lines.map((line, i) => {
+        if (line.match(/^- \[x\] /i)) {
+          return (
+            <div key={i} style={{display:'flex',gap:8,alignItems:'flex-start',marginBottom:4}}>
+              <button onClick={()=>onToggle(i)} style={{background:'#22c55e',border:'none',width:17,height:17,borderRadius:4,cursor:'pointer',flexShrink:0,marginTop:2,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <svg width="10" height="10" viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
+              </button>
+              <span style={{textDecoration:'line-through',color:'#555'}}>{line.slice(6)}</span>
+            </div>
+          );
+        }
+        if (line.match(/^- \[ \] /i)) {
+          return (
+            <div key={i} style={{display:'flex',gap:8,alignItems:'flex-start',marginBottom:4}}>
+              <button onClick={()=>onToggle(i)} style={{background:'none',border:'1.5px solid #333',width:17,height:17,borderRadius:4,cursor:'pointer',flexShrink:0,marginTop:2}}/>
+              <span>{line.slice(6)}</span>
+            </div>
+          );
+        }
+        // Timestamp [mm:ss]
+        const tsRe = /\[(\d{1,2}:\d{2})\]/g;
+        if (tsRe.test(line)) {
+          tsRe.lastIndex = 0;
+          const parts = []; let last = 0; let match;
+          while ((match = tsRe.exec(line)) !== null) {
+            if (match.index > last) parts.push(<span key={last}>{line.slice(last, match.index)}</span>);
+            parts.push(<span key={match.index} style={{background:'rgba(229,9,20,.15)',color:'#FF7A7E',padding:'1px 5px',borderRadius:3,fontFamily:'monospace',fontSize:12,cursor:'pointer'}}>{match[0]}</span>);
+            last = match.index + match[0].length;
+          }
+          if (last < line.length) parts.push(<span key={last}>{line.slice(last)}</span>);
+          return <div key={i} style={{marginBottom:4}}>{parts}</div>;
+        }
+        if (!line) return <div key={i} style={{height:8}}/>;
+        return <div key={i} style={{marginBottom:4}}>{line}</div>;
+      })}
+    </div>
+  );
+}
+
+const NOTE_PRIO_COLORS = { 1:'#e50914', 2:'#f97316', 3:'#3b82f6', 4:'#333' };
+const NOTE_PRIO_LABELS = { 1:'P1', 2:'P2', 3:'P3', 4:'' };
+
+function NotesPage({ notes, links, cats, selectedNoteId, setSelectedNoteId,
+  filter, setFilter, search, setSearch, jwt, onRefresh, onClose }) {
+
+  const [quickAdd, setQuickAdd] = useState('');
+  const [parsed, setParsed] = useState(null);
+  const [editContent, setEditContent] = useState('');
+  const [editTitle, setEditTitle] = useState('');
+  const [saving, setSaving] = useState(false);
+  const editorRef = useRef(null);
+
+  const selectedNote = notes.find(n => n.id === selectedNoteId);
+
+  // Parse quick-add in real time
+  useEffect(() => {
+    if (!quickAdd.trim()) return setParsed(null);
+    setParsed(parseNoteInput(quickAdd));
+  }, [quickAdd]);
+
+  // Load note into editor
+  useEffect(() => {
+    if (selectedNote) {
+      setEditTitle(selectedNote.title);
+      setEditContent(selectedNote.content || '');
+    }
+  }, [selectedNoteId]);
+
+  // Filter notes
+  const today = new Date().toISOString().split('T')[0];
+  const filtered = notes.filter(n => {
+    if (search) return n.title.toLowerCase().includes(search.toLowerCase()) || (n.content||'').toLowerCase().includes(search.toLowerCase());
+    if (filter === 'today') return n.dueDate === today || n.priority === 1;
+    if (filter === 'upcoming') return n.dueDate && n.dueDate > today;
+    if (filter.startsWith('folder:')) return n.folderName === filter.slice(7);
+    return !n.folderName; // inbox
+  });
+
+  const folders = [...new Set(notes.map(n=>n.folderName).filter(Boolean))];
+
+  async function handleQuickAdd(e) {
+    e.preventDefault();
+    if (!quickAdd.trim() || !jwt) return;
+    const p = parseNoteInput(quickAdd);
+    try {
+      await apiFetch('/api/notes', { method:'POST', body:JSON.stringify({ title:p.title, priority:p.priority, tags:p.tags, dueDate:p.dueDate, content:'' }) }, jwt);
+      setQuickAdd(''); setParsed(null); onRefresh();
+    } catch(e) { console.error(e); }
+  }
+
+  async function handleSaveNote() {
+    if (!selectedNote || !jwt) return;
+    setSaving(true);
+    try {
+      await apiFetch(`/api/notes/${selectedNote.id}`, { method:'PATCH', body:JSON.stringify({ title:editTitle, content:editContent }) }, jwt);
+      onRefresh();
+    } finally { setSaving(false); }
+  }
+
+  async function handleDeleteNote(id) {
+    if (!jwt) return;
+    await apiFetch(`/api/notes/${id}`, { method:'DELETE' }, jwt);
+    if (selectedNoteId === id) setSelectedNoteId(null);
+    onRefresh();
+  }
+
+  async function toggleCheckbox(noteToEdit, lineIndex) {
+    const lines = (noteToEdit.content||'').split('\n');
+    const line = lines[lineIndex];
+    if (line.match(/^- \[x\] /i)) lines[lineIndex] = '- [ ] ' + line.slice(6);
+    else if (line.match(/^- \[ \] /i)) lines[lineIndex] = '- [x] ' + line.slice(6);
+    const newContent = lines.join('\n');
+    await apiFetch(`/api/notes/${noteToEdit.id}`, { method:'PATCH', body:JSON.stringify({ content:newContent }) }, jwt);
+    if (selectedNoteId === noteToEdit.id) setEditContent(newContent);
+    onRefresh();
+  }
+
+  function countChecklist(content) {
+    const lines = (content||'').split('\n');
+    const total = lines.filter(l => l.match(/^- \[(x| )\] /i)).length;
+    const done = lines.filter(l => l.match(/^- \[x\] /i)).length;
+    return total > 0 ? { total, done } : null;
+  }
+
+  function insertTodo() {
+    const el = editorRef.current;
+    if (!el) return;
+    const pos = el.selectionStart;
+    const before = editContent.slice(0, pos);
+    const after = editContent.slice(pos);
+    const newVal = before + '\n- [ ] ' + after;
+    setEditContent(newVal);
+    setTimeout(() => { el.selectionStart = el.selectionEnd = pos + 7; el.focus(); }, 0);
+  }
+
+  return (
+    <div style={{display:'flex',height:'calc(100vh - 64px)',overflow:'hidden',background:'#0a0a0a'}}>
+
+      {/* ── SIDEBAR ─────────────────────────────────────────────────────── */}
+      <div style={{width:220,flexShrink:0,borderRight:'1px solid #1a1a1a',display:'flex',flexDirection:'column',padding:'16px 0',overflowY:'auto'}}>
+        <button onClick={()=>{setSelectedNoteId(null);}} style={{margin:'0 12px 16px',background:'#e50914',border:'none',color:'#fff',cursor:'pointer',padding:'9px 0',borderRadius:8,fontSize:13,fontWeight:800,fontFamily:"'Inter',sans-serif",display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+          <Plus size={14}/> Nova nota
+        </button>
+
+        {[['inbox','📥','Caixa de entrada'],['today','⭐','Hoje'],['upcoming','📅','Próximas']].map(([f,ico,label])=>(
+          <button key={f} onClick={()=>setFilter(f)} style={{background:filter===f?'rgba(229,9,20,.1)':'none',border:'none',color:filter===f?'#e50914':'#888',cursor:'pointer',padding:'8px 16px',textAlign:'left',fontSize:13,fontWeight:filter===f?700:400,fontFamily:"'Inter',sans-serif",display:'flex',alignItems:'center',gap:8,width:'100%',borderLeft:filter===f?'2px solid #e50914':'2px solid transparent'}}>
+            <span>{ico}</span>{label}
+            <span style={{marginLeft:'auto',fontSize:11,color:'#444'}}>{
+              f==='inbox'?notes.filter(n=>!n.folderName).length:
+              f==='today'?notes.filter(n=>n.dueDate===today||n.priority===1).length:
+              notes.filter(n=>n.dueDate&&n.dueDate>today).length
+            }</span>
+          </button>
+        ))}
+
+        {folders.length > 0 && (
+          <>
+            <div style={{padding:'12px 16px 4px',fontSize:10,fontWeight:800,textTransform:'uppercase',letterSpacing:'.7px',color:'#333'}}>PASTAS</div>
+            {folders.map(f=>(
+              <button key={f} onClick={()=>setFilter(`folder:${f}`)} style={{background:filter===`folder:${f}`?'rgba(229,9,20,.1)':'none',border:'none',color:filter===`folder:${f}`?'#e50914':'#888',cursor:'pointer',padding:'8px 16px',textAlign:'left',fontSize:13,fontFamily:"'Inter',sans-serif",display:'flex',alignItems:'center',gap:8,width:'100%',borderLeft:filter===`folder:${f}`?'2px solid #e50914':'2px solid transparent'}}>
+                📁 {f}
+                <span style={{marginLeft:'auto',fontSize:11,color:'#444'}}>{notes.filter(n=>n.folderName===f).length}</span>
+              </button>
+            ))}
+          </>
+        )}
+      </div>
+
+      {/* ── NOTES LIST ──────────────────────────────────────────────────── */}
+      <div style={{width:300,flexShrink:0,borderRight:'1px solid #1a1a1a',display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        {/* Search */}
+        <div style={{padding:'12px',borderBottom:'1px solid #1a1a1a',flexShrink:0}}>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar notas..." style={{width:'100%',background:'#141414',border:'1px solid #1a1a1a',color:'#fff',padding:'8px 12px',borderRadius:7,fontSize:12,fontFamily:"'Inter',sans-serif",outline:'none'}}/>
+        </div>
+        {/* Quick-add */}
+        <form onSubmit={handleQuickAdd} style={{padding:'10px 12px',borderBottom:'1px solid #1a1a1a',flexShrink:0}}>
+          <div style={{display:'flex',gap:6}}>
+            <input value={quickAdd} onChange={e=>setQuickAdd(e.target.value)} placeholder="+ Adicionar nota..." style={{flex:1,background:'#0a0a0a',border:'1px dashed #1a1a1a',color:'#fff',padding:'8px 10px',borderRadius:7,fontSize:12,fontFamily:"'Inter',sans-serif",outline:'none'}}/>
+            {quickAdd && <button type="submit" style={{background:'#e50914',border:'none',color:'#fff',cursor:'pointer',padding:'8px 12px',borderRadius:7,fontSize:11,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>+</button>}
+          </div>
+          {parsed && quickAdd && (
+            <div style={{display:'flex',gap:5,flexWrap:'wrap',marginTop:6}}>
+              {parsed.dueDate && <span style={{background:'rgba(59,130,246,.15)',color:'#64b5f6',padding:'2px 7px',borderRadius:10,fontSize:10}}>📅 {parsed.dueDate}</span>}
+              {parsed.priority < 4 && <span style={{background:`rgba(${parsed.priority===1?'229,9,20':parsed.priority===2?'249,115,22':'59,130,246'},.15)`,color:NOTE_PRIO_COLORS[parsed.priority],padding:'2px 7px',borderRadius:10,fontSize:10}}>🚩 P{parsed.priority}</span>}
+              {parsed.tags.map(t=><span key={t} style={{background:'rgba(139,92,246,.15)',color:'#a78bfa',padding:'2px 7px',borderRadius:10,fontSize:10}}>#{t}</span>)}
+            </div>
+          )}
+          <div style={{fontSize:9,color:'#2a2a2a',marginTop:4}}>Linguagem natural: data, prioridade p1–p4, tags #tag</div>
+        </form>
+        {/* List */}
+        <div style={{flex:1,overflowY:'auto'}}>
+          {filtered.length === 0 ? (
+            <div style={{textAlign:'center',padding:'40px 16px',color:'#333'}}>
+              <div style={{fontSize:28,marginBottom:8,opacity:.2}}>📝</div>
+              <div style={{fontSize:13,fontWeight:700,color:'#555'}}>Nenhuma nota</div>
+            </div>
+          ) : filtered.map(note => {
+            const cl = countChecklist(note.content);
+            const linked = note.linkedItemId ? links.find(l=>l.id===note.linkedItemId) : null;
+            const isSelected = selectedNoteId === note.id;
+            return (
+              <div key={note.id} onClick={()=>setSelectedNoteId(note.id)}
+                style={{padding:'10px 14px',borderBottom:'1px solid #111',cursor:'pointer',background:isSelected?'rgba(229,9,20,.06)':'transparent',borderLeft:isSelected?'2px solid #e50914':'2px solid transparent',transition:'all .12s'}}>
+                <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:4}}>
+                  {note.priority < 4 && <span style={{color:NOTE_PRIO_COLORS[note.priority],fontSize:10,fontWeight:700}}>🚩</span>}
+                  <span style={{fontSize:13,fontWeight:600,color:note.isCompleted?'#444':'#fff',textDecoration:note.isCompleted?'line-through':'none',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{note.title}</span>
+                  <button onClick={e=>{e.stopPropagation();handleDeleteNote(note.id);}} style={{background:'none',border:'none',cursor:'pointer',color:'#222',fontSize:11,padding:'2px 4px',borderRadius:3,flexShrink:0}} onMouseEnter={e=>e.target.style.color='#f87171'} onMouseLeave={e=>e.target.style.color='#222'}>✕</button>
+                </div>
+                <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                  {cl && <span style={{fontSize:10,color:'#555'}}>☑ {cl.done}/{cl.total}</span>}
+                  {linked && <span style={{fontSize:10,color:'#3b82f6'}}>🎬 vinculada</span>}
+                  {(note.tags||[]).map(t=><span key={t} style={{fontSize:10,color:'#6b21a8',background:'rgba(139,92,246,.1)',padding:'1px 5px',borderRadius:8}}>#{t}</span>)}
+                  {note.dueDate && <span style={{fontSize:10,color:note.dueDate<today?'#f87171':note.dueDate===today?'#22c55e':'#555',marginLeft:'auto'}}>{note.dueDate}</span>}
+                </div>
+                {note.content && !cl && (
+                  <div style={{fontSize:11,color:'#444',marginTop:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{note.content.slice(0,60)}</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── EDITOR ──────────────────────────────────────────────────────── */}
+      <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        {selectedNote ? (
+          <>
+            {/* Editor toolbar */}
+            <div style={{padding:'10px 20px',borderBottom:'1px solid #1a1a1a',display:'flex',alignItems:'center',gap:10,flexShrink:0}}>
+              <div style={{display:'flex',gap:5}}>
+                {[1,2,3,4].map(p=>(
+                  <button key={p} onClick={async()=>{await apiFetch(`/api/notes/${selectedNote.id}`,{method:'PATCH',body:JSON.stringify({priority:p})},jwt);onRefresh();}} style={{background:selectedNote.priority===p?NOTE_PRIO_COLORS[p]:'none',border:`1px solid ${NOTE_PRIO_COLORS[p]}`,color:selectedNote.priority===p?'#fff':NOTE_PRIO_COLORS[p],cursor:'pointer',padding:'3px 9px',borderRadius:5,fontSize:11,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>P{p}</button>
+                ))}
+              </div>
+              <button onClick={insertTodo} style={{background:'none',border:'1px solid #1a1a1a',color:'#888',cursor:'pointer',padding:'3px 10px',borderRadius:5,fontSize:11,fontFamily:"'Inter',sans-serif"}}>☑ Todo</button>
+              <button onClick={async()=>{await apiFetch(`/api/notes/${selectedNote.id}`,{method:'PATCH',body:JSON.stringify({isCompleted:!selectedNote.isCompleted})},jwt);onRefresh();}} style={{background:selectedNote.isCompleted?'rgba(34,197,94,.15)':'none',border:'1px solid #1a1a1a',color:selectedNote.isCompleted?'#22c55e':'#888',cursor:'pointer',padding:'3px 10px',borderRadius:5,fontSize:11,fontFamily:"'Inter',sans-serif"}}>
+                {selectedNote.isCompleted ? '✓ Concluída' : 'Concluir'}
+              </button>
+              <div style={{marginLeft:'auto',display:'flex',gap:8}}>
+                {saving && <span style={{fontSize:11,color:'#555'}}>Salvando...</span>}
+                <button onClick={handleSaveNote} style={{background:'#e50914',border:'none',color:'#fff',cursor:'pointer',padding:'5px 14px',borderRadius:6,fontSize:12,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>Salvar</button>
+              </div>
+            </div>
+
+            {/* Linked video block */}
+            {selectedNote.linkedItemId && (() => {
+              const item = links.find(l=>l.id===selectedNote.linkedItemId);
+              return item ? (
+                <div style={{margin:'12px 20px 0',background:'#141414',border:'1px solid #1a1a1a',borderRadius:8,padding:'10px 14px',display:'flex',alignItems:'center',gap:12,flexShrink:0}}>
+                  <div style={{fontSize:10,color:'#e50914',fontWeight:800,letterSpacing:.5}}>🎬 VÍDEO VINCULADO</div>
+                  {item.thumbnail && <img src={item.thumbnail} style={{width:48,height:32,borderRadius:4,objectFit:'cover'}} alt=""/>}
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:12,fontWeight:700,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.title}</div>
+                  </div>
+                  <button onClick={()=>window.open(item.url,'_blank')} style={{background:'#e50914',border:'none',color:'#fff',cursor:'pointer',padding:'5px 12px',borderRadius:6,fontSize:11,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>Abrir</button>
+                  <button onClick={async()=>{await apiFetch(`/api/notes/${selectedNote.id}`,{method:'PATCH',body:JSON.stringify({linkedItemId:null})},jwt);onRefresh();}} style={{background:'none',border:'1px solid #1a1a1a',color:'#555',cursor:'pointer',padding:'5px 10px',borderRadius:6,fontSize:11,fontFamily:"'Inter',sans-serif"}}>Desvincular</button>
+                </div>
+              ) : null;
+            })()}
+
+            {/* Title */}
+            <input value={editTitle} onChange={e=>setEditTitle(e.target.value)} onBlur={handleSaveNote}
+              style={{margin:'16px 20px 0',background:'none',border:'none',color:'#fff',fontSize:22,fontWeight:900,fontFamily:"'Inter',sans-serif",outline:'none',letterSpacing:'-.5px'}}
+              placeholder="Título da nota..."/>
+
+            {/* Tags */}
+            {(selectedNote.tags||[]).length > 0 && (
+              <div style={{padding:'6px 20px',display:'flex',gap:6,flexWrap:'wrap'}}>
+                {(selectedNote.tags||[]).map(t=><span key={t} style={{background:'rgba(139,92,246,.12)',color:'#a78bfa',padding:'2px 8px',borderRadius:10,fontSize:11}}>#{t}</span>)}
+              </div>
+            )}
+
+            {/* Editor */}
+            <textarea ref={editorRef} value={editContent} onChange={e=>setEditContent(e.target.value)} onBlur={handleSaveNote}
+              style={{flex:1,margin:'12px 20px 20px',background:'#0a0a0a',border:'1px solid #111',color:'#ccc',fontSize:14,lineHeight:1.7,fontFamily:"ui-monospace,'JetBrains Mono',monospace",padding:'14px',borderRadius:8,resize:'none',outline:'none'}}
+              placeholder={'Digite suas notas aqui...\n\n- [ ] Item de checklist\n- [x] Item concluído\n[12:34] Timestamp clicável\n\nUse - [ ] para criar checklists'}/>
+
+            <div style={{padding:'8px 20px',fontSize:10,color:'#2a2a2a',borderTop:'1px solid #111',flexShrink:0,display:'flex',alignItems:'center',gap:12}}>
+              <span>Clique em ☑ Todo para inserir checkbox · <kbd style={{background:'#111',padding:'1px 5px',borderRadius:3}}>Ctrl+S</kbd> salva</span>
+            </div>
+          </>
+        ) : (
+          <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',gap:12,color:'#333'}}>
+            <div style={{fontSize:52,opacity:.1}}>📝</div>
+            <div style={{fontSize:15,fontWeight:700,color:'#555'}}>Selecione ou crie uma nota</div>
+            <div style={{fontSize:12,color:'#333'}}>Use o quick-add ou clique em uma nota na lista</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── ORGANIZAR MODAL ────────────────────────────────────────────────────────────
 const TAG_COLORS_CYCLE = ["#FF6B6B","#FFB74D","#64B5F6","#81C784","#BA68C8","#F06292","#FF8A65","#90A4AE"];
 
@@ -4362,6 +4725,47 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
     </>
   );
 }
+
+
+// ─── NOTES PAGE ─────────────────────────────────────────────────────────────────
+
+// Simple NLP parser for quick-add
+
+function renderNoteContent(content, onToggleCheck) {
+  if (!content) return null;
+  const lines = content.split('\n');
+  let checkIdx = 0;
+  return lines.map((line, i) => {
+    const checkMatch = line.match(/^(\s*)-\s*\[([ x])\]\s*(.*)$/);
+    if (checkMatch) {
+      const checked = checkMatch[2] === 'x';
+      const text = checkMatch[3];
+      const idx = checkIdx++;
+      return (
+        <div key={i} className={`note-check-item${checked?' checked':''}`}
+          onClick={()=>onToggleCheck && onToggleCheck(i)}>
+          <span className="note-checkbox">{checked?'✓':''}</span>
+          <span className="note-check-text">{text}</span>
+        </div>
+      );
+    }
+    if (line.startsWith('# ')) return <h2 key={i} className="note-h1">{line.slice(2)}</h2>;
+    if (line.startsWith('## ')) return <h3 key={i} className="note-h2">{line.slice(3)}</h3>;
+    if (line.startsWith('> ')) return <blockquote key={i} className="note-quote">{line.slice(2)}</blockquote>;
+    if (line === '---' || line === '---') return <hr key={i} className="note-divider"/>;
+    return line ? <p key={i} className="note-para">{line}</p> : <br key={i}/>;
+  });
+}
+
+function countChecks(content) {
+  const all = (content||'').match(/^.*-\s*\[[ x]\].*$/gm)||[];
+  const done = (content||'').match(/^.*-\s*\[x\].*$/gm)||[];
+  return { total: all.length, done: done.length };
+}
+
+const PRIORITY_COLORS = { 1:'#e50914', 2:'#ff8a00', 3:'#3b82f6', 4:'transparent' };
+const PRIORITY_LABELS = { 1:'P1', 2:'P2', 3:'P3', 4:'' };
+
 
 // ─── APP ROUTER (root component) ─────────────────────────────────────────────
 export default function App() {
