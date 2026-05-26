@@ -3199,14 +3199,16 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
                   method: "DELETE",
                   headers: jwt ? { Authorization: `Bearer ${jwt}` } : {}
                 });
-                if (!res.ok) {
-                  console.error("Delete failed:", res.status, await res.text().catch(()=>""));
-                  const fresh = await apiFetch("/api/categories",{},jwt).catch(()=>null);
+                const body = await res.json().catch(() => ({}));
+                if (!res.ok || body.deleted === 0) {
+                  console.error("Delete failed — server:", res.status, body);
+                  // Rollback: re-fetch real state from server
+                  const fresh = await apiFetch("/api/categories", {}, jwt).catch(() => null);
                   if (fresh) saveCats(fresh);
                   return;
                 }
-                const updated = cats.filter(c => !toRemove.has(c.id));
-                try { new BroadcastChannel("watchlist-sync").postMessage({type:"CATS_UPDATED",cats:updated}); }catch{}
+                // Confirmed deleted — keep optimistic state and sync extension
+                try { new BroadcastChannel("watchlist-sync").postMessage({type:"CATS_UPDATED", cats: cats.filter(c=>!toRemove.has(c.id))}); }catch{}
               } catch(e) { console.error("Delete network error:", e); }
             }}
             onCreateCat={async(name,parentId)=>{
