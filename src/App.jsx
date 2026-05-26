@@ -150,7 +150,7 @@ const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:#0a0a0a;color:#fff;font-family:'Inter',sans-serif;min-height:100vh;}
-.wl{background:#0a0a0a;min-height:100vh;}
+
 
 /* ── HEADER ─────────────────────────────────────────────── */
 html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
@@ -163,11 +163,11 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
 .nav-btn{background:none;border:none;color:#a0a0a0;font-size:14px;font-weight:500;cursor:pointer;padding:8px 16px;font-family:'Inter',sans-serif;transition:color .2s;border-radius:4px;letter-spacing:.2px;}
 .nav-btn:hover,.nav-btn.on{color:#fff;}
 .hdr-r{display:flex;align-items:center;gap:8px;}
-.srch-wrap{position:relative;display:flex;align-items:center;}
-.srch-inp{background:rgba(255,255,255,.06);border:1px solid #1a1a1a;color:#fff;padding:8px 36px 8px 12px;border-radius:6px;font-size:13px;font-family:'Inter',sans-serif;width:190px;outline:none;transition:all .3s;}
+
+
 .srch-inp::placeholder{color:#555;}
 .srch-inp:focus{border-color:#e50914;background:rgba(229,9,20,.05);width:256px;}
-.srch-ico{position:absolute;right:10px;pointer-events:none;color:#555;}
+
 .btn-primary{background:#e50914;color:#fff;border:none;cursor:pointer;padding:9px 20px;border-radius:6px;font-size:13px;font-weight:700;font-family:'Inter',sans-serif;transition:all .2s ease;display:flex;align-items:center;gap:6px;white-space:nowrap;letter-spacing:.2px;}
 .btn-primary:hover{background:#f40612;transform:translateY(-1px);box-shadow:0 4px 20px rgba(229,9,20,.35);}
 
@@ -192,34 +192,24 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
 .hero-mute-btn{background:rgba(0,0,0,.65);border:1.5px solid rgba(255,255,255,.28);color:#fff;cursor:pointer;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;}
 .hero-mute-btn:hover{background:rgba(0,0,0,.9);border-color:#fff;}
 .hero-dots{position:absolute;bottom:28px;right:52px;display:flex;gap:7px;align-items:center;z-index:5;}
-.hero-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.28);border:none;cursor:pointer;transition:all .35s ease;padding:0;}
+
 .hero-dot.on{width:22px;border-radius:4px;background:#e50914;}
 .hero-dot:hover:not(.on){background:rgba(255,255,255,.55);}
-.hero-timer{position:absolute;bottom:0;left:0;height:3px;background:#e50914;opacity:.55;transition:none;}
+
 
 /* ── POPUP VIDEO ─────────────────────────────────────────── */
-.pop-iframe{
-  position:absolute;
-  /* Extend beyond .pop-top bounds to clip YouTube player UI */
-  top:-60px;left:-60px;
-  width:calc(100% + 120px);
-  height:calc(100% + 120px);
-  border:none;pointer-events:none;
-  z-index:2;
-}
-.pop-mute-btn{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.72);border:1.5px solid rgba(255,255,255,.28);color:#fff;cursor:pointer;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .15s;z-index:8;pointer-events:all;}
+
+
 .pop-mute-btn:hover{background:rgba(0,0,0,.95);border-color:#fff;}
-.hero-grd-l{position:absolute;inset:0;background:linear-gradient(to right,#0a0a0a 38%,rgba(10,10,10,.6) 60%,transparent 78%);}
-.hero-grd-b{position:absolute;inset:0;background:linear-gradient(to top,#0a0a0a 0%,rgba(10,10,10,.7) 20%,transparent 55%);}
+
+
 .hero-body{position:relative;z-index:2;padding:0 60px 72px;max-width:620px;}
 .hero-tags{display:flex;gap:8px;align-items:center;margin-bottom:18px;flex-wrap:wrap;}
-.hero-plat-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:800;padding:3px 9px;border-radius:4px;text-transform:uppercase;letter-spacing:.7px;}
-.hero-new-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:3px 9px;border-radius:4px;background:#f5a623;color:#000;text-transform:uppercase;letter-spacing:.7px;}
-.hero-cat-badge{font-size:11px;color:#a0a0a0;font-weight:600;letter-spacing:.3px;}
+
 .hero-title{font-size:3rem;font-weight:900;line-height:1.05;margin-bottom:14px;letter-spacing:-1.5px;font-family:'Inter',sans-serif;text-shadow:0 2px 20px rgba(0,0,0,.5);}
 .hero-meta{font-size:13px;color:#a0a0a0;margin-bottom:24px;font-weight:500;}
 .hero-acts{display:flex;gap:12px;flex-wrap:wrap;}
-.btn-hero-p{background:#e50914;color:#fff;border:none;cursor:pointer;padding:13px 32px;border-radius:6px;font-size:15px;font-weight:700;font-family:'Inter',sans-serif;transition:all .2s;display:flex;align-items:center;gap:8px;text-decoration:none;letter-spacing:.2px;}
+
 .btn-hero-p:hover{background:#f40612;transform:scale(1.02);box-shadow:0 6px 24px rgba(229,9,20,.4);}
 .btn-hero-o{background:rgba(255,255,255,.1);color:#fff;border:2px solid rgba(255,255,255,.35);cursor:pointer;padding:13px 32px;border-radius:6px;font-size:15px;font-weight:700;font-family:'Inter',sans-serif;transition:all .2s;display:flex;align-items:center;gap:8px;letter-spacing:.2px;}
 .btn-hero-o:hover{border-color:#fff;background:rgba(255,255,255,.18);}
@@ -250,10 +240,10 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
 .row-wrap::before,.row-wrap::after{content:'';position:absolute;top:0;bottom:12px;width:100px;pointer-events:none;z-index:5;}
 .row-wrap::before{left:0;background:linear-gradient(to right,#0a0a0a,transparent);}
 .row-wrap::after{right:0;background:linear-gradient(to left,#0a0a0a,transparent);}
-.scroll-btn{position:absolute;top:50%;transform:translateY(-60%);background:rgba(10,10,10,.92);border:1px solid #1a1a1a;color:#fff;width:38px;height:80px;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;z-index:10;opacity:0;pointer-events:none;}
+
 .row-wrap:hover .scroll-btn{opacity:1;pointer-events:all;}
 .scroll-btn:hover{background:#e50914;border-color:#e50914;}
-.sl{left:4px;}.sr{right:4px;}
+.sr{right:4px;}
 
 /* ── CARD ────────────────────────────────────────────────── */
 /* ── NETFLIX CARD EXPANSION ─────────────────────────────────────────────── */
@@ -323,7 +313,7 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
   opacity:.7;transition:opacity .3s;
 }
 .card:hover .card-tag-bar{opacity:0;} /* hide when detail panel is open */
-.card-tag-segment{flex:1;height:100%;}
+
 
 /* Watched overlay */
 .card-watched-overlay{
@@ -949,33 +939,11 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
 }
 `;
 
+function getTagDef(label) {
+  try { const s=JSON.parse(localStorage.getItem("wl-custom-tags")||"[]"); return s.find(t=>t.label===label)||{label,color:"#888",icon:"◈"}; } catch { return {label,color:"#888",icon:"◈"}; }
+}
+
 // ─── SAMPLE DATA ─────────────────────────────────────────────────────────────
-const SAMPLE_CATS = [
-  { id:"c1", name:"Educação",      parentId:null, order:0 },
-  { id:"c2", name:"Entretenimento",parentId:null, order:1 },
-  { id:"c3", name:"Esportes",      parentId:null, order:2 },
-  { id:"c4", name:"React / JS",    parentId:"c1", order:0 },
-];
-
-const PRESET_TAGS = [
-  { label:"Favorito",    color:"#e50914" },
-  { label:"Urgente",     color:"#f5a623" },
-  { label:"Ver depois",  color:"#3b82f6" },
-  { label:"Recomendado", color:"#22c55e" },
-  { label:"Em progresso",color:"#9147ff" },
-];
-
-const SAMPLE_LINKS = [
-  { id:"l1", url:"https://youtube.com/watch?v=dQw4w9WgXcQ", title:"Champions League — Melhores Momentos", thumbnail:"", rawThumb:"", platform:"youtube", videoId:"dQw4w9WgXcQ", categoryId:"c3", watched:false, notes:"", tags:["Favorito"], order:0, createdAt:new Date(Date.now()-600000).toISOString() },
-  { id:"l2", url:"https://youtube.com/watch?v=9bZkp7q19f0", title:"React Avançado — Hooks e Performance",  thumbnail:"", rawThumb:"", platform:"youtube", videoId:"9bZkp7q19f0", categoryId:"c4", watched:true,  notes:"Revisar os hooks customizados", tags:[], order:0, createdAt:new Date(Date.now()-86400000).toISOString() },
-  { id:"l3", url:"https://youtube.com/watch?v=kJQP7kiw5Fk", title:"Como a Música Dominou o Mundo",        thumbnail:"", rawThumb:"", platform:"youtube", videoId:"kJQP7kiw5Fk", categoryId:"c1", watched:false, notes:"", tags:["Ver depois"], order:0, createdAt:new Date(Date.now()-172800000).toISOString() },
-  { id:"l4", url:"https://youtube.com/watch?v=JGwWNGJdvx8", title:"Show ao Vivo — Especial de Aniversário",thumbnail:"", rawThumb:"", platform:"youtube", videoId:"JGwWNGJdvx8", categoryId:"c2", watched:true,  notes:"", tags:[], order:0, createdAt:new Date(Date.now()-259200000).toISOString() },
-  { id:"l5", url:"https://youtube.com/watch?v=hT_nvWreIhg", title:"Física Quântica para Todos",            thumbnail:"", rawThumb:"", platform:"youtube", videoId:"hT_nvWreIhg", categoryId:"c1", watched:false, notes:"Assistir com calma, tem exercícios", tags:["Urgente"], order:1, createdAt:new Date(Date.now()-345600000).toISOString() },
-  { id:"l6", url:"https://www.instagram.com/p/abc/",         title:"Receitas Incríveis de Verão",           thumbnail:"", rawThumb:"", platform:"instagram", videoId:"", categoryId:"c2", watched:false, notes:"", tags:["Recomendado"], order:0, createdAt:new Date(Date.now()-432000000).toISOString() },
-  { id:"l7", url:"https://youtube.com/watch?v=RgKAFK5djSk", title:"Top 10 Jogadas Históricas do Futebol",  thumbnail:"", rawThumb:"", platform:"youtube", videoId:"RgKAFK5djSk", categoryId:"c3", watched:false, notes:"", tags:[], order:1, createdAt:new Date(Date.now()-518400000).toISOString() },
-  { id:"l8", url:"https://youtube.com/watch?v=OPf0YbXqDm0", title:"Tutorial Completo de TypeScript",       thumbnail:"", rawThumb:"", platform:"youtube", videoId:"OPf0YbXqDm0", categoryId:"c4", watched:false, notes:"Continuar do min 45:00", tags:["Em progresso"], order:1, createdAt:new Date(Date.now()-604800000).toISOString() },
-];
-
 // ─── FOLDER CARD ──────────────────────────────────────────────────────────────
 function FolderCard({ cat, cats, links, onNavigate }) {
   const total = getAllLinksInTree(cat.id, cats, links).length;
@@ -1054,7 +1022,7 @@ function CinemaModal({ link, onClose }) {
         <div className="cinema-ftr">
           <div style={{display:"flex",gap:6}}>
             {(link.tags||[]).map(t=>{
-              const pt = PRESET_TAGS.find(p=>p.label===t);
+              const pt = getTagDef(t);
               return <span key={t} className="tag-pill" style={{background:pt?.color+"22",color:pt?.color||"#a0a0a0",border:`1px solid ${pt?.color||"#333"}44`}}>{t}</span>;
             })}
           </div>
@@ -1198,7 +1166,7 @@ function EditModal({ link, categories, onSave, onClose }) {
         <div className="fg">
           <label className="fl">Tags</label>
           <div className="tag-select">
-            {PRESET_TAGS.map(pt=>(
+            {(()=>{try{return JSON.parse(localStorage.getItem("wl-custom-tags")||"[]");}catch{return[];}})().map(pt=>(
               <button key={pt.label} className="tag-toggle" onClick={()=>toggleTag(pt.label)}
                 style={{borderColor:tags.includes(pt.label)?pt.color:"#1a1a1a",color:tags.includes(pt.label)?pt.color:"#555",background:tags.includes(pt.label)?pt.color+"18":"transparent"}}>
                 {pt.label}
@@ -1308,7 +1276,7 @@ function Card({ link, catIdx, onPreviewShow, onPreviewHide, onToggle, onDelete, 
           {(link.tags||[]).length > 0 && (
             <div style={{position:"absolute",bottom:link.title?32:8,left:10,right:10,display:"flex",gap:3,flexWrap:"wrap",zIndex:4,pointerEvents:"none"}}>
               {(link.tags||[]).slice(0,2).map(t=>{
-                const pt=PRESET_TAGS.find(p=>p.label===t);
+                const pt=getTagDef(t);
                 return <span key={t} className="tag-pill tag-pill-sm" style={{background:pt?.color+"33",color:pt?.color||"#a0a0a0",backdropFilter:"blur(4px)"}}>{t}</span>;
               })}
             </div>
@@ -1368,7 +1336,7 @@ function Card({ link, catIdx, onPreviewShow, onPreviewHide, onToggle, onDelete, 
         <div className="card-detail-title">{link.title}</div>
         <div className="card-detail-meta">
           {(() => { const p=PLAT[link.platform]||PLAT.other; return <span className="card-detail-plat" style={{background:p.bg,color:p.color}}>{p.label}</span>; })()}
-          {(link.tags||[]).slice(0,2).map(t=>{ const pt=PRESET_TAGS.find(p=>p.label===t); return <span key={t} className="card-detail-tag" style={{color:pt?.color||"#a0a0a0",borderColor:(pt?.color||"#333")+"44",background:(pt?.color||"#333")+"18"}}>{t}</span>; })}
+          {(link.tags||[]).slice(0,2).map(t=>{ const pt=getTagDef(t); return <span key={t} className="card-detail-tag" style={{color:pt?.color||"#a0a0a0",borderColor:(pt?.color||"#333")+"44",background:(pt?.color||"#333")+"18"}}>{t}</span>; })}
         </div>
         <div className="card-detail-acts">
           <a href={link.url} target="_blank" rel="noopener noreferrer" className="card-detail-btn primary" onClick={e=>e.stopPropagation()} style={{textDecoration:"none"}}>
@@ -1501,7 +1469,7 @@ function Popup({ link, rect, catIdx, onToggle, onDelete, onEnter, onLeave, onCin
         {(link.tags||[]).length > 0 && (
           <div className="tags-row" style={{marginBottom:6}}>
             {(link.tags||[]).map(t=>{
-              const pt = PRESET_TAGS.find(p=>p.label===t);
+              const pt = getTagDef(t);
               return <span key={t} className="tag-pill tag-pill-sm" style={{background:pt?.color+"22",color:pt?.color||"#a0a0a0",border:`1px solid ${pt?.color||"#333"}44`}}>{t}</span>;
             })}
           </div>
@@ -1524,17 +1492,15 @@ function Row({ cat, subCats=[], links, catIdx, isOrphaned, allCats, allLinks, on
   const pct = links.length > 0 ? Math.round((wd/links.length)*100) : 0;
   const isEmpty = subCats.length === 0 && links.length === 0;
   const [dragLinkId, setDragLinkId] = useState(null);
-  const [dragOverLinkId, setDragOverLinkId] = useState(null);
 
   const handleLinkDragStart = (e, id) => { setDragLinkId(id); e.dataTransfer.effectAllowed = "move"; };
-  const handleLinkDragOver  = (e, id) => { e.preventDefault(); if (id !== dragLinkId) setDragOverLinkId(id); };
+  const handleLinkDragOver  = (e, id) => { e.preventDefault(); };
   const handleLinkDrop      = (e, targetId) => {
     e.preventDefault();
-    if (!dragLinkId || dragLinkId === targetId) { setDragLinkId(null); setDragOverLinkId(null); return; }
+    if (!dragLinkId || dragLinkId === targetId) { setDragLinkId(null); return; }
     onReorderLinks && onReorderLinks(cat.id, dragLinkId, targetId);
-    setDragLinkId(null); setDragOverLinkId(null);
-  };
-  const handleLinkDragEnd   = () => { setDragLinkId(null); setDragOverLinkId(null); };
+    setDragLinkId(null); };
+  const handleLinkDragEnd   = () => { setDragLinkId(null); };
 
   return (
     <div className="row-sec">
@@ -1990,397 +1956,6 @@ function AddModal({ categories, lastCatId, onSave, onClose }) {
 }
 
 // ─── CATEGORY MANAGER ─────────────────────────────────────────────────────────
-function CatModal({ categories, links, onSave, onClose }) {
-  const [cats, setCats]             = useState(categories);
-  const [newName, setNewName]       = useState("");
-  const [editId, setEditId]         = useState(null);
-  const [editName, setEditName]     = useState("");
-  const [addSubOf, setAddSubOf]     = useState(null);
-  const [subName, setSubName]       = useState("");
-  const [delConfirm, setDelConfirm] = useState(null);
-  // Enhanced DnD state
-  const [dragId,    setDragId]    = useState(null);
-  const [dropState, setDropState] = useState(null);
-  // dropState = { targetId, mode: "before"|"after"|"nest" }
-  const ghostRef = useRef(null);
-  const dragDataRef = useRef({});
-
-  // ── Tree helpers ──────────────────────────────────────────────────────────
-  const siblings = (cat) => cats.filter(c => c.parentId === cat.parentId).sort((a,b)=>a.order-b.order);
-  const siblingsOf = (parentId) => cats.filter(c => c.parentId === parentId).sort((a,b)=>a.order-b.order);
-  const idx = (cat) => siblings(cat).findIndex(c => c.id === cat.id);
-
-  // ── Operations ─────────────────────────────────────────────────────────────
-  const addCat = () => {
-    if (!newName.trim()) return;
-    setCats(p=>[...p,{id:uid(),name:newName.trim(),parentId:null,order:p.filter(c=>!c.parentId).length}]);
-    setNewName("");
-  };
-  const addSub = (parentId) => {
-    if (!subName.trim()) return;
-    setCats(p=>[...p,{id:uid(),name:subName.trim(),parentId,order:p.filter(c=>c.parentId===parentId).length}]);
-    setSubName(""); setAddSubOf(null);
-  };
-  const rename = (id) => {
-    if (!editName.trim()) { setEditId(null); return; }
-    setCats(p=>p.map(c=>c.id===id?{...c,name:editName.trim()}:c)); setEditId(null);
-  };
-  const moveUp = (cat) => {
-    const sibs = siblings(cat); const i = idx(cat);
-    if (i === 0) return;
-    const prev = sibs[i-1];
-    setCats(p=>p.map(c=>{
-      if (c.id===cat.id) return {...c,order:prev.order};
-      if (c.id===prev.id) return {...c,order:cat.order};
-      return c;
-    }));
-  };
-  const moveDown = (cat) => {
-    const sibs = siblings(cat); const i = idx(cat);
-    if (i === sibs.length-1) return;
-    const next = sibs[i+1];
-    setCats(p=>p.map(c=>{
-      if (c.id===cat.id) return {...c,order:next.order};
-      if (c.id===next.id) return {...c,order:cat.order};
-      return c;
-    }));
-  };
-  const indent = (cat) => {
-    // Become child of previous sibling
-    const sibs = siblings(cat); const i = idx(cat);
-    if (i === 0) return;
-    const newParent = sibs[i-1];
-    const newOrder = cats.filter(c=>c.parentId===newParent.id).length;
-    setCats(p=>p.map(c=>c.id===cat.id?{...c,parentId:newParent.id,order:newOrder}:c));
-  };
-  const outdent = (cat) => {
-    // Become child of grandparent (or root)
-    if (!cat.parentId) return;
-    const parent = cats.find(c=>c.id===cat.parentId);
-    const newParentId = parent?.parentId||null;
-    const newOrder = cats.filter(c=>c.parentId===newParentId).length;
-    setCats(p=>p.map(c=>c.id===cat.id?{...c,parentId:newParentId,order:newOrder}:c));
-  };
-  const deleteCat = (id) => {
-    const toDelete = new Set([id]);
-    let changed = true;
-    while (changed) { changed=false; cats.forEach(c=>{if(c.parentId&&toDelete.has(c.parentId)&&!toDelete.has(c.id)){toDelete.add(c.id);changed=true;}}); }
-    setCats(p=>p.filter(c=>!toDelete.has(c.id))); setDelConfirm(null);
-  };
-
-  // ── Enhanced Drag and Drop ────────────────────────────────────────────────
-  // Supports: drag up/down to reorder, drag right to NEST as subcategory
-  const NEST_THRESHOLD_PX = 48; // px from left edge to trigger "nest inside" mode
-
-  const onDragStart = (e, id, name) => {
-    setDragId(id);
-    dragDataRef.current = { id, name };
-    e.dataTransfer.effectAllowed = "move";
-    // Create custom ghost label
-    const ghost = document.createElement("div");
-    ghost.textContent = "📁 " + name;
-    ghost.style.cssText = "position:fixed;top:-100px;left:-100px;background:#1a1a1a;border:1px solid #e50914;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:600;color:#fff;font-family:Inter,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.7);white-space:nowrap;z-index:9999;pointer-events:none;";
-    document.body.appendChild(ghost);
-    ghostRef.current = ghost;
-    e.dataTransfer.setDragImage(ghost, 0, 0);
-    setTimeout(() => { if (ghostRef.current) { ghostRef.current.style.top = "-999px"; } }, 0);
-  };
-
-  const onDragOver = (e, targetId) => {
-    e.preventDefault();
-    if (!dragId || dragId === targetId) return;
-    const dragged = cats.find(c => c.id === dragId);
-    const target  = cats.find(c => c.id === targetId);
-    if (!dragged || !target) return;
-    // Don't allow nesting inside own children
-    const isDescendant = (parentId, childId) => {
-      let c = cats.find(x => x.id === childId);
-      while (c) { if (c.id === parentId) return true; c = cats.find(x => x.id === c.parentId); }
-      return false;
-    };
-    const rect = e.currentTarget.getBoundingClientRect();
-    const relX  = e.clientX - rect.left;
-    const relY  = e.clientY - rect.top;
-    const isNestZone = relX > NEST_THRESHOLD_PX && !isDescendant(dragId, targetId) && targetId !== dragged.parentId;
-    const mode = isNestZone ? "nest" : (relY < rect.height / 2 ? "before" : "after");
-    setDropState({ targetId, mode });
-  };
-
-  const onDrop = (e, targetId) => {
-    e.preventDefault();
-    if (!dragId || !dropState || dragId === targetId) { clearDrag(); return; }
-    const dragged = cats.find(c => c.id === dragId);
-    const target  = cats.find(c => c.id === targetId);
-    if (!dragged || !target) { clearDrag(); return; }
-
-    if (dropState.mode === "nest") {
-      // Make dragged a child of target
-      const newOrder = cats.filter(c => c.parentId === targetId).length;
-      setCats(p => p.map(c => c.id === dragId ? { ...c, parentId: targetId, order: newOrder } : c));
-    } else {
-      // Reorder — only within same parent level
-      if (dragged.parentId !== target.parentId) { clearDrag(); return; }
-      // Recompute orders
-      const siblings = cats
-        .filter(c => c.parentId === dragged.parentId && c.id !== dragId)
-        .sort((a, b) => a.order - b.order);
-      const targetIdx = siblings.findIndex(c => c.id === targetId);
-      const insertIdx = dropState.mode === "before" ? targetIdx : targetIdx + 1;
-      siblings.splice(insertIdx, 0, dragged);
-      setCats(p => p.map(c => {
-        const newOrder = siblings.findIndex(s => s.id === c.id);
-        return newOrder >= 0 ? { ...c, order: newOrder } : c;
-      }));
-    }
-    clearDrag();
-  };
-
-  const clearDrag = () => {
-    setDragId(null); setDropState(null);
-    if (ghostRef.current) { document.body.removeChild(ghostRef.current); ghostRef.current = null; }
-  };
-  const onDragEnd = clearDrag;
-
-  const lkCount = (id) => links.filter(l=>l.categoryId===id).length;
-
-  // ── Render tree: clear visual hierarchy with connecting lines ────────────
-  const renderSubtree = (children, colorIdx) => {
-    if (!children.length) return null;
-    return (
-      <div className="cat-subtree">
-        {children.map((c, ci) => {
-          const isLast = ci === children.length - 1;
-          const subSubs = cats.filter(s => s.parentId === c.id).sort((a,b)=>a.order-b.order);
-          const isDragging  = dragId === c.id;
-          const isDropNest  = dropState?.targetId===c.id && dropState?.mode==="nest";
-          const isDropBefore= dropState?.targetId===c.id && dropState?.mode==="before";
-          const isDropAfter = dropState?.targetId===c.id && dropState?.mode==="after";
-          const lk          = lkCount(c.id);
-          const color       = CAT_COLORS[colorIdx%8];
-          const sibs        = siblings(c);
-          const si          = sibs.findIndex(x=>x.id===c.id);
-          return (
-            <div key={c.id} className="cat-sub-row">
-              {isDropBefore && <div className="cat-drop-bar"/>}
-              <div
-                className={`cat-item sub-item${isDragging?" dragging":""}${isDropNest?" drag-over-nest":""}${isDropAfter||isDropBefore?" drag-over-reorder":""}`}
-                draggable
-                onDragStart={e=>onDragStart(e,c.id,c.name)}
-                onDragOver={e=>onDragOver(e,c.id)}
-                onDrop={e=>onDrop(e,c.id)}
-                onDragEnd={onDragEnd}
-                title="Arraste para mover • Arraste para a direita para aninhar dentro de outra pasta"
-              >
-                <span className="cat-drag-handle">⠿</span>
-                <span className="cat-icon" style={{opacity:.5}}>📄</span>
-                {editId===c.id ? (
-                  <input className="cat-create-inp" style={{flex:1,padding:"3px 8px",fontSize:12,margin:"0 4px"}} value={editName}
-                    onChange={e=>setEditName(e.target.value)}
-                    onKeyDown={e=>{if(e.key==="Enter")rename(c.id);if(e.key==="Escape")setEditId(null);}}
-                    autoFocus onBlur={()=>rename(c.id)}/>
-                ) : (
-                  <span className="cat-name sub-name" onDoubleClick={()=>{setEditId(c.id);setEditName(c.name);}}>
-                    {c.name}
-                    <span className="cat-sub-label">sub</span>
-                  </span>
-                )}
-                {lk > 0 && <span className="cat-link-cnt">{lk}</span>}
-                <div className="cat-actions">
-                  <button className="cat-act-btn" title="↑ Subir" disabled={si===0} onClick={()=>moveUp(c)}>↑</button>
-                  <button className="cat-act-btn" title="↓ Descer" disabled={si===sibs.length-1} onClick={()=>moveDown(c)}>↓</button>
-                  <button className="cat-act-btn outdent-btn" title="← Promover a categoria raiz" onClick={()=>outdent(c)}>←</button>
-                  <button className="cat-act-btn add-sub" title="Adicionar sub-subcategoria" onClick={()=>{setAddSubOf(c.id);setSubName("");}}>
-                    <FolderPlus size={11}/>
-                  </button>
-                  <button className="cat-act-btn" title="Renomear" onClick={()=>{setEditId(c.id);setEditName(c.name);}}>
-                    <Edit2 size={11}/>
-                  </button>
-                  {delConfirm===c.id
-                    ? <button className="cat-act-btn danger" onClick={()=>deleteCat(c.id)}>✓ confirmar</button>
-                    : <button className="cat-act-btn danger" title="Excluir" onClick={()=>setDelConfirm(c.id)}><Trash2 size={11}/></button>
-                  }
-                </div>
-              </div>
-              {isDropAfter && <div className="cat-drop-bar"/>}
-              {addSubOf===c.id && (
-                <div className="cat-create-form" style={{margin:"4px 0 4px 12px",padding:10}}>
-                  <div className="cat-create-form-title" style={{fontSize:10,marginBottom:8}}>Sub-subcategoria em "{c.name}"</div>
-                  <div className="cat-create-row">
-                    <input className="cat-create-inp" placeholder="Nome..." value={subName}
-                      onChange={e=>setSubName(e.target.value)}
-                      onKeyDown={e=>{if(e.key==="Enter")addSub(c.id);if(e.key==="Escape")setAddSubOf(null);}}
-                      autoFocus style={{fontSize:12}}/>
-                    <button className="btn-sm-green" onClick={()=>addSub(c.id)}><Check size={12}/></button>
-                    <button className="modal-x" style={{position:"static",width:30,height:30,flexShrink:0}} onClick={()=>setAddSubOf(null)}><X size={12}/></button>
-                  </div>
-                </div>
-              )}
-              {renderSubtree(subSubs, colorIdx)}
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
-  const renderRoot = (c, colorIdx) => {
-    const color = CAT_COLORS[colorIdx%8];
-    const subs  = cats.filter(s => s.parentId === c.id).sort((a,b)=>a.order-b.order);
-    const sibs  = siblings(c);
-    const si    = sibs.findIndex(x=>x.id===c.id);
-    const lk    = lkCount(c.id);
-    const isDragging  = dragId===c.id;
-    const isDropNest  = dropState?.targetId===c.id && dropState?.mode==="nest";
-    const isDropBefore= dropState?.targetId===c.id && dropState?.mode==="before";
-    const isDropAfter = dropState?.targetId===c.id && dropState?.mode==="after";
-
-    return (
-      <div key={c.id} className="cat-root-block">
-        {isDropBefore && <div className="cat-drop-bar"/>}
-        <div
-          className={`cat-item root-item${isDragging?" dragging":""}${isDropNest?" drag-over-nest":""}${isDropAfter||isDropBefore?" drag-over-reorder":""}`}
-          style={{borderLeftColor: color}}
-          draggable
-          onDragStart={e=>onDragStart(e,c.id,c.name)}
-          onDragOver={e=>onDragOver(e,c.id)}
-          onDrop={e=>onDrop(e,c.id)}
-          onDragEnd={onDragEnd}
-          title="Arraste para reordenar • Arraste para a direita para aninhar dentro de outra pasta"
-        >
-          <span className="cat-drag-handle">⠿</span>
-          <span className="cat-icon">📁</span>
-          {editId===c.id ? (
-            <input className="cat-create-inp" style={{flex:1,padding:"4px 10px",fontSize:13,margin:"0 4px"}} value={editName}
-              onChange={e=>setEditName(e.target.value)}
-              onKeyDown={e=>{if(e.key==="Enter")rename(c.id);if(e.key==="Escape")setEditId(null);}}
-              autoFocus onBlur={()=>rename(c.id)}/>
-          ) : (
-            <span className="cat-name root-name" onDoubleClick={()=>{setEditId(c.id);setEditName(c.name);}}>
-              {c.name}
-            </span>
-          )}
-          {subs.length > 0 && (
-            <span style={{fontSize:10,color:"#444",flexShrink:0,fontFamily:"'Inter',sans-serif",fontWeight:600}}>
-              {subs.length} {subs.length===1?"pasta":"pastas"}
-            </span>
-          )}
-          {lk > 0 && <span className="cat-link-cnt">{lk}</span>}
-          <div className="cat-actions">
-            <button className="cat-act-btn" title="↑ Subir" disabled={si===0} onClick={()=>moveUp(c)}>↑</button>
-            <button className="cat-act-btn" title="↓ Descer" disabled={si===sibs.length-1} onClick={()=>moveDown(c)}>↓</button>
-            {si>0 && <button className="cat-act-btn indent-btn" title="→ Tornar subcategoria da anterior" onClick={()=>indent(c)}>→</button>}
-            <button className="cat-act-btn add-sub" title="Adicionar subcategoria" onClick={()=>{setAddSubOf(c.id);setSubName("");}}>
-              <FolderPlus size={12}/>
-            </button>
-            <button className="cat-act-btn" title="Renomear (ou duplo clique)" onClick={()=>{setEditId(c.id);setEditName(c.name);}}>
-              <Edit2 size={11}/>
-            </button>
-            {delConfirm===c.id
-              ? <button className="cat-act-btn danger" onClick={()=>deleteCat(c.id)}>✓ confirmar</button>
-              : <button className="cat-act-btn danger" title="Excluir" onClick={()=>setDelConfirm(c.id)}><Trash2 size={11}/></button>
-            }
-          </div>
-        </div>
-        {isDropAfter && !subs.length && <div className="cat-drop-bar"/>}
-        {addSubOf===c.id && (
-          <div className="cat-create-form" style={{margin:"4px 0 6px 16px",padding:12}}>
-            <div className="cat-create-form-title" style={{fontSize:10,marginBottom:8}}>Nova subcategoria em "{c.name}"</div>
-            <div className="cat-create-row">
-              <input className="cat-create-inp" placeholder="Nome da subcategoria..." value={subName}
-                onChange={e=>setSubName(e.target.value)}
-                onKeyDown={e=>{if(e.key==="Enter")addSub(c.id);if(e.key==="Escape")setAddSubOf(null);}}
-                autoFocus style={{fontSize:13}}/>
-              <button className="btn-sm-green" onClick={()=>addSub(c.id)}><Check size={13}/></button>
-              <button className="modal-x" style={{position:"static",width:32,height:32,flexShrink:0}} onClick={()=>setAddSubOf(null)}><X size={13}/></button>
-            </div>
-          </div>
-        )}
-        {/* Subtree with connecting lines */}
-        {subs.length > 0 && renderSubtree(subs, colorIdx)}
-      </div>
-    );
-  };
-
-  return (
-    <div className="modal-bg" onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div className="modal" style={{maxWidth:560}}>
-        {/* Header */}
-        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:6}}>
-          <div>
-            <div className="modal-t" style={{marginBottom:4}}>Gerenciar Categorias</div>
-            <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
-              {[["⠿","arrastar"],["↑↓","mover"],["→","recuar"],["←","promover"],["✎","duplo clique"]].map(([icon,label])=>(
-                <span key={label} style={{fontSize:10,color:"#333",display:"flex",alignItems:"center",gap:4,fontFamily:"'Inter',sans-serif"}}>
-                  <span style={{background:"#1a1a1a",borderRadius:3,padding:"1px 5px",fontWeight:700,color:"#555"}}>{icon}</span>
-                  {label}
-                </span>
-              ))}
-            </div>
-          </div>
-          <button className="modal-x" style={{position:"static",marginTop:4}} onClick={onClose}><X size={16}/></button>
-        </div>
-
-        {/* Legend */}
-        <div style={{display:"flex",gap:16,marginBottom:12,marginTop:8,padding:"8px 12px",background:"rgba(255,255,255,.02)",borderRadius:6,flexWrap:"wrap"}}>
-          <span style={{fontSize:11,color:"#333",fontFamily:"'Inter',sans-serif",display:"flex",alignItems:"center",gap:5}}>
-            <span style={{fontSize:12}}>📁</span><span>Categoria raiz</span>
-          </span>
-          <span style={{fontSize:11,color:"#333",fontFamily:"'Inter',sans-serif",display:"flex",alignItems:"center",gap:5}}>
-            <span style={{fontSize:12}}>📄</span><span>Subcategoria</span>
-          </span>
-          <span style={{fontSize:11,color:"#555",fontFamily:"'Inter',sans-serif",display:"flex",alignItems:"center",gap:5}}>
-            <span style={{background:"rgba(229,9,20,.3)",width:24,height:2,borderRadius:1,display:"inline-block"}}/>
-            <span>arrastar para reordenar</span>
-          </span>
-          <span style={{fontSize:11,color:"#555",fontFamily:"'Inter',sans-serif",display:"flex",alignItems:"center",gap:5}}>
-            <span style={{background:"rgba(76,175,80,.3)",width:24,height:2,borderRadius:1,display:"inline-block"}}/>
-            <span>arrastar para a direita para aninhar</span>
-          </span>
-        </div>
-
-        {/* Category tree */}
-        <div className="cat-list">
-          {cats.filter(c=>!c.parentId).sort((a,b)=>a.order-b.order).map((c,ci)=>renderRoot(c,ci))}
-          {cats.filter(c=>!c.parentId).length===0 && (
-            <div className="cat-empty-state">
-              <div className="cat-empty-ico">📁</div>
-              <div className="cat-empty-msg">Nenhuma categoria ainda</div>
-              <div className="cat-empty-hint">Crie a primeira categoria abaixo para organizar seus vídeos</div>
-            </div>
-          )}
-        </div>
-
-        {/* Add root category */}
-        <div style={{marginBottom:20}}>
-          <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".7px",color:"#444",marginBottom:8,fontFamily:"'Inter',sans-serif"}}>
-            Nova categoria raiz
-          </div>
-          <div className="cat-create-row">
-            <input
-              className="cat-create-inp"
-              placeholder="Nome da categoria..."
-              value={newName}
-              onChange={e=>setNewName(e.target.value)}
-              onKeyDown={e=>e.key==="Enter"&&addCat()}
-              style={{fontSize:13}}
-            />
-            <button className="btn-sm-green" onClick={addCat} disabled={!newName.trim()}>
-              <Plus size={14}/> Criar
-            </button>
-          </div>
-        </div>
-
-        <div className="modal-foot">
-          <button className="btn-cancel" onClick={onClose}>Fechar</button>
-          <button className="btn-save" onClick={()=>onSave(cats)}><Check size={16}/> Salvar alterações</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
-// ─── BOTTOM NAV (mobile) ─────────────────────────────────────────────────────
 function BottomNav({ activePage, onHome, onSearch, onAdd, onCats, onSettings }) {
   return (
     <nav className="bottom-nav">
@@ -2412,20 +1987,14 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
   const [loading, setLoading] = useState(true);
   const [filter, setFilter]   = useState("all");
   const [search, setSearch]   = useState("");
-  const [headerUp, setHeaderUp] = useState(true);
   const [notif, setNotif]       = useState(null);
   const [popup, setPopup]       = useState(null);
   const [showAdd, setShowAdd]           = useState(false);
-  const [showCats, setShowCats]         = useState(false);
   const [editLink, setEditLink]         = useState(null);
   const [cinemaLink, setCinemaLink]     = useState(null);
   const [importData, setImportData]     = useState(null);
   const [currentCatId, setCurrentCatId] = useState(null);
-  const [showAdvSearch, setShowAdvSearch] = useState(false);
-  const [showMobileSearch, setShowMobileSearch] = useState(false);
-  const [mobileNavPage, setMobileNavPage] = useState("home");
-  const [showOrganizar, setShowOrganizar] = useState(false);
-  const [orgTab, setOrgTab] = useState("cats"); // "cats" | "tags"
+  const [showOrganizar, setShowOrganizar] = useState(false); // "cats" | "tags"
   const [customTags, setCustomTags] = useState(()=>{try{return JSON.parse(localStorage.getItem("wl-custom-tags")||"[]");}catch{return [];}});
   const [filterPlatform, setFilterPlatform] = useState("all");
   const [filterDate, setFilterDate]         = useState("all");
@@ -2498,20 +2067,20 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
         const savedCats  = rc?.value ? JSON.parse(rc.value)  : null;
         const savedLinks = rl?.value ? JSON.parse(rl.value) : null;
         if (savedCats  && Array.isArray(savedCats))  setCats(savedCats);
-        else setCats(SAMPLE_CATS);
+        else setCats([]);
         if (savedLinks && Array.isArray(savedLinks)) setLinks(savedLinks);
-        else setLinks(SAMPLE_LINKS);
+        else setLinks([]);
         if (lc?.value) lastCatRef.current = lc.value;
         if (!savedCats || !savedLinks) {
           try {
-            await wlStorage.set(`wl2-cats-${userKey}`,  JSON.stringify(SAMPLE_CATS));
-            await wlStorage.set(`wl2-links-${userKey}`, JSON.stringify(SAMPLE_LINKS));
+            await wlStorage.set(`wl2-cats-${userKey}`,  JSON.stringify([]));
+            await wlStorage.set(`wl2-links-${userKey}`, JSON.stringify([]));
           } catch{}
         }
       } catch(e) {
         console.warn("WatchList storage error:", e);
-        setCats(SAMPLE_CATS);
-        setLinks(SAMPLE_LINKS);
+        setCats([]);
+        setLinks([]);
       }
       if (!cancelled) setLoading(false);
     })();
@@ -2550,7 +2119,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
 
   // Header scroll
   useEffect(()=>{
-    const fn=()=>{ const y=window.scrollY; setHeaderUp(y<60||y<lastY.current); lastY.current=y; };
+    const fn=()=>{ const y=window.scrollY; lastY.current=y; };
     window.addEventListener("scroll",fn,{passive:true});
     return()=>window.removeEventListener("scroll",fn);
   },[]);
@@ -2890,7 +2459,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
             ))}
             <div className="filter-sep"/>
             <span className="filter-label">Tags:</span>
-            {PRESET_TAGS.map(pt=>(
+            {(()=>{try{return JSON.parse(localStorage.getItem("wl-custom-tags")||"[]");}catch{return[];}})().map(pt=>(
               <button key={pt.label} className={`filter-chip${filterTags.includes(pt.label)?" on":""}`}
                 onClick={()=>setFilterTags(prev=>prev.includes(pt.label)?prev.filter(t=>t!==pt.label):[...prev,pt.label])}
                 style={filterTags.includes(pt.label)?{borderColor:pt.color,color:pt.color,background:pt.color+"18"}:{}}
@@ -3216,15 +2785,14 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
         {/* BOTTOM NAV — mobile only */}
         <BottomNav
           activePage={mobileNavPage}
-          onHome={()=>{ setMobileNavPage("home"); setFilter("all"); setSearch(""); }}
-          onSearch={()=>{ setMobileNavPage("search"); setShowMobileSearch(true); }}
-          onAdd={()=>{ setMobileNavPage("home"); setShowAdd(true); }}
-          onCats={()=>{ setMobileNavPage("cats"); setShowCats(true); }}
-          onSettings={()=>{ setMobileNavPage("settings"); onSettings(); }}
+          onHome={()=>{ setFilter("all"); setSearch(""); }}
+          onSearch={()=>{ }}
+          onAdd={()=>{ setShowAdd(true); }}
+          onCats={()=>{ }}
+          onSettings={()=>{ onSettings(); }}
         />
 
         {/* CAT MANAGER */}
-        {showCats && <CatModal categories={cats} links={links} onSave={c=>{saveCats(c);setShowCats(false);notify("✓ Categorias salvas!");}} onClose={()=>setShowCats(false)}/>}
 
         {/* NOTIF */}
         {/* UNDO TOAST */}
@@ -4081,25 +3649,6 @@ function MigrationModal({ status, result }) {
   );
 }
 
-// ─── CONFIRM MODAL (replaces browser confirm()) ──────────────────────────────
-function ConfirmModal({ message, onConfirm, onCancel }) {
-  return (
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center"}}
-      onClick={onCancel}>
-      <div style={{background:"#111",border:"1px solid #1a1a1a",borderRadius:12,padding:"28px 32px",maxWidth:400,width:"90%",textAlign:"center",boxShadow:"0 24px 64px rgba(0,0,0,.8)"}}
-        onClick={e=>e.stopPropagation()}>
-        <div style={{fontSize:22,marginBottom:12}}>⚠️</div>
-        <div style={{fontSize:15,fontWeight:700,color:"#fff",marginBottom:8,lineHeight:1.4}}>{message}</div>
-        <div style={{display:"flex",gap:10,justifyContent:"center",marginTop:20}}>
-          <button onClick={onConfirm} style={{background:"#e50914",border:"none",color:"#fff",cursor:"pointer",padding:"10px 28px",borderRadius:7,fontSize:14,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>Excluir</button>
-          <button onClick={onCancel} style={{background:"rgba(255,255,255,.07)",border:"1px solid #1a1a1a",color:"#a0a0a0",cursor:"pointer",padding:"10px 24px",borderRadius:7,fontSize:14,fontFamily:"'Inter',sans-serif"}}>Cancelar</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── ORGANIZAR MODAL ────────────────────────────────────────────────────────────
 const TAG_COLORS_CYCLE = ["#FF6B6B","#FFB74D","#64B5F6","#81C784","#BA68C8","#F06292","#FF8A65","#90A4AE"];
 
 function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, onCreateTag, onDeleteTag }) {
@@ -4109,9 +3658,7 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState(TAG_COLORS_CYCLE[customTags.length % TAG_COLORS_CYCLE.length]);
   const [showCreateTag, setShowCreateTag] = useState(false);
-  const [creatingCat, setCreatingCat] = useState(false);
-  const [pendingDelete, setPendingDelete] = useState(null); // {id, name, hasSubs}
-  const [dupTagMsg, setDupTagMsg] = useState("");
+  const [creatingCat, setCreatingCat] = useState(false); // {id, name, hasSubs}
   const [confirmState, setConfirmState] = useState(null); // {message, onConfirm}
   const askConfirm = (message, onConfirm) => setConfirmState({message, onConfirm});
 
@@ -4133,9 +3680,8 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
   function handleCreateTag() {
     if (!newTagName.trim()) return;
     if (customTags.find(t => t.label.toLowerCase() === newTagName.trim().toLowerCase())) {
-      setDupTagMsg("Já existe uma tag com esse nome."); return;
+      return;
     }
-    setDupTagMsg("");
     onCreateTag({ id:"t-"+Date.now(), label:newTagName.trim(), color:newTagColor, icon:"◈", count:0 });
     setNewTagName(""); setShowCreateTag(false);
     setNewTagColor(TAG_COLORS_CYCLE[(customTags.length+1) % TAG_COLORS_CYCLE.length]);
@@ -4312,7 +3858,6 @@ export default function App() {
   const [page, setPage]               = useState(null);
   const [user, setUser]               = useState(null);
   const [migrationStatus, setMigStatus] = useState(null);
-  const [migrationResult, setMigResult] = useState(null);
   const [appStats, setAppStats]         = useState({ cats:[], links:[] }); // shared stats
   const exportRef = useRef(null);
   const importRef = useRef(null);
@@ -4383,13 +3928,8 @@ export default function App() {
         body: JSON.stringify({ categories: bestCats, links: bestLinks })
       }, userData.jwtToken);
 
-      setMigResult({
-        links:      result.imported?.links      || 0,
-        categories: result.imported?.categories || 0,
-        skipped:    result.imported?.skipped    || 0,
-      });
       setMigStatus(result.ok ? "done" : "error");
-      setTimeout(()=>{ setMigStatus(null); setMigResult(null); }, 3500);
+      setTimeout(()=>{ setMigStatus(null); }, 3500);
 
     } catch (err) {
       console.warn("Migration failed:", err.message);
