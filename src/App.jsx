@@ -4338,7 +4338,7 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
                 </div>
               ):customTags.map(tag=>(
                 <div key={tag.id||tag.label}
-                  style={{borderLeft:`3px solid ${tag.color}`,background:"#0f0f0f",border:"1px solid #1a1a1a",borderLeft:`3px solid ${tag.color}`,borderRadius:8,padding:"12px 14px",display:"flex",alignItems:"center",gap:12}}>
+                  style={{background:"#0f0f0f",borderRadius:8,padding:"12px 14px",display:"flex",alignItems:"center",gap:12,borderTop:"1px solid #1a1a1a",borderRight:"1px solid #1a1a1a",borderBottom:"1px solid #1a1a1a",borderLeft:`3px solid ${tag.color}`}}>
                   <span style={{color:tag.color,fontSize:18,flexShrink:0}}>{tag.icon||"◈"}</span>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:14,fontWeight:700,color:"#fff",whiteSpace:"normal",lineHeight:1.4,wordBreak:"break-word"}}>{tag.label}</div>
