@@ -2416,15 +2416,22 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
   const [notif, setNotif]       = useState(null);
   const [popup, setPopup]       = useState(null);
   const [showAdd, setShowAdd]           = useState(false);
-  const [showCats, setShowCats]         = useState(false);
   const [editLink, setEditLink]         = useState(null);
   const [cinemaLink, setCinemaLink]     = useState(null);
   const [importData, setImportData]     = useState(null);
   const [currentCatId, setCurrentCatId] = useState(null);
   const [showAdvSearch, setShowAdvSearch] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
-  const [mobileNavPage, setMobileNavPage] = useState("home");
   const [showOrganizar, setShowOrganizar] = useState(false);
+  // Re-fetch cats from backend whenever Organizar modal opens
+  useEffect(() => {
+    if (!showOrganizar) return;
+    const jwt = user?.jwtToken;
+    if (!jwt || !API_URL) return;
+    apiFetch("/api/categories", {}, jwt)
+      .then(fresh => { if (Array.isArray(fresh)) saveCats(fresh); })
+      .catch(() => {});
+  }, [showOrganizar]);
   const [orgTab, setOrgTab] = useState("cats"); // "cats" | "tags"
   const [customTags, setCustomTags] = useState(()=>{try{return JSON.parse(localStorage.getItem("wl-custom-tags")||"[]");}catch{return [];}});
   const [filterPlatform, setFilterPlatform] = useState("all");
@@ -3266,15 +3273,14 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
         {/* BOTTOM NAV — mobile only */}
         <BottomNav
           activePage={mobileNavPage}
-          onHome={()=>{ setMobileNavPage("home"); setFilter("all"); setSearch(""); }}
-          onSearch={()=>{ setMobileNavPage("search"); setShowMobileSearch(true); }}
-          onAdd={()=>{ setMobileNavPage("home"); setShowAdd(true); }}
-          onCats={()=>{ setMobileNavPage("cats"); setShowCats(true); }}
-          onSettings={()=>{ setMobileNavPage("settings"); onSettings(); }}
+          onHome={()=>{ setFilter("all"); setSearch(""); }}
+          onSearch={()=>{ setShowMobileSearch(true); }}
+          onAdd={()=>{ setShowAdd(true); }}
+          onCats={()=>setShowOrganizar(true)}
+          onSettings={()=>{ onSettings(); }}
         />
 
-        {/* CAT MANAGER */}
-        {showCats && <CatModal categories={cats} links={links} onSave={c=>{saveCats(c);setShowCats(false);notify("✓ Categorias salvas!");}} onClose={()=>setShowCats(false)}/>}
+        {/* CatModal removed — use Organizar */}
 
         {/* NOTIF */}
         {/* UNDO TOAST */}
