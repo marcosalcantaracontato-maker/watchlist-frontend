@@ -1542,7 +1542,7 @@ function Row({ cat, subCats=[], links, catIdx, isOrphaned, allCats, allLinks, on
         <div className="row-hdr-l">
           <div className="row-title" onClick={() => onNavigate && subCats.length > 0 && onNavigate(cat.id)} style={{...(subCats.length>0?{cursor:"pointer"}:{}),color:isOrphaned?"#f5a623":""}}>
             {cat.name}
-            {isOrphaned && <span style={{fontSize:11,color:"#666",marginLeft:8,fontWeight:400}}>— selecione um item e exclua com o botão 🗑</span>}
+            {isOrphaned && <span style={{fontSize:11,color:"#888",marginLeft:8,fontWeight:400}}>— links sem categoria (mova ou exclua)</span>}
           </div>
           {links.length > 0 && <div className="row-cnt">{wd} de {links.length} assistidos</div>}
           {subCats.length > 0 && <div className="row-cnt" style={{color:"#f5a623"}}>{subCats.length} pasta{subCats.length!==1?"s":""}</div>}
@@ -2744,7 +2744,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
       const catIds = new Set(cats.map(c => c.id));
       const orphaned = shown.filter(l => !catIds.has(l.categoryId));
       if (orphaned.length > 0) {
-        rows.push({ cat: { id:"__orphaned__", name:"⚠ Sem Categoria (itens para excluir)", parentId:null, order:9999 }, subCats:[], links:orphaned, catIdx:rows.length, isOrphaned:true });
+        rows.push({ cat: { id:"__orphaned__", name:"⚠ Sem Categoria", parentId:null, order:9999 }, subCats:[], links:orphaned, catIdx:rows.length, isOrphaned:true });
       }
       return rows;
     } else {
