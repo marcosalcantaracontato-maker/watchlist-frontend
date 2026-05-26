@@ -2664,6 +2664,17 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
     const targetIdx= catLinks.findIndex(l=>l.id===targetId);
     if (dragIdx<0||targetIdx<0) return;
     const reordered = [...catLinks];
+
+  // Refresh notes from backend
+  const freshNotes = useCallback(async () => {
+    const jwt = user?.jwtToken;
+    if (!jwt || !API_URL) return;
+    try {
+      const data = await apiFetch("/api/notes", {}, jwt);
+      if (Array.isArray(data)) setNotes(data);
+    } catch(e) { console.warn("freshNotes:", e); }
+  }, [user]);
+
     const [moved] = reordered.splice(dragIdx,1);
     reordered.splice(targetIdx,0,moved);
     const updatedOrders = reordered.reduce((acc,l,i)=>({...acc,[l.id]:i}),{});
@@ -2902,7 +2913,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
             {[["all","Início"],["unwatched","Para Assistir"],["watched","Assistidos"]].map(([f,l])=>(
               <button key={f} className={`nav-btn${filter===f?" on":""}`} onClick={()=>setFilter(f)}>{l}</button>
             ))}
-            <button className={`nav-btn${appPage==="notes"?" on":""}`} onClick={()=>setAppPage("notes")}>📝 Notas</button>
+            <button className={`nav-btn${appPage==="notes"?" on":""}`} onClick={()=>setAppPage("notes")}>Notas</button>
             <button className="nav-btn" onClick={()=>setShowOrganizar(true)}>⊞ Organizar</button>
           </nav>
           <div className="hdr-r">
