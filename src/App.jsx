@@ -2436,6 +2436,23 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
 
   // Storage key scoped by user ID — must be declared before any useEffect
   const userKey = user?.id || "demo";
+
+  // Re-fetch from backend when tab regains focus (keeps app in sync with extension)
+  useEffect(()=>{
+    const onFocus = async () => {
+      if (!user?.jwtToken || !API_URL) return;
+      try {
+        const [freshCats, freshLinks] = await Promise.all([
+          apiFetch("/api/categories", {}, user.jwtToken),
+          apiFetch("/api/links", {}, user.jwtToken),
+        ]);
+        if (Array.isArray(freshCats))  saveCats(freshCats);
+        if (Array.isArray(freshLinks)) saveLinks(freshLinks);
+      } catch {}
+    };
+    document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") onFocus(); });
+    return ()=>document.removeEventListener("visibilitychange", onFocus);
+  },[user?.jwtToken]);
   const undoProgInterval = useRef(null);
   const saveCount = useRef(0);
   const lastCatRef = useRef(null);
@@ -3122,18 +3139,40 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
             cats={cats} customTags={customTags}
             onClose={()=>setShowOrganizar(false)}
             onDeleteCat={async(id)=>{
+              // Collect all descendants recursively
+              function getDescendants(parentId) {
+                const children = cats.filter(c => c.parentId === parentId);
+                return children.flatMap(c => [c.id, ...getDescendants(c.id)]);
+              }
+              const toDelete = [...getDescendants(id), id]; // children first, parent last
+              // Optimistic UI update
+              saveCats(cats.filter(c => !toDelete.includes(c.id)));
+              // Delete from backend: children first, then parent
               try{
-                await apiFetch(`/api/categories/${id}`,{method:"DELETE"},user?.jwtToken);
-                const fresh=await apiFetch("/api/categories",{},user?.jwtToken);
-                saveCats(Array.isArray(fresh)?fresh:cats.filter(c=>c.id!==id&&c.parentId!==id));
-              }catch{saveCats(cats.filter(c=>c.id!==id&&c.parentId!==id));}
+                for(const catId of toDelete){
+                  try{ await apiFetch(`/api/categories/${catId}`,{method:"DELETE"},user?.jwtToken); }
+                  catch(e){ console.warn("Delete cat failed:",catId,e); }
+                }
+              }finally{
+                // Always re-fetch to sync with truth
+                try{
+                  const fresh=await apiFetch("/api/categories",{},user?.jwtToken);
+                  if(Array.isArray(fresh)){
+                    saveCats(fresh);
+                    // BroadcastChannel sync to extension
+                    try{ new BroadcastChannel("watchlist-sync").postMessage({type:"CATS_UPDATED",cats:fresh}); }catch{}
+                  }
+                }catch{}
+              }
             }}
             onCreateCat={async(name,parentId)=>{
               try{
                 const res=await apiFetch("/api/categories",{method:"POST",body:JSON.stringify({name,parentId:parentId||null,order:cats.filter(c=>!c.parentId).length})},user?.jwtToken);
                 const fresh=await apiFetch("/api/categories",{},user?.jwtToken);
-                saveCats(Array.isArray(fresh)?fresh:[...cats,{id:res.catId,name,parentId:parentId||null,order:0}]);
-              }catch(e){alert("Erro ao criar categoria: "+e);}
+                const newCats = Array.isArray(fresh)?fresh:[...cats,{id:res.catId,name,parentId:parentId||null,order:0}];
+                saveCats(newCats);
+                try{ new BroadcastChannel("watchlist-sync").postMessage({type:"CATS_UPDATED",cats:newCats}); }catch{}
+              }catch(e){ console.error("Create cat error:",e); }
             }}
             onCreateTag={(tag)=>setCustomTags(prev=>[...prev,tag])}
             onDeleteTag={(id)=>setCustomTags(prev=>prev.filter(t=>t.id!==id&&t.label!==id))}
@@ -4042,6 +4081,24 @@ function MigrationModal({ status, result }) {
   );
 }
 
+// ─── CONFIRM MODAL (replaces browser confirm()) ──────────────────────────────
+function ConfirmModal({ message, onConfirm, onCancel }) {
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center"}}
+      onClick={onCancel}>
+      <div style={{background:"#111",border:"1px solid #1a1a1a",borderRadius:12,padding:"28px 32px",maxWidth:400,width:"90%",textAlign:"center",boxShadow:"0 24px 64px rgba(0,0,0,.8)"}}
+        onClick={e=>e.stopPropagation()}>
+        <div style={{fontSize:22,marginBottom:12}}>⚠️</div>
+        <div style={{fontSize:15,fontWeight:700,color:"#fff",marginBottom:8,lineHeight:1.4}}>{message}</div>
+        <div style={{display:"flex",gap:10,justifyContent:"center",marginTop:20}}>
+          <button onClick={onConfirm} style={{background:"#e50914",border:"none",color:"#fff",cursor:"pointer",padding:"10px 28px",borderRadius:7,fontSize:14,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>Excluir</button>
+          <button onClick={onCancel} style={{background:"rgba(255,255,255,.07)",border:"1px solid #1a1a1a",color:"#a0a0a0",cursor:"pointer",padding:"10px 24px",borderRadius:7,fontSize:14,fontFamily:"'Inter',sans-serif"}}>Cancelar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── ORGANIZAR MODAL ────────────────────────────────────────────────────────────
 const TAG_COLORS_CYCLE = ["#FF6B6B","#FFB74D","#64B5F6","#81C784","#BA68C8","#F06292","#FF8A65","#90A4AE"];
 
@@ -4053,6 +4110,10 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
   const [newTagColor, setNewTagColor] = useState(TAG_COLORS_CYCLE[customTags.length % TAG_COLORS_CYCLE.length]);
   const [showCreateTag, setShowCreateTag] = useState(false);
   const [creatingCat, setCreatingCat] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState(null); // {id, name, hasSubs}
+  const [dupTagMsg, setDupTagMsg] = useState("");
+  const [confirmState, setConfirmState] = useState(null); // {message, onConfirm}
+  const askConfirm = (message, onConfirm) => setConfirmState({message, onConfirm});
 
   // Show EVERY category — no filtering, no tree logic
   const existingIds = new Set(cats.map(c => c.id));
@@ -4072,14 +4133,17 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
   function handleCreateTag() {
     if (!newTagName.trim()) return;
     if (customTags.find(t => t.label.toLowerCase() === newTagName.trim().toLowerCase())) {
-      alert("Já existe uma tag com esse nome."); return;
+      setDupTagMsg("Já existe uma tag com esse nome."); return;
     }
+    setDupTagMsg("");
     onCreateTag({ id:"t-"+Date.now(), label:newTagName.trim(), color:newTagColor, icon:"◈", count:0 });
     setNewTagName(""); setShowCreateTag(false);
     setNewTagColor(TAG_COLORS_CYCLE[(customTags.length+1) % TAG_COLORS_CYCLE.length]);
   }
 
   return (
+    <>
+    {confirmState && <ConfirmModal message={confirmState.message} onConfirm={confirmState.onConfirm} onCancel={()=>setConfirmState(null)}/>}
     <div className="modal-bg" onClick={onClose}>
       <div className="modal" style={{width:"min(880px,95vw)",maxHeight:"88vh",overflowY:"auto",padding:24}} onClick={e=>e.stopPropagation()}>
         {/* Header */}
@@ -4154,7 +4218,7 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
                       <span style={{flex:1,fontSize:13,fontWeight:600,color: cat._orphan ? "#f5a623" : "#fff"}}>{cat.name}</span>
                       {cat._orphan && <span style={{fontSize:9,color:"#f5a623",padding:"1px 6px",border:"1px solid rgba(245,166,35,.3)",borderRadius:4}}>órfã</span>}
                       <button
-                        onClick={()=>{if(confirm(`Excluir "${cat.name}"${hasSubs?" e suas subcategorias":""  }?`))onDeleteCat(cat.id);}}
+                        onClick={()=>askConfirm(`Excluir "${cat.name}"${hasSubs?" e suas subcategorias":""}?`, ()=>{ setConfirmState(null); onDeleteCat(cat.id); })}
                         style={{background:"none",border:"none",cursor:"pointer",color:"#333",fontSize:12,padding:"4px 8px",borderRadius:4,transition:"all .15s"}}
                         onMouseEnter={e=>e.currentTarget.style.color="#f87171"}
                         onMouseLeave={e=>e.currentTarget.style.color="#333"}>🗑</button>
@@ -4221,10 +4285,10 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
                   style={{borderLeft:`3px solid ${tag.color}`,background:"#0a0a0a",border:"1px solid #1a1a1a",borderLeft:`3px solid ${tag.color}`,borderRadius:7,padding:"9px 10px",display:"flex",alignItems:"center",gap:8}}>
                   <span style={{color:tag.color,fontSize:14}}>{tag.icon||"◈"}</span>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:12,fontWeight:700,color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{tag.label}</div>
+                    <div style={{fontSize:12,fontWeight:700,color:"#fff",wordBreak:"break-word",lineHeight:1.3}}>{tag.label}</div>
                     <div style={{fontSize:10,color:"#555"}}>{tag.count||0} itens</div>
                   </div>
-                  <button onClick={()=>onDeleteTag(tag.id||tag.label)}
+                  <button onClick={()=>askConfirm(`Excluir tag "${tag.label}"?`, ()=>{ setConfirmState(null); onDeleteTag(tag.id||tag.label); })}
                     style={{background:"none",border:"none",cursor:"pointer",color:"#333",fontSize:12,padding:"2px 6px",borderRadius:3,transition:"color .15s"}}
                     onMouseEnter={e=>e.target.style.color="#f87171"} onMouseLeave={e=>e.target.style.color="#333"}>✕</button>
                 </div>
@@ -4239,6 +4303,7 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
         </div>
       </div>
     </div>
+    </>
   );
 }
 
