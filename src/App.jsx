@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Play, Plus, Search, Check, Trash2, Edit2, ChevronRight, ChevronLeft,
   Download, Upload, X, Loader2, Youtube, Link, FolderPlus, MoreVertical,
   Eye, EyeOff, BarChart2, Folder, Volume2, VolumeX, Sparkles, RefreshCw,
-  Home, Settings, Menu } from "lucide-react";
+  Home, Settings, Menu,
+  FileText, Inbox, Star, Calendar, Flag, ChevronDown, RotateCcw } from "lucide-react";
 
 // ─── CONFIGURAÇÃO DA API ──────────────────────────────────────────────────────
 const API_URL = "https://web-production-99f91.up.railway.app";
@@ -947,6 +948,400 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
   .bottom-nav{padding-bottom:calc(8px + env(safe-area-inset-bottom));}
   .modal{padding-bottom:calc(32px + env(safe-area-inset-bottom));}
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   📐 DESIGN TOKENS — Tipografia e cores para dark mode legível (Netflix-grade)
+   Aplicados na seção de Notas; restante do app pode migrar gradualmente.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root{
+  /* Texto — contraste 7:1+ */
+  --text-primary:   #ffffff;
+  --text-body:      rgba(255,255,255,.92);
+  --text-secondary: rgba(255,255,255,.72);
+  --text-tertiary:  rgba(255,255,255,.52);
+  --text-disabled:  rgba(255,255,255,.32);
+
+  /* Backgrounds em camadas */
+  --bg-base:     #0a0a0a;
+  --bg-surface:  #141414;
+  --bg-elevated: #1f1f1f;
+  --bg-hover:    rgba(255,255,255,.06);
+  --bg-active:   rgba(229,9,20,.12);
+
+  /* Bordas */
+  --border-subtle: rgba(255,255,255,.06);
+  --border-default:rgba(255,255,255,.10);
+  --border-strong: rgba(255,255,255,.18);
+
+  /* Cor de marca */
+  --brand:       #e50914;
+  --brand-hover: #f40d18;
+  --brand-soft:  rgba(229,9,20,.15);
+
+  /* Prioridades */
+  --p1: #e50914;  /* alta */
+  --p2: #f5a623;
+  --p3: #3b82f6;
+  --p4: rgba(255,255,255,.32);
+
+  /* Tipografia */
+  --font-display:28px;
+  --font-title:  20px;
+  --font-h2:     17px;
+  --font-body:   15px;
+  --font-nav:    14px;
+  --font-meta:   13px;
+  --font-mini:   12px;
+
+  /* Curva Netflix */
+  --ease: cubic-bezier(.16,1,.3,1);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   📝 NOTAS — Layout 3 colunas (sidebar redimensionável + lista + editor)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.notes-page{
+  position:fixed;
+  top:64px;left:0;right:0;bottom:0;
+  display:flex;
+  background:var(--bg-base);
+  color:var(--text-body);
+  font-family:'Inter',sans-serif;
+  z-index:5;
+}
+
+/* — SIDEBAR esquerda (redimensionável) — */
+.np-sidebar{
+  flex:0 0 auto;
+  background:var(--bg-surface);
+  border-right:1px solid var(--border-subtle);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  min-width:200px;max-width:480px;
+  position:relative;
+}
+.np-sidebar.collapsed{flex:0 0 56px !important;width:56px;}
+.np-sidebar-head{
+  padding:18px 18px 12px;
+  display:flex;flex-direction:column;gap:12px;
+  border-bottom:1px solid var(--border-subtle);
+}
+.np-new-btn{
+  background:var(--brand);color:#fff;border:none;
+  padding:10px 14px;border-radius:8px;
+  font-size:var(--font-nav);font-weight:600;
+  cursor:pointer;display:flex;align-items:center;gap:8px;justify-content:center;
+  transition:background .2s var(--ease);font-family:'Inter',sans-serif;
+}
+.np-new-btn:hover{background:var(--brand-hover);}
+.np-search{
+  background:var(--bg-elevated);border:1px solid var(--border-subtle);
+  color:var(--text-body);padding:9px 12px;border-radius:7px;
+  font-size:var(--font-nav);outline:none;width:100%;
+  font-family:'Inter',sans-serif;
+  transition:border-color .2s var(--ease);
+}
+.np-search:focus{border-color:var(--brand);}
+.np-search::placeholder{color:var(--text-tertiary);}
+
+.np-sidebar-body{flex:1;overflow-y:auto;padding:10px 8px 18px;}
+.np-sidebar-body::-webkit-scrollbar{width:8px;}
+.np-sidebar-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:4px;}
+.np-sidebar-body::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.18);}
+
+.np-section-label{
+  font-size:var(--font-mini);font-weight:700;
+  color:var(--text-tertiary);
+  text-transform:uppercase;letter-spacing:1px;
+  padding:14px 10px 8px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.np-section-label button{
+  background:none;border:none;color:var(--text-tertiary);cursor:pointer;
+  padding:2px;border-radius:4px;display:flex;align-items:center;
+  transition:all .15s var(--ease);
+}
+.np-section-label button:hover{background:var(--bg-hover);color:var(--text-body);}
+
+.np-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;
+  border-radius:7px;
+  cursor:pointer;
+  font-size:var(--font-nav);font-weight:500;
+  color:var(--text-body);
+  transition:background .15s var(--ease);
+  border-left:3px solid transparent;
+  margin:1px 0;
+  position:relative;
+  min-width:0; /* essencial pra ellipsis funcionar em flex */
+}
+.np-item:hover{background:var(--bg-hover);}
+.np-item.active{
+  background:var(--bg-active);
+  border-left-color:var(--brand);
+  color:var(--text-primary);
+  font-weight:600;
+}
+.np-item-ico{flex-shrink:0;display:flex;align-items:center;color:var(--text-secondary);}
+.np-item.active .np-item-ico{color:var(--brand);}
+.np-item-label{
+  flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.np-item-count{
+  flex-shrink:0;font-size:var(--font-mini);font-weight:600;
+  color:var(--text-tertiary);
+  background:var(--bg-elevated);
+  padding:2px 8px;border-radius:10px;
+  min-width:22px;text-align:center;
+}
+.np-item.active .np-item-count{color:var(--text-body);background:rgba(229,9,20,.2);}
+
+.np-folder-row{
+  display:flex;align-items:center;gap:6px;
+}
+.np-folder-row .np-item{flex:1;min-width:0;}
+.np-folder-row .np-folder-actions{
+  display:none;flex-shrink:0;
+}
+.np-folder-row:hover .np-folder-actions{display:flex;gap:2px;padding-right:4px;}
+.np-folder-act-btn{
+  background:none;border:none;color:var(--text-secondary);
+  cursor:pointer;padding:5px;border-radius:5px;display:flex;align-items:center;
+  transition:all .15s var(--ease);
+}
+.np-folder-act-btn:hover{background:var(--bg-hover);color:var(--text-primary);}
+
+/* — Resize handle — */
+.np-resize-handle{
+  position:absolute;
+  top:0;right:-2px;bottom:0;
+  width:5px;
+  cursor:col-resize;
+  z-index:10;
+  background:transparent;
+  transition:background .15s var(--ease);
+}
+.np-resize-handle:hover,
+.np-resize-handle.dragging{background:var(--brand-soft);}
+
+/* — LISTA central — */
+.np-list{
+  flex:0 0 340px;
+  background:var(--bg-base);
+  border-right:1px solid var(--border-subtle);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  min-width:280px;
+}
+.np-list-head{
+  padding:18px 20px 14px;
+  border-bottom:1px solid var(--border-subtle);
+}
+.np-list-title{
+  font-size:var(--font-title);font-weight:700;
+  color:var(--text-primary);
+  margin-bottom:4px;letter-spacing:-.3px;
+}
+.np-list-sub{
+  font-size:var(--font-meta);color:var(--text-secondary);font-weight:500;
+}
+.np-list-body{flex:1;overflow-y:auto;padding:8px;}
+.np-list-body::-webkit-scrollbar{width:8px;}
+.np-list-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:4px;}
+
+.np-note-card{
+  padding:14px 16px;
+  margin:2px 0;
+  border-radius:9px;
+  cursor:pointer;
+  border-left:3px solid transparent;
+  transition:background .15s var(--ease);
+  position:relative;
+}
+.np-note-card:hover{background:var(--bg-hover);}
+.np-note-card.active{
+  background:var(--bg-active);
+  border-left-color:var(--brand);
+}
+.np-note-title{
+  font-size:var(--font-body);font-weight:600;
+  color:var(--text-primary);
+  margin-bottom:6px;line-height:1.35;
+  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.np-note-title.untitled{color:var(--text-tertiary);font-style:italic;}
+.np-note-title.completed{color:var(--text-tertiary);text-decoration:line-through;}
+.np-note-preview{
+  font-size:var(--font-meta);color:var(--text-secondary);
+  line-height:1.45;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;
+  margin-bottom:8px;
+  word-break:break-word;
+}
+.np-note-meta{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  font-size:var(--font-mini);color:var(--text-tertiary);font-weight:500;
+}
+.np-note-flag{
+  display:inline-flex;align-items:center;gap:3px;
+  font-weight:600;
+}
+.np-note-flag.p1{color:var(--p1);}
+.np-note-flag.p2{color:var(--p2);}
+.np-note-flag.p3{color:var(--p3);}
+
+.np-empty-list{
+  padding:40px 24px;text-align:center;color:var(--text-tertiary);
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+}
+.np-empty-list .ico{font-size:36px;opacity:.4;}
+.np-empty-list .t{font-size:var(--font-body);font-weight:600;color:var(--text-body);}
+.np-empty-list .s{font-size:var(--font-meta);line-height:1.5;max-width:240px;}
+
+/* — EDITOR direita — */
+.np-editor{
+  flex:1;
+  background:var(--bg-base);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.np-editor-head{
+  padding:18px 28px 12px;
+  border-bottom:1px solid var(--border-subtle);
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+}
+.np-editor-head-l{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;}
+.np-editor-title{
+  background:none;border:none;
+  font-size:var(--font-display);font-weight:700;
+  color:var(--text-primary);
+  outline:none;font-family:'Inter',sans-serif;
+  letter-spacing:-.5px;
+  width:100%;
+  padding:0;
+}
+.np-editor-title::placeholder{color:var(--text-tertiary);}
+.np-editor-meta{
+  font-size:var(--font-meta);color:var(--text-secondary);
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.np-editor-meta-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--bg-elevated);
+  padding:4px 10px;border-radius:14px;
+  font-weight:500;
+  border:1px solid var(--border-subtle);
+}
+.np-editor-actions{display:flex;gap:8px;flex-shrink:0;}
+.np-editor-btn{
+  background:var(--bg-elevated);border:1px solid var(--border-subtle);
+  color:var(--text-body);cursor:pointer;
+  padding:8px 12px;border-radius:7px;
+  font-size:var(--font-meta);font-weight:600;
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:'Inter',sans-serif;
+  transition:all .15s var(--ease);
+}
+.np-editor-btn:hover{background:var(--bg-hover);border-color:var(--border-default);color:var(--text-primary);}
+.np-editor-btn.danger:hover{color:var(--brand);border-color:var(--brand);}
+.np-editor-btn.primary{background:var(--brand);color:#fff;border-color:var(--brand);}
+.np-editor-btn.primary:hover{background:var(--brand-hover);border-color:var(--brand-hover);}
+
+.np-editor-body{
+  flex:1;overflow-y:auto;
+  padding:24px 28px 60px;
+}
+.np-editor-textarea{
+  width:100%;
+  background:none;border:none;outline:none;resize:none;
+  color:var(--text-body);
+  font-size:var(--font-body);font-family:'Inter',sans-serif;
+  line-height:1.65;
+  min-height:calc(100vh - 280px);
+  padding:0;
+}
+.np-editor-textarea::placeholder{color:var(--text-tertiary);}
+
+.np-editor-empty{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:18px;color:var(--text-tertiary);text-align:center;padding:40px;
+}
+.np-editor-empty .ico{font-size:56px;opacity:.4;}
+.np-editor-empty .t{font-size:var(--font-h2);font-weight:600;color:var(--text-body);}
+.np-editor-empty .s{font-size:var(--font-meta);line-height:1.5;max-width:340px;}
+
+.np-saving{
+  font-size:var(--font-mini);color:var(--text-tertiary);
+  display:inline-flex;align-items:center;gap:5px;
+}
+.np-saving.saved{color:#22c55e;}
+
+/* — Modal de criar/editar pasta — */
+.np-folder-modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.7);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;
+  z-index:1000;
+  animation:fadeIn .15s var(--ease);
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.np-folder-modal{
+  background:var(--bg-surface);
+  border:1px solid var(--border-default);
+  border-radius:12px;
+  padding:24px;
+  width:100%;max-width:420px;
+  font-family:'Inter',sans-serif;
+}
+.np-folder-modal-title{
+  font-size:var(--font-h2);font-weight:700;color:var(--text-primary);
+  margin-bottom:6px;
+}
+.np-folder-modal-sub{
+  font-size:var(--font-meta);color:var(--text-secondary);margin-bottom:18px;
+}
+.np-folder-modal-input{
+  width:100%;
+  background:var(--bg-elevated);border:1px solid var(--border-default);
+  color:var(--text-primary);
+  padding:11px 14px;border-radius:8px;
+  font-size:var(--font-body);font-family:'Inter',sans-serif;
+  outline:none;transition:border-color .15s var(--ease);
+}
+.np-folder-modal-input:focus{border-color:var(--brand);}
+.np-folder-modal-actions{
+  display:flex;gap:10px;margin-top:18px;justify-content:flex-end;
+}
+
+/* — Responsivo: até 1024px, esconde sidebar (drawer) e estreita lista — */
+@media (max-width: 1024px){
+  .np-sidebar{position:absolute;top:0;left:0;bottom:0;z-index:20;transform:translateX(-100%);transition:transform .25s var(--ease);box-shadow:8px 0 24px rgba(0,0,0,.4);}
+  .np-sidebar.mobile-open{transform:translateX(0);}
+  .np-list{flex:1;min-width:0;}
+  .np-resize-handle{display:none;}
+  .np-mobile-menu-btn{display:flex !important;}
+}
+.np-mobile-menu-btn{
+  display:none;
+  background:var(--bg-elevated);border:1px solid var(--border-subtle);
+  color:var(--text-body);cursor:pointer;
+  padding:8px;border-radius:7px;align-items:center;
+}
+
+/* — Editor escondido em telas pequenas até nota selecionada — */
+@media (max-width: 760px){
+  .np-list{flex:1;}
+  .np-editor{position:absolute;inset:0;z-index:25;background:var(--bg-base);transform:translateX(100%);transition:transform .25s var(--ease);}
+  .np-editor.mobile-open{transform:translateX(0);}
+}
+
+/* — Bottom nav: novo item Notas — */
+.bnav-btn-notes svg{stroke-width:2.2;}
 `;
 
 // ─── SAMPLE DATA ─────────────────────────────────────────────────────────────
@@ -2381,15 +2776,616 @@ function CatModal({ categories, links, onSave, onClose }) {
 
 
 // ─── BOTTOM NAV (mobile) ─────────────────────────────────────────────────────
-function BottomNav({ activePage, onHome, onSearch, onAdd, onCats, onSettings }) {
+// ─── NOTES PAGE ─────────────────────────────────────────────────────────────
+// Tela completa de Notas: sidebar redimensionável + lista + editor inline.
+// Fase 1+2: CRUD funcional com persistência no backend e sync para extensão.
+
+function notesApi(jwt) {
+  const h = (extra={}) => ({ "Content-Type":"application/json", ...(jwt?{Authorization:`Bearer ${jwt}`}:{}), ...extra });
+  const base = API_URL;
+  return {
+    listFolders: () => fetch(`${base}/api/note-folders`, { headers:h() }).then(r=>r.ok?r.json():[]),
+    createFolder: (data) => fetch(`${base}/api/note-folders`, { method:"POST", headers:h(), body:JSON.stringify(data) }).then(r=>r.json()),
+    updateFolder: (id, data) => fetch(`${base}/api/note-folders/${id}`, { method:"PATCH", headers:h(), body:JSON.stringify(data) }).then(r=>r.json()),
+    deleteFolder: (id) => fetch(`${base}/api/note-folders/${id}`, { method:"DELETE", headers:h() }).then(r=>r.json()),
+    listNotes: (folderId=null, includeDeleted=false) => {
+      const params = new URLSearchParams();
+      if (folderId) params.set("folderId", folderId);
+      if (includeDeleted) params.set("includeDeleted", "true");
+      return fetch(`${base}/api/notes?${params}`, { headers:h() }).then(r=>r.ok?r.json():[]);
+    },
+    createNote: (data) => fetch(`${base}/api/notes`, { method:"POST", headers:h(), body:JSON.stringify(data) }).then(r=>r.json()),
+    updateNote: (id, data) => fetch(`${base}/api/notes/${id}`, { method:"PATCH", headers:h(), body:JSON.stringify(data) }).then(r=>r.json()),
+    deleteNote: (id) => fetch(`${base}/api/notes/${id}`, { method:"DELETE", headers:h() }).then(r=>r.json()),
+    restoreNote: (id) => fetch(`${base}/api/notes/${id}/restore`, { method:"POST", headers:h() }).then(r=>r.json()),
+    permaDelete: (id) => fetch(`${base}/api/notes/${id}/permanent`, { method:"DELETE", headers:h() }).then(r=>r.json()),
+    emptyTrash: () => fetch(`${base}/api/notes/empty-trash`, { method:"POST", headers:h() }).then(r=>r.json()),
+  };
+}
+
+// Storage local quando não há JWT (modo demo). Mesmos formatos do backend.
+function localNotesStore(userKey) {
+  const NK = `wl-notes-${userKey}`;
+  const FK = `wl-note-folders-${userKey}`;
+  const read = (k) => { try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch { return []; } };
+  const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+  const uid = () => "loc_" + Math.random().toString(36).slice(2,11) + Date.now().toString(36);
+  return {
+    listFolders: async () => read(FK),
+    createFolder: async (d) => { const f = { id:uid(), name:d.name||"Sem nome", parentId:d.parentId||null, color:d.color||null, order:d.order||0, createdAt:new Date().toISOString() }; write(FK, [...read(FK), f]); return f; },
+    updateFolder: async (id, d) => { const fs = read(FK).map(f=>f.id===id?{...f,...d}:f); write(FK, fs); return fs.find(f=>f.id===id); },
+    deleteFolder: async (id) => { const fs = read(FK); const toRm = new Set([id]); let chg = true; while (chg) { chg=false; fs.forEach(f=>{ if (f.parentId && toRm.has(f.parentId) && !toRm.has(f.id)) { toRm.add(f.id); chg=true; } }); } write(FK, fs.filter(f=>!toRm.has(f.id))); write(NK, read(NK).map(n=>toRm.has(n.folderId)?{...n,folderId:null}:n)); return { ok:true }; },
+    listNotes: async (folderId=null, includeDeleted=false) => {
+      let ns = read(NK);
+      ns = includeDeleted ? ns.filter(n=>n.deletedAt) : ns.filter(n=>!n.deletedAt);
+      if (folderId === "__inbox__") ns = ns.filter(n=>!n.folderId);
+      else if (folderId && folderId !== "__all__") ns = ns.filter(n=>n.folderId===folderId);
+      return ns.sort((a,b)=>(b.updatedAt||"").localeCompare(a.updatedAt||""));
+    },
+    createNote: async (d) => {
+      const now = new Date().toISOString();
+      const n = { id:uid(), title:d.title||"", body:d.body||"", folderId:d.folderId===("__inbox__")?null:(d.folderId||null), linkedItemId:d.linkedItemId||null, priority:d.priority||4, dueDate:d.dueDate||null, tags:d.tags||[], isCompleted:!!d.isCompleted, deletedAt:null, createdAt:now, updatedAt:now };
+      write(NK, [n, ...read(NK)]); return n;
+    },
+    updateNote: async (id, d) => {
+      const upd = { ...d };
+      if (upd.folderId === "__inbox__") upd.folderId = null;
+      upd.updatedAt = new Date().toISOString();
+      const ns = read(NK).map(n=>n.id===id?{...n,...upd}:n);
+      write(NK, ns); return ns.find(n=>n.id===id);
+    },
+    deleteNote: async (id) => { const ns = read(NK).map(n=>n.id===id?{...n,deletedAt:new Date().toISOString()}:n); write(NK, ns); return { ok:true }; },
+    restoreNote: async (id) => { const ns = read(NK).map(n=>n.id===id?{...n,deletedAt:null,updatedAt:new Date().toISOString()}:n); write(NK, ns); return ns.find(n=>n.id===id); },
+    permaDelete: async (id) => { write(NK, read(NK).filter(n=>n.id!==id)); return { ok:true }; },
+    emptyTrash: async () => { const ns = read(NK).filter(n=>!n.deletedAt); write(NK, ns); return { ok:true }; },
+  };
+}
+
+function NotesPage({ user, links, customTags, onClose }) {
+  const jwt = user?.jwtToken;
+  const userKey = user?.id || "demo";
+  const api = useMemo(() => jwt ? notesApi(jwt) : localNotesStore(userKey), [jwt, userKey]);
+
+  const [folders, setFolders]         = useState([]);
+  const [notes, setNotes]             = useState([]);
+  const [trashNotes, setTrashNotes]   = useState([]);
+  const [view, setView]               = useState("inbox");   // inbox|today|upcoming|all|folder:<id>|trash
+  const [selectedId, setSelectedId]   = useState(null);
+  const [searchQ, setSearchQ]         = useState("");
+  const [loading, setLoading]         = useState(true);
+  const [savingState, setSavingState] = useState("idle");    // idle|saving|saved
+  const [showFolderModal, setShowFolderModal] = useState(null); // null | {mode:"create"|"rename", folder?:{}}
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [mobileEditorOpen, setMobileEditorOpen] = useState(false);
+
+  // Sidebar redimensionável
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const w = parseInt(localStorage.getItem(`wl-notes-sb-w-${userKey}`) || "260", 10);
+    return isNaN(w) ? 260 : Math.max(200, Math.min(480, w));
+  });
+  const dragRef = useRef({ dragging:false, startX:0, startW:260 });
+
+  const onResizeStart = (e) => {
+    dragRef.current = { dragging:true, startX:e.clientX, startW:sidebarWidth };
+    e.target.classList.add("dragging");
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  };
+  useEffect(() => {
+    const onMove = (e) => {
+      if (!dragRef.current.dragging) return;
+      const dx = e.clientX - dragRef.current.startX;
+      let next = dragRef.current.startW + dx;
+      next = Math.max(200, Math.min(480, next));
+      // Snap points em 200/260/320/400
+      [200, 260, 320, 400].forEach(snap => { if (Math.abs(next-snap) < 8) next = snap; });
+      setSidebarWidth(next);
+    };
+    const onUp = () => {
+      if (!dragRef.current.dragging) return;
+      dragRef.current.dragging = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      document.querySelectorAll(".np-resize-handle.dragging").forEach(el=>el.classList.remove("dragging"));
+      localStorage.setItem(`wl-notes-sb-w-${userKey}`, String(sidebarWidth));
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+  }, [sidebarWidth, userKey]);
+
+  // Carrega folders e notes
+  const refreshAll = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [fs, ns, ts] = await Promise.all([
+        api.listFolders(),
+        api.listNotes("__all__", false),
+        api.listNotes("__all__", true),
+      ]);
+      setFolders(Array.isArray(fs)?fs:[]);
+      setNotes(Array.isArray(ns)?ns:[]);
+      setTrashNotes(Array.isArray(ts)?ts:[]);
+    } catch (e) { console.error("[notes] refresh failed", e); }
+    setLoading(false);
+  }, [api]);
+  useEffect(() => { refreshAll(); }, [refreshAll]);
+
+  // Sync com extensão
+  const broadcastNotes = useCallback(() => {
+    try {
+      if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+        chrome.runtime.sendMessage({ type:"WL_NOTES_UPDATED" }, ()=>{});
+      }
+      const bc = new BroadcastChannel("watchlist-sync");
+      bc.postMessage({ type:"NOTES_UPDATED" });
+      bc.close();
+    } catch {}
+  }, []);
+
+  // Notas filtradas para a view atual
+  const today0 = useMemo(() => { const d=new Date(); d.setHours(0,0,0,0); return d; }, []);
+  const todayEnd = useMemo(() => { const d=new Date(today0); d.setDate(d.getDate()+1); return d; }, [today0]);
+  const weekEnd  = useMemo(() => { const d=new Date(today0); d.setDate(d.getDate()+7); return d; }, [today0]);
+  const isTrash = view === "trash";
+  const currentNotes = useMemo(() => {
+    let pool = isTrash ? trashNotes : notes;
+    if (view === "inbox") pool = pool.filter(n => !n.folderId);
+    else if (view === "today") {
+      pool = pool.filter(n => {
+        if (n.priority && n.priority <= 2) return true;
+        if (!n.dueDate) return false;
+        const d = new Date(n.dueDate);
+        return d >= today0 && d < todayEnd;
+      });
+    }
+    else if (view === "upcoming") {
+      pool = pool.filter(n => {
+        if (!n.dueDate) return false;
+        const d = new Date(n.dueDate);
+        return d >= today0 && d < weekEnd;
+      });
+    }
+    else if (view === "all") { /* todas */ }
+    else if (view.startsWith("folder:")) {
+      const fid = view.slice(7);
+      pool = pool.filter(n => n.folderId === fid);
+    }
+    if (searchQ.trim()) {
+      const q = searchQ.toLowerCase();
+      pool = pool.filter(n => (n.title||"").toLowerCase().includes(q) || (n.body||"").toLowerCase().includes(q));
+    }
+    return pool;
+  }, [notes, trashNotes, view, searchQ, today0, todayEnd, weekEnd, isTrash]);
+
+  // Contadores para o sidebar
+  const counts = useMemo(() => {
+    const c = { inbox:0, today:0, upcoming:0, all:notes.length, trash:trashNotes.length };
+    notes.forEach(n => {
+      if (!n.folderId) c.inbox++;
+      const due = n.dueDate ? new Date(n.dueDate) : null;
+      if ((n.priority && n.priority<=2) || (due && due>=today0 && due<todayEnd)) c.today++;
+      if (due && due>=today0 && due<weekEnd) c.upcoming++;
+    });
+    const folderCounts = {};
+    folders.forEach(f => { folderCounts[f.id] = notes.filter(n=>n.folderId===f.id).length; });
+    return { ...c, folders:folderCounts };
+  }, [notes, trashNotes, folders, today0, todayEnd, weekEnd]);
+
+  // Nota selecionada
+  const selectedNote = useMemo(() => {
+    if (!selectedId) return null;
+    return notes.find(n=>n.id===selectedId) || trashNotes.find(n=>n.id===selectedId) || null;
+  }, [notes, trashNotes, selectedId]);
+
+  // Auto-seleciona primeira nota visível ao trocar de view (desktop)
+  useEffect(() => {
+    if (selectedId && currentNotes.some(n=>n.id===selectedId)) return;
+    if (window.innerWidth > 760 && currentNotes.length > 0) setSelectedId(currentNotes[0].id);
+    else if (currentNotes.length === 0) setSelectedId(null);
+  }, [currentNotes, selectedId]);
+
+  // CRUD handlers
+  const handleNewNote = async () => {
+    const folderId = view.startsWith("folder:") ? view.slice(7) : null;
+    const n = await api.createNote({ folderId, title:"", body:"" });
+    if (n && n.id) {
+      setNotes(prev => [n, ...prev]);
+      setSelectedId(n.id);
+      setMobileEditorOpen(true);
+      broadcastNotes();
+    }
+  };
+
+  const handleSaveNote = useCallback(async (id, patch) => {
+    setSavingState("saving");
+    try {
+      const updated = await api.updateNote(id, patch);
+      if (updated) {
+        setNotes(prev => prev.map(n => n.id===id ? { ...n, ...updated } : n));
+        setSavingState("saved");
+        setTimeout(() => setSavingState("idle"), 1500);
+        broadcastNotes();
+      }
+    } catch (e) { console.error(e); setSavingState("idle"); }
+  }, [api, broadcastNotes]);
+
+  const handleDeleteNote = async (id) => {
+    await api.deleteNote(id);
+    const deletedNote = notes.find(n=>n.id===id);
+    setNotes(prev => prev.filter(n=>n.id!==id));
+    if (deletedNote) setTrashNotes(prev => [{...deletedNote, deletedAt:new Date().toISOString()}, ...prev]);
+    if (selectedId === id) setSelectedId(null);
+    broadcastNotes();
+  };
+
+  const handleRestoreNote = async (id) => {
+    await api.restoreNote(id);
+    const note = trashNotes.find(n=>n.id===id);
+    setTrashNotes(prev => prev.filter(n=>n.id!==id));
+    if (note) setNotes(prev => [{...note, deletedAt:null}, ...prev]);
+    broadcastNotes();
+  };
+
+  const handlePermaDelete = async (id) => {
+    if (!window.confirm("Apagar essa nota PERMANENTEMENTE? Não dá pra recuperar.")) return;
+    await api.permaDelete(id);
+    setTrashNotes(prev => prev.filter(n=>n.id!==id));
+    if (selectedId === id) setSelectedId(null);
+    broadcastNotes();
+  };
+
+  const handleEmptyTrash = async () => {
+    if (!window.confirm(`Apagar permanentemente ${trashNotes.length} nota(s) na lixeira?`)) return;
+    await api.emptyTrash();
+    setTrashNotes([]);
+    if (isTrash) setSelectedId(null);
+    broadcastNotes();
+  };
+
+  const handleCreateFolder = async (name) => {
+    const f = await api.createFolder({ name, order:folders.length });
+    if (f && f.id) {
+      setFolders(prev => [...prev, f]);
+      setView(`folder:${f.id}`);
+      broadcastNotes();
+    }
+  };
+
+  const handleRenameFolder = async (id, name) => {
+    const f = await api.updateFolder(id, { name });
+    if (f) setFolders(prev => prev.map(x => x.id===id ? { ...x, ...f } : x));
+    broadcastNotes();
+  };
+
+  const handleDeleteFolder = async (id) => {
+    if (!window.confirm("Excluir essa pasta? As notas dentro voltam para a Caixa de entrada.")) return;
+    await api.deleteFolder(id);
+    setFolders(prev => prev.filter(f=>f.id!==id));
+    setNotes(prev => prev.map(n => n.folderId===id ? { ...n, folderId:null } : n));
+    if (view === `folder:${id}`) setView("inbox");
+    broadcastNotes();
+  };
+
+  // Título da lista central baseado na view
+  const viewTitle = {
+    inbox: "Caixa de entrada",
+    today: "Hoje",
+    upcoming: "Próximas",
+    all: "Todas as notas",
+    trash: "Lixeira",
+  }[view] || (folders.find(f=>view===`folder:${f.id}`)?.name || "Notas");
+
+  return (
+    <div className="notes-page">
+      {/* SIDEBAR */}
+      <aside className="np-sidebar" style={{ flex:`0 0 ${sidebarWidth}px`, width:sidebarWidth }} role="navigation" aria-label="Navegação de notas">
+        <div className="np-sidebar-head">
+          <button className="np-new-btn" onClick={handleNewNote}>
+            <Plus size={16}/> Nova nota
+          </button>
+          <input
+            className="np-search"
+            placeholder="Buscar notas..."
+            value={searchQ}
+            onChange={e=>setSearchQ(e.target.value)}
+            aria-label="Buscar notas"
+          />
+        </div>
+        <div className="np-sidebar-body">
+          <NoteSidebarItem ico={<Inbox size={17}/>} label="Caixa de entrada" count={counts.inbox} active={view==="inbox"} onClick={()=>setView("inbox")}/>
+          <NoteSidebarItem ico={<Star size={17}/>}  label="Hoje"             count={counts.today} active={view==="today"} onClick={()=>setView("today")}/>
+          <NoteSidebarItem ico={<Calendar size={17}/>} label="Próximas"      count={counts.upcoming} active={view==="upcoming"} onClick={()=>setView("upcoming")}/>
+          <NoteSidebarItem ico={<FileText size={17}/>} label="Todas"         count={counts.all} active={view==="all"} onClick={()=>setView("all")}/>
+
+          <div className="np-section-label">
+            <span>Minhas pastas</span>
+            <button onClick={()=>setShowFolderModal({mode:"create"})} title="Nova pasta" aria-label="Nova pasta">
+              <Plus size={14}/>
+            </button>
+          </div>
+          {folders.length === 0 ? (
+            <div style={{padding:"6px 12px",fontSize:"var(--font-meta)",color:"var(--text-tertiary)",lineHeight:1.5}}>
+              Nenhuma pasta ainda. Clique no <strong>+</strong> acima para criar.
+            </div>
+          ) : folders.map(f => (
+            <div key={f.id} className="np-folder-row">
+              <div className={`np-item${view===`folder:${f.id}`?" active":""}`} onClick={()=>setView(`folder:${f.id}`)}>
+                <span className="np-item-ico"><Folder size={17}/></span>
+                <span className="np-item-label" title={f.name}>{f.name}</span>
+                <span className="np-item-count">{counts.folders[f.id] || 0}</span>
+              </div>
+              <div className="np-folder-actions">
+                <button className="np-folder-act-btn" title="Renomear" onClick={()=>setShowFolderModal({mode:"rename",folder:f})}><Edit2 size={13}/></button>
+                <button className="np-folder-act-btn" title="Excluir" onClick={()=>handleDeleteFolder(f.id)}><Trash2 size={13}/></button>
+              </div>
+            </div>
+          ))}
+
+          <div className="np-section-label" style={{marginTop:14}}><span>Outros</span></div>
+          <NoteSidebarItem ico={<Trash2 size={17}/>} label="Lixeira" count={counts.trash} active={view==="trash"} onClick={()=>setView("trash")}/>
+        </div>
+        <div
+          className="np-resize-handle"
+          onMouseDown={onResizeStart}
+          role="separator"
+          aria-label="Redimensionar barra lateral"
+          aria-valuenow={sidebarWidth}
+          aria-valuemin={200}
+          aria-valuemax={480}
+        />
+      </aside>
+
+      {/* LISTA */}
+      <section className="np-list">
+        <div className="np-list-head">
+          <div className="np-list-title">{viewTitle}</div>
+          <div className="np-list-sub">
+            {currentNotes.length} {currentNotes.length===1?"nota":"notas"}
+            {isTrash && trashNotes.length > 0 && (
+              <button
+                onClick={handleEmptyTrash}
+                style={{marginLeft:12,background:"none",border:"none",color:"var(--brand)",cursor:"pointer",fontSize:"var(--font-meta)",fontWeight:600,padding:0}}
+              >Esvaziar lixeira</button>
+            )}
+          </div>
+        </div>
+        <div className="np-list-body">
+          {loading ? (
+            <div className="np-empty-list"><Loader2 size={28} style={{animation:"spin 1s linear infinite",opacity:.5}}/></div>
+          ) : currentNotes.length === 0 ? (
+            <div className="np-empty-list">
+              <div className="ico">{view==="trash"?"🗑":"📝"}</div>
+              <div className="t">{view==="trash"?"Lixeira vazia":"Nenhuma nota aqui"}</div>
+              <div className="s">{view==="trash"?"Notas excluídas aparecem aqui por 30 dias.":"Clique em \"+ Nova nota\" para começar."}</div>
+            </div>
+          ) : currentNotes.map(n => (
+            <div
+              key={n.id}
+              className={`np-note-card${selectedId===n.id?" active":""}`}
+              onClick={()=>{ setSelectedId(n.id); setMobileEditorOpen(true); }}
+            >
+              <div className={`np-note-title${!n.title?" untitled":""}${n.isCompleted?" completed":""}`}>
+                {n.title || "Sem título"}
+              </div>
+              {n.body && (
+                <div className="np-note-preview">{n.body}</div>
+              )}
+              <div className="np-note-meta">
+                {n.priority && n.priority <= 3 && (
+                  <span className={`np-note-flag p${n.priority}`}><Flag size={11} fill="currentColor"/> P{n.priority}</span>
+                )}
+                <span>{formatRelativeDate(n.updatedAt)}</span>
+                {n.folderId && (
+                  <span>· {folders.find(f=>f.id===n.folderId)?.name || "Pasta"}</span>
+                )}
+                {Array.isArray(n.tags) && n.tags.slice(0,2).map(t => (
+                  <span key={t} style={{color:"var(--text-secondary)"}}>#{t}</span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* EDITOR */}
+      <section className={`np-editor${mobileEditorOpen?" mobile-open":""}`}>
+        {selectedNote ? (
+          <NoteEditor
+            key={selectedNote.id}
+            note={selectedNote}
+            folders={folders}
+            isTrash={!!selectedNote.deletedAt}
+            savingState={savingState}
+            onSave={(patch)=>handleSaveNote(selectedNote.id, patch)}
+            onDelete={()=>handleDeleteNote(selectedNote.id)}
+            onRestore={()=>handleRestoreNote(selectedNote.id)}
+            onPermaDelete={()=>handlePermaDelete(selectedNote.id)}
+            onMobileBack={()=>setMobileEditorOpen(false)}
+            onClose={onClose}
+          />
+        ) : (
+          <div className="np-editor-empty">
+            <div className="ico">📝</div>
+            <div className="t">Selecione uma nota</div>
+            <div className="s">Ou clique em <strong>+ Nova nota</strong> na barra lateral para criar uma agora.</div>
+            <button className="np-editor-btn primary" onClick={handleNewNote}>
+              <Plus size={14}/> Criar primeira nota
+            </button>
+          </div>
+        )}
+      </section>
+
+      {/* MODAL CRIAR/RENOMEAR PASTA */}
+      {showFolderModal && (
+        <FolderModal
+          mode={showFolderModal.mode}
+          folder={showFolderModal.folder}
+          onClose={()=>setShowFolderModal(null)}
+          onSubmit={(name)=>{
+            if (showFolderModal.mode === "create") handleCreateFolder(name);
+            else handleRenameFolder(showFolderModal.folder.id, name);
+            setShowFolderModal(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function NoteSidebarItem({ ico, label, count, active, onClick }) {
+  return (
+    <div className={`np-item${active?" active":""}`} onClick={onClick}>
+      <span className="np-item-ico">{ico}</span>
+      <span className="np-item-label" title={label}>{label}</span>
+      {count > 0 && <span className="np-item-count">{count}</span>}
+    </div>
+  );
+}
+
+function NoteEditor({ note, folders, isTrash, savingState, onSave, onDelete, onRestore, onPermaDelete, onMobileBack, onClose }) {
+  const [title, setTitle] = useState(note.title || "");
+  const [body,  setBody]  = useState(note.body || "");
+  const [folderId, setFolderId] = useState(note.folderId || "");
+  const debounceRef = useRef(null);
+
+  useEffect(() => { setTitle(note.title || ""); setBody(note.body || ""); setFolderId(note.folderId || ""); }, [note.id]);
+
+  // Auto-save com debounce 800ms
+  const triggerSave = useCallback((patch) => {
+    if (isTrash) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => { onSave(patch); }, 800);
+  }, [onSave, isTrash]);
+
+  return (
+    <>
+      <div className="np-editor-head">
+        <div className="np-editor-head-l">
+          {isTrash ? (
+            <div style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",background:"rgba(245,166,35,.12)",border:"1px solid rgba(245,166,35,.3)",borderRadius:6,color:"#f5a623",fontSize:"var(--font-meta)",fontWeight:600,alignSelf:"flex-start"}}>
+              🗑 Esta nota está na lixeira
+            </div>
+          ) : (
+            <input
+              className="np-editor-title"
+              value={title}
+              placeholder="Sem título"
+              onChange={e=>{ setTitle(e.target.value); triggerSave({ title:e.target.value }); }}
+              aria-label="Título da nota"
+            />
+          )}
+          <div className="np-editor-meta">
+            {!isTrash && (
+              <select
+                value={folderId}
+                onChange={e=>{ setFolderId(e.target.value); onSave({ folderId: e.target.value || "__inbox__" }); }}
+                style={{background:"var(--bg-elevated)",border:"1px solid var(--border-subtle)",color:"var(--text-body)",padding:"5px 10px",borderRadius:14,fontSize:"var(--font-meta)",fontFamily:"'Inter',sans-serif",cursor:"pointer",outline:"none"}}
+              >
+                <option value="">📥 Caixa de entrada</option>
+                {folders.map(f => <option key={f.id} value={f.id}>📁 {f.name}</option>)}
+              </select>
+            )}
+            <span className="np-editor-meta-chip">
+              {savingState === "saving" ? <Loader2 size={11} style={{animation:"spin 1s linear infinite"}}/> :
+               savingState === "saved"  ? <Check size={11} style={{color:"#22c55e"}}/> : null}
+              {savingState === "saving" ? "Salvando..." :
+               savingState === "saved"  ? "Salvo" :
+               note.updatedAt ? formatRelativeDate(note.updatedAt) : "Não salvo"}
+            </span>
+          </div>
+        </div>
+        <div className="np-editor-actions">
+          <button className="np-editor-btn" onClick={onMobileBack} style={{display:"none"}} aria-label="Voltar">
+            <ChevronLeft size={14}/>
+          </button>
+          {isTrash ? (
+            <>
+              <button className="np-editor-btn primary" onClick={onRestore}>
+                <RotateCcw size={14}/> Restaurar
+              </button>
+              <button className="np-editor-btn danger" onClick={onPermaDelete}>
+                <Trash2 size={14}/> Apagar
+              </button>
+            </>
+          ) : (
+            <button className="np-editor-btn danger" onClick={onDelete} title="Mover para a lixeira">
+              <Trash2 size={14}/> Excluir
+            </button>
+          )}
+          <button className="np-editor-btn" onClick={onClose} title="Fechar Notas" aria-label="Fechar">
+            <X size={14}/>
+          </button>
+        </div>
+      </div>
+      <div className="np-editor-body">
+        <textarea
+          className="np-editor-textarea"
+          value={body}
+          placeholder={isTrash ? "" : "Comece a escrever..."}
+          readOnly={isTrash}
+          onChange={e=>{ setBody(e.target.value); triggerSave({ body:e.target.value }); }}
+          aria-label="Corpo da nota"
+        />
+      </div>
+    </>
+  );
+}
+
+function FolderModal({ mode, folder, onClose, onSubmit }) {
+  const [name, setName] = useState(folder?.name || "");
+  const inputRef = useRef(null);
+  useEffect(() => { setTimeout(()=>inputRef.current?.focus(), 50); }, []);
+  const submit = () => { const t = name.trim(); if (t) onSubmit(t); };
+  return (
+    <div className="np-folder-modal-overlay" onClick={onClose}>
+      <div className="np-folder-modal" onClick={e=>e.stopPropagation()}>
+        <div className="np-folder-modal-title">{mode==="create"?"Nova pasta":"Renomear pasta"}</div>
+        <div className="np-folder-modal-sub">{mode==="create"?"Pastas ajudam a organizar suas notas por tema ou projeto.":"Escolha um novo nome."}</div>
+        <input
+          ref={inputRef}
+          className="np-folder-modal-input"
+          value={name}
+          placeholder="Nome da pasta"
+          onChange={e=>setName(e.target.value)}
+          onKeyDown={e=>{ if(e.key==="Enter") submit(); if(e.key==="Escape") onClose(); }}
+        />
+        <div className="np-folder-modal-actions">
+          <button className="np-editor-btn" onClick={onClose}>Cancelar</button>
+          <button className="np-editor-btn primary" onClick={submit} disabled={!name.trim()}>
+            {mode==="create"?"Criar":"Salvar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function formatRelativeDate(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const diffMs = Date.now() - d.getTime();
+  const diffMin = Math.round(diffMs / 60000);
+  if (diffMin < 1) return "agora";
+  if (diffMin < 60) return `há ${diffMin} min`;
+  const diffH = Math.round(diffMin / 60);
+  if (diffH < 24) return `há ${diffH}h`;
+  const diffD = Math.round(diffH / 24);
+  if (diffD === 1) return "ontem";
+  if (diffD < 7) return `há ${diffD} dias`;
+  return d.toLocaleDateString("pt-BR", { day:"numeric", month:"short" });
+}
+
+function BottomNav({ activePage, onHome, onNotes, onSearch, onAdd, onCats, onSettings }) {
   return (
     <nav className="bottom-nav">
       <div className="bnav-inner">
         <button className={`bnav-btn${activePage==="home"?" active":""}`} onClick={onHome}>
           <Home size={20}/><span>Início</span>
         </button>
-        <button className={`bnav-btn${activePage==="search"?" active":""}`} onClick={onSearch}>
-          <Search size={20}/><span>Buscar</span>
+        <button className={`bnav-btn bnav-btn-notes${activePage==="notes"?" active":""}`} onClick={onNotes}>
+          <FileText size={20}/><span>Notas</span>
         </button>
         <button className="bnav-add-btn" onClick={onAdd} title="Adicionar vídeo">
           <Plus size={22} color="#fff"/>
@@ -2423,21 +3419,8 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
   const [showAdvSearch, setShowAdvSearch] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [showOrganizar, setShowOrganizar] = useState(false);
-  // Notes
-  const [notes, setNotes] = useState([]);
-  const [selectedNoteId, setSelectedNoteId] = useState(null);
-  const [noteFilter, setNoteFilter] = useState("inbox");
-  const [noteSearch, setNoteSearch] = useState("");
-  // freshNotes defined early so useEffect can safely reference it
-  const freshNotes = useCallback(async () => {
-    try {
-      const jwt = user?.jwtToken;
-      if (!jwt || !API_URL) return;
-      const data = await apiFetch("/api/notes", {}, jwt);
-      if (Array.isArray(data)) setNotes(data);
-    } catch(e) { console.warn("freshNotes:", e); }
-  }, [user]);
-  const [appPage, setAppPage] = useState("home"); // "home" | "notes"
+  // Página ativa: "home" (default, grid de vídeos) | "notes"
+  const [activePage, setActivePage] = useState("home");
   // Re-fetch cats from backend whenever Organizar modal opens
   useEffect(() => {
     if (!showOrganizar) return;
@@ -2447,12 +3430,6 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
       .then(fresh => { if (Array.isArray(fresh)) saveCats(fresh); })
       .catch(() => {});
   }, [showOrganizar]);
-
-  // Load notes when notes page opens
-  useEffect(() => {
-    if (appPage !== "notes") return;
-    freshNotes();
-  }, [appPage]);
   const [orgTab, setOrgTab] = useState("cats"); // "cats" | "tags"
   const [customTags, setCustomTags] = useState(()=>{try{return JSON.parse(localStorage.getItem("wl-custom-tags")||"[]");}catch{return [];}});
   const [filterPlatform, setFilterPlatform] = useState("all");
@@ -2673,7 +3650,6 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
     const targetIdx= catLinks.findIndex(l=>l.id===targetId);
     if (dragIdx<0||targetIdx<0) return;
     const reordered = [...catLinks];
-
     const [moved] = reordered.splice(dragIdx,1);
     reordered.splice(targetIdx,0,moved);
     const updatedOrders = reordered.reduce((acc,l,i)=>({...acc,[l.id]:i}),{});
@@ -2910,10 +3886,12 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
           <div className="logo" onClick={()=>window.location.reload()} style={{cursor:"pointer"}}>Watch<em>List</em></div>
           <nav className="nav">
             {[["all","Início"],["unwatched","Para Assistir"],["watched","Assistidos"]].map(([f,l])=>(
-              <button key={f} className={`nav-btn${filter===f?" on":""}`} onClick={()=>{setAppPage("home");setFilter(f);}}>{l}</button>
+              <button key={f} className={`nav-btn${activePage==="home" && filter===f?" on":""}`} onClick={()=>{setActivePage("home");setFilter(f);}}>{l}</button>
             ))}
-            <button className={`nav-btn${appPage==="notes"?" on":""}`} onClick={()=>setAppPage("notes")}>Notas</button>
-            <button className="nav-btn" onClick={()=>{setAppPage("home");setShowOrganizar(true);}}>⊞ Organizar</button>
+            <button className={`nav-btn${activePage==="notes"?" on":""}`} onClick={()=>setActivePage("notes")}>
+              📝 Notas
+            </button>
+            <button className="nav-btn" onClick={()=>setShowOrganizar(true)}>⊞ Organizar</button>
           </nav>
           <div className="hdr-r">
             {/* Desktop: search + filters + add + user */}
@@ -2974,19 +3952,6 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
           </div>
         )}
 
-        {/* ── NOTES PAGE ── */}
-        {appPage === "notes" && (
-          <NotesPage
-            notes={notes} links={links} cats={cats}
-            selectedNoteId={selectedNoteId} setSelectedNoteId={setSelectedNoteId}
-            filter={noteFilter} setFilter={setNoteFilter}
-            search={noteSearch} setSearch={setNoteSearch}
-            jwt={user?.jwtToken} onRefresh={freshNotes}
-          />
-        )}
-
-        {/* HERO (hidden when notes page open) */}
-        {appPage !== "notes" && <div style={{display:"contents"}}>
         {/* HERO */}
         {loading ? (
           <div className="skel-hero"/>
@@ -3215,9 +4180,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
         {/* EDIT MODAL */}
         {editLink && <EditModal link={editLink} categories={cats} onSave={saveEdit} onClose={()=>setEditLink(null)}/>}
 
-        </div> /* end non-notes content */}
-
-        {/* ORGANIZAR MODAL — dual-pane Categorias + Tags */}
+                {/* ORGANIZAR MODAL — dual-pane Categorias + Tags */}
         {showOrganizar && (
           <OrganizarModal
             cats={cats} customTags={customTags}
@@ -3308,12 +4271,21 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
           </div>
         )}
 
+        {/* NOTES PAGE — overlay quando activePage === "notes" */}
+        {activePage === "notes" && (
+          <NotesPage
+            user={user}
+            links={links}
+            customTags={customTags}
+            onClose={()=>setActivePage("home")}
+          />
+        )}
 
         {/* BOTTOM NAV — mobile only */}
-
         <BottomNav
-          activePage={filter==="unwatched"?"watch":filter==="watched"?"watched":"home"}
-          onHome={()=>{ setFilter("all"); setSearch(""); }}
+          activePage={activePage==="notes"?"notes":(filter==="unwatched"?"watch":filter==="watched"?"watched":"home")}
+          onHome={()=>{ setActivePage("home"); setFilter("all"); setSearch(""); }}
+          onNotes={()=>setActivePage("notes")}
           onSearch={()=>{ setShowMobileSearch(true); }}
           onAdd={()=>{ setShowAdd(true); }}
           onCats={()=>setShowOrganizar(true)}
@@ -4195,366 +5167,213 @@ function ConfirmModal({ message, onConfirm, onCancel }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// NOTES PAGE — 3-pane Todoist-style
-// ═══════════════════════════════════════════════════════════════════════════════
+// ─── ORGANIZAR MODAL ────────────────────────────────────────────────────────────
+const TAG_COLORS_CYCLE = ["#FF6B6B","#FFB74D","#64B5F6","#81C784","#BA68C8","#F06292","#FF8A65","#90A4AE"];
 
-// ── Quick-add parser ────────────────────────────────────────────────────────────
+function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, onCreateTag, onDeleteTag }) {
+  const [newCatName, setNewCatName] = useState("");
+  const [newCatParent, setNewCatParent] = useState("");
+  const [showCreateCat, setShowCreateCat] = useState(false);
+  const [newTagName, setNewTagName] = useState("");
+  const [newTagColor, setNewTagColor] = useState(TAG_COLORS_CYCLE[customTags.length % TAG_COLORS_CYCLE.length]);
+  const [showCreateTag, setShowCreateTag] = useState(false);
+  const [creatingCat, setCreatingCat] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState(null); // {id, name, hasSubs}
+  const [dupTagMsg, setDupTagMsg] = useState("");
+  const [confirmState, setConfirmState] = useState(null); // {message, onConfirm}
+  const askConfirm = (message, onConfirm) => setConfirmState({message, onConfirm});
 
-function parseNoteInput(text) {
-  let title = text.trim(), priority = 4, tags = [], dueDate = null;
-  const prioMap = [{re:/\b(p1|!!!)\b/i,v:1},{re:/\b(p2|!!)\b/i,v:2},{re:/\b(p3|!)\b/i,v:3}];
-  prioMap.forEach(({re,v})=>{ if(re.test(title)){priority=v;title=title.replace(re,'').trim();} });
-  const tagRe=/#([\wÀ-ÿ][\wÀ-ÿ-]*)/g; let m;
-  while((m=tagRe.exec(title))!==null) tags.push(m[1].toLowerCase());
-  title=title.replace(/#[\wÀ-ÿ][\wÀ-ÿ-]*/g,'').trim();
-  const dateMap={'hoje':0,'amanhã':1,'amanha':1,'depois de amanhã':2,'semana que vem':7};
-  for(const[w,d] of Object.entries(dateMap)){
-    const re=new RegExp(`\\b${w}\\b`,'i');
-    if(re.test(title)){const dt=new Date();dt.setDate(dt.getDate()+d);dueDate=dt.toISOString().split('T')[0];title=title.replace(re,'').trim();break;}
-  }
-  return {title:title||'Sem título',priority,tags,dueDate};
-}
+  // Show EVERY category — no filtering, no tree logic
+  const existingIds = new Set(cats.map(c => c.id));
+  const flatCats = cats.map(c => ({
+    ...c,
+    _depth: 0,
+    _orphan: !!(c.parentId && !existingIds.has(c.parentId))
+  }));
 
-const NOTE_PC={1:'#e50914',2:'#f97316',3:'#3b82f6',4:'#333'};
-
-// Build folder tree for display
-function buildFolderTree(folders, parentId=null, depth=0) {
-  return folders
-    .filter(f=>(f.parentId||null)===parentId)
-    .sort((a,b)=>a.name.localeCompare(b.name))
-    .flatMap(f=>[{...f,depth},...buildFolderTree(folders,f.id,depth+1)]);
-}
-
-function NotesPage({notes,links,cats,selectedNoteId,setSelectedNoteId,filter,setFilter,search,setSearch,jwt,onRefresh}){
-  const [quickAdd,setQuickAdd]=useState('');
-  const [parsed,setParsed]=useState(null);
-  const [editContent,setEditContent]=useState('');
-  const [editTitle,setEditTitle]=useState('');
-  const [saving,setSaving]=useState(false);
-  const [showLinkPicker,setShowLinkPicker]=useState(false);
-  const [linkSearch,setLinkSearch]=useState('');
-  // Folders stored in localStorage
-  const [folders,setFolders]=useState(()=>{try{return JSON.parse(localStorage.getItem('wl-note-folders')||'[]');}catch{return[];}});
-  const [showAddFolder,setShowAddFolder]=useState(null); // parentId or 'root'
-  const [newFolderName,setNewFolderName]=useState('');
-  const editorRef=useRef(null);
-  const selectedNote=notes.find(n=>n.id===selectedNoteId);
-  const today=new Date().toISOString().split('T')[0];
-
-  useEffect(()=>{if(!quickAdd.trim())return setParsed(null);setParsed(parseNoteInput(quickAdd));},[quickAdd]);
-  useEffect(()=>{if(selectedNote){setEditTitle(selectedNote.title);setEditContent(selectedNote.content||'');}},[selectedNoteId]);
-
-  // Save folders to localStorage
-  function saveFolders(f){setFolders(f);try{localStorage.setItem('wl-note-folders',JSON.stringify(f));}catch{}}
-
-  function addFolder(parentId,name){
-    if(!name.trim())return;
-    const f=[...folders,{id:'nf-'+Date.now(),name:name.trim(),parentId:parentId||null}];
-    saveFolders(f);setNewFolderName('');setShowAddFolder(null);
+  async function handleCreateCat() {
+    if (!newCatName.trim()) return;
+    setCreatingCat(true);
+    await onCreateCat(newCatName.trim(), newCatParent||null);
+    setNewCatName(""); setNewCatParent(""); setShowCreateCat(false); setCreatingCat(false);
   }
 
-  function deleteFolder(id){
-    // Remove folder and its children recursively
-    const toRemove=new Set([id]);
-    let changed=true;
-    while(changed){changed=false;folders.forEach(f=>{if(toRemove.has(f.parentId)&&!toRemove.has(f.id)){toRemove.add(f.id);changed=true;}});}
-    saveFolders(folders.filter(f=>!toRemove.has(f.id)));
+  function handleCreateTag() {
+    if (!newTagName.trim()) return;
+    if (customTags.find(t => t.label.toLowerCase() === newTagName.trim().toLowerCase())) {
+      setDupTagMsg("Já existe uma tag com esse nome."); return;
+    }
+    setDupTagMsg("");
+    onCreateTag({ id:"t-"+Date.now(), label:newTagName.trim(), color:newTagColor, icon:"◈", count:0 });
+    setNewTagName(""); setShowCreateTag(false);
+    setNewTagColor(TAG_COLORS_CYCLE[(customTags.length+1) % TAG_COLORS_CYCLE.length]);
   }
 
-  // Filter notes
-  const filtered=notes.filter(n=>{
-    if(search)return n.title.toLowerCase().includes(search.toLowerCase())||(n.content||'').toLowerCase().includes(search.toLowerCase());
-    if(filter==='today')return n.dueDate===today||n.priority===1;
-    if(filter==='upcoming')return n.dueDate&&n.dueDate>today;
-    if(filter.startsWith('folder:'))return n.folderName===filter.slice(7);
-    return !n.folderName; // inbox
-  });
-
-  const folderTree=buildFolderTree(folders);
-
-  async function handleQuickAdd(e){
-    e.preventDefault();
-    if(!quickAdd.trim()||!jwt)return;
-    const p=parseNoteInput(quickAdd);
-    const folderName=filter.startsWith('folder:')?filter.slice(7):undefined;
-    try{await apiFetch('/api/notes',{method:'POST',body:JSON.stringify({title:p.title,priority:p.priority,tags:p.tags,dueDate:p.dueDate,content:'',folderName:folderName||null})},jwt);
-    setQuickAdd('');setParsed(null);onRefresh();}catch(e){console.error(e);}
-  }
-
-  async function patch(id,data){
-    if(!jwt)return;
-    await apiFetch(`/api/notes/${id}`,{method:'PATCH',body:JSON.stringify(data)},jwt);
-    onRefresh();
-  }
-
-  async function handleSaveNote(){
-    if(!selectedNote||!jwt)return;
-    setSaving(true);
-    try{await patch(selectedNote.id,{title:editTitle,content:editContent});}
-    finally{setSaving(false);}
-  }
-
-  async function handleDelete(id){
-    if(!jwt)return;
-    await apiFetch(`/api/notes/${id}`,{method:'DELETE'},jwt);
-    if(selectedNoteId===id)setSelectedNoteId(null);
-    onRefresh();
-  }
-
-  function insertTodo(){
-    const el=editorRef.current;if(!el)return;
-    const pos=el.selectionStart,before=editContent.slice(0,pos),after=editContent.slice(pos);
-    const insert=before.endsWith('\n')||pos===0?'- [ ] ':'\n- [ ] ';
-    const newVal=before+insert+after;
-    setEditContent(newVal);
-    setTimeout(()=>{el.selectionStart=el.selectionEnd=pos+insert.length;el.focus();},0);
-  }
-
-  function toggleLine(lineIdx){
-    if(!selectedNote)return;
-    const lines=(editContent||'').split('\n');
-    const l=lines[lineIdx];
-    if(l.match(/^- \[x\] /i))lines[lineIdx]='- [ ] '+l.slice(6);
-    else if(l.match(/^- \[ \] /i))lines[lineIdx]='- [x] '+l.slice(6);
-    const nc=lines.join('\n');
-    setEditContent(nc);
-    patch(selectedNote.id,{content:nc});
-  }
-
-  function countChecklist(content){
-    const lines=(content||'').split('\n');
-    const total=lines.filter(l=>l.match(/^- \[(x| )\] /i)).length;
-    const done=lines.filter(l=>l.match(/^- \[x\] /i)).length;
-    return total>0?{total,done}:null;
-  }
-
-  // Render note content with clickable checkboxes
-  function renderContent(content,noteId){
-    const lines=(content||'').split('\n');
-    return lines.map((line,i)=>{
-      if(line.match(/^- \[x\] /i))return(
-        <div key={i} style={{display:'flex',gap:8,alignItems:'flex-start',marginBottom:3}}>
-          <button onClick={()=>toggleLine(i)} style={{background:'#22c55e',border:'none',width:16,height:16,borderRadius:3,cursor:'pointer',flexShrink:0,marginTop:3,display:'flex',alignItems:'center',justifyContent:'center'}}>
-            <svg width="9" height="9" viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
-          </button>
-          <span style={{textDecoration:'line-through',color:'#444',fontSize:13}}>{line.slice(6)}</span>
-        </div>);
-      if(line.match(/^- \[ \] /i))return(
-        <div key={i} style={{display:'flex',gap:8,alignItems:'flex-start',marginBottom:3}}>
-          <button onClick={()=>toggleLine(i)} style={{background:'none',border:'1.5px solid #333',width:16,height:16,borderRadius:3,cursor:'pointer',flexShrink:0,marginTop:3}}/>
-          <span style={{fontSize:13,color:'#ccc'}}>{line.slice(6)}</span>
-        </div>);
-      if(!line)return <div key={i} style={{height:6}}/>;
-      const tsRe=/\[(\d{1,2}:\d{2})\]/g;
-      if(tsRe.test(line)){
-        tsRe.lastIndex=0;const parts=[];let last=0,mm;
-        while((mm=tsRe.exec(line))!==null){
-          if(mm.index>last)parts.push(<span key={last}>{line.slice(last,mm.index)}</span>);
-          parts.push(<span key={mm.index} style={{background:'rgba(229,9,20,.15)',color:'#FF7A7E',padding:'1px 5px',borderRadius:3,fontFamily:'monospace',fontSize:11,cursor:'pointer'}}>{mm[0]}</span>);
-          last=mm.index+mm[0].length;
-        }
-        if(last<line.length)parts.push(<span key={last}>{line.slice(last)}</span>);
-        return <div key={i} style={{marginBottom:3,fontSize:13,color:'#ccc'}}>{parts}</div>;
-      }
-      return <div key={i} style={{marginBottom:3,fontSize:13,color:'#ccc'}}>{line}</div>;
-    });
-  }
-
-  const linkedItem=selectedNote?.linkedItemId?links.find(l=>l.id===selectedNote.linkedItemId):null;
-  const filteredLinks=links.filter(l=>!linkSearch||l.title.toLowerCase().includes(linkSearch.toLowerCase())||(l.url||'').toLowerCase().includes(linkSearch.toLowerCase()));
-
-  return(
-    <div style={{display:'flex',height:'calc(100vh - 64px)',overflow:'hidden',background:'#0a0a0a'}}>
-
-      {/* ── SIDEBAR ── */}
-      <div style={{width:210,flexShrink:0,borderRight:'1px solid #1a1a1a',display:'flex',flexDirection:'column',overflowY:'auto',background:'#0a0a0a'}}>
-        <div style={{padding:'12px 10px 8px'}}>
-          <button onClick={async()=>{if(!jwt)return;const p=parseNoteInput('Nova nota');const folderName=filter.startsWith('folder:')?filter.slice(7):null;try{const r=await apiFetch('/api/notes',{method:'POST',body:JSON.stringify({title:p.title,content:'',folderName})},jwt);onRefresh();setSelectedNoteId(r.noteId);}catch{}}}
-            style={{width:'100%',background:'#e50914',border:'none',color:'#fff',cursor:'pointer',padding:'9px 0',borderRadius:8,fontSize:12,fontWeight:800,fontFamily:"'Inter',sans-serif"}}>
-            + Nova nota
-          </button>
+  return (
+    <>
+    {confirmState && <ConfirmModal message={confirmState.message} onConfirm={confirmState.onConfirm} onCancel={()=>setConfirmState(null)}/>}
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" style={{width:"min(1100px,96vw)",maxHeight:"92vh",overflowY:"auto",padding:28}} onClick={e=>e.stopPropagation()}>
+        {/* Header */}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
+          <div>
+            <h2 style={{fontSize:20,fontWeight:900,letterSpacing:"-.5px",marginBottom:4}}>Organizar</h2>
+            <p style={{fontSize:12,color:"#555"}}>
+              Categorias dizem <em style={{color:"#e50914",fontStyle:"normal",fontWeight:700}}>onde</em> mora. Tags dizem <em style={{color:"#3b82f6",fontStyle:"normal",fontWeight:700}}>como</em> é.
+            </p>
+          </div>
+          <button className="modal-x" onClick={onClose}><X size={18}/></button>
         </div>
 
-        {[['inbox','📥','Caixa de entrada'],['today','⭐','Hoje'],['upcoming','📅','Próximas']].map(([f,ico,label])=>(
-          <button key={f} onClick={()=>setFilter(f)} style={{background:filter===f?'rgba(229,9,20,.08)':'none',border:'none',color:filter===f?'#e50914':'#888',cursor:'pointer',padding:'7px 12px',textAlign:'left',fontSize:12,fontWeight:filter===f?700:400,fontFamily:"'Inter',sans-serif",display:'flex',alignItems:'center',gap:7,width:'100%',borderLeft:filter===f?'2px solid #e50914':'2px solid transparent'}}>
-            <span style={{fontSize:13}}>{ico}</span><span style={{flex:1}}>{label}</span>
-            <span style={{fontSize:10,color:'#444'}}>{f==='inbox'?notes.filter(n=>!n.folderName).length:f==='today'?notes.filter(n=>n.dueDate===today||n.priority===1).length:notes.filter(n=>n.dueDate&&n.dueDate>today).length}</span>
-          </button>
-        ))}
+        {/* Dual pane */}
+        <div style={{display:"flex",gap:16,minHeight:520}}>
 
-        {/* Folders tree */}
-        <div style={{padding:'8px 10px 2px',fontSize:9,fontWeight:800,textTransform:'uppercase',letterSpacing:'.6px',color:'#333',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-          <span>PASTAS</span>
-          <button onClick={()=>setShowAddFolder('root')} style={{background:'none',border:'none',color:'#555',cursor:'pointer',fontSize:14,padding:'0 2px'}} title="Nova pasta raiz">+</button>
-        </div>
-
-        {folderTree.map(f=>(
-          <div key={f.id} style={{paddingLeft:8+f.depth*14}}>
-            <div style={{display:'flex',alignItems:'center',gap:5,padding:'5px 8px',borderRadius:6,cursor:'pointer',background:filter===`folder:${f.name}`?'rgba(229,9,20,.08)':'transparent',borderLeft:filter===`folder:${f.name}`?'2px solid #e50914':'2px solid transparent',group:'true'}}
-              onClick={()=>setFilter(`folder:${f.name}`)}>
-              <span style={{fontSize:12}}>📁</span>
-              <span style={{flex:1,fontSize:12,color:filter===`folder:${f.name}`?'#e50914':'#888',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{f.name}</span>
-              <span style={{fontSize:10,color:'#333'}}>{notes.filter(n=>n.folderName===f.name).length}</span>
-              <button onClick={e=>{e.stopPropagation();setShowAddFolder(f.id);}} style={{background:'none',border:'none',color:'#333',cursor:'pointer',fontSize:12,padding:'0 2px',flexShrink:0}} title="Subpasta">+</button>
-              <button onClick={e=>{e.stopPropagation();if(window.confirm(`Excluir pasta "${f.name}"?`))deleteFolder(f.id);}} style={{background:'none',border:'none',color:'#222',cursor:'pointer',fontSize:11,padding:'0 2px',flexShrink:0}} onMouseEnter={e=>e.target.style.color='#f87171'} onMouseLeave={e=>e.target.style.color='#222'}>✕</button>
+          {/* ── CATEGORIES ─────────────────────────────────────────────── */}
+          <div style={{flex:1,background:"#111",border:"1px solid #1a1a1a",borderRadius:10,overflow:"hidden",display:"flex",flexDirection:"column"}}>
+            <div style={{padding:"12px 16px",borderBottom:"1px solid #1a1a1a",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+              <span style={{fontSize:13,fontWeight:800,display:"flex",alignItems:"center",gap:7}}>
+                <span style={{color:"#e50914"}}>□</span> Categorias
+                <span style={{color:"#555",fontWeight:400,fontSize:12}}>{cats.length}</span>
+              </span>
+              <button onClick={()=>setShowCreateCat(s=>!s)}
+                style={{background:"#e50914",border:"none",color:"#fff",cursor:"pointer",padding:"5px 12px",borderRadius:6,fontSize:11,fontWeight:800,fontFamily:"'Inter',sans-serif"}}>
+                {showCreateCat?"✕ Cancelar":"+ Nova"}
+              </button>
             </div>
-          </div>
-        ))}
 
-        {/* Inline add folder form */}
-        {showAddFolder!==null&&(
-          <div style={{margin:'4px 8px',display:'flex',gap:4}}>
-            <input value={newFolderName} onChange={e=>setNewFolderName(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')addFolder(showAddFolder==='root'?null:showAddFolder,newFolderName);if(e.key==='Escape'){setShowAddFolder(null);setNewFolderName('');}}}
-              autoFocus placeholder="Nome da pasta..." style={{flex:1,background:'#141414',border:'1px solid #e50914',color:'#fff',padding:'5px 8px',borderRadius:5,fontSize:11,fontFamily:"'Inter',sans-serif",outline:'none'}}/>
-            <button onClick={()=>addFolder(showAddFolder==='root'?null:showAddFolder,newFolderName)} style={{background:'#e50914',border:'none',color:'#fff',cursor:'pointer',padding:'5px 8px',borderRadius:5,fontSize:11,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>+</button>
-            <button onClick={()=>{setShowAddFolder(null);setNewFolderName('');}} style={{background:'none',border:'1px solid #333',color:'#555',cursor:'pointer',padding:'5px',borderRadius:5,fontSize:11}}>✕</button>
-          </div>
-        )}
-      </div>
-
-      {/* ── LIST ── */}
-      <div style={{width:290,flexShrink:0,borderRight:'1px solid #1a1a1a',display:'flex',flexDirection:'column',overflow:'hidden'}}>
-        <div style={{padding:'10px',borderBottom:'1px solid #1a1a1a',flexShrink:0}}>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar notas..." style={{width:'100%',background:'#141414',border:'1px solid #1a1a1a',color:'#fff',padding:'7px 10px',borderRadius:6,fontSize:12,fontFamily:"'Inter',sans-serif",outline:'none'}}/>
-        </div>
-        <form onSubmit={handleQuickAdd} style={{padding:'8px 10px',borderBottom:'1px solid #1a1a1a',flexShrink:0}}>
-          <div style={{display:'flex',gap:5}}>
-            <input value={quickAdd} onChange={e=>setQuickAdd(e.target.value)} placeholder="+ Adicionar nota..." style={{flex:1,background:'none',border:'1px dashed #1a1a1a',color:'#fff',padding:'7px 9px',borderRadius:6,fontSize:12,fontFamily:"'Inter',sans-serif",outline:'none'}}/>
-            {quickAdd&&<button type="submit" style={{background:'#e50914',border:'none',color:'#fff',cursor:'pointer',padding:'7px 11px',borderRadius:6,fontSize:11,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>+</button>}
-          </div>
-          {parsed&&quickAdd&&(
-            <div style={{display:'flex',gap:4,flexWrap:'wrap',marginTop:5}}>
-              {parsed.dueDate&&<span style={{background:'rgba(59,130,246,.12)',color:'#64b5f6',padding:'1px 6px',borderRadius:8,fontSize:10}}>📅 {parsed.dueDate}</span>}
-              {parsed.priority<4&&<span style={{background:'rgba(229,9,20,.12)',color:NOTE_PC[parsed.priority],padding:'1px 6px',borderRadius:8,fontSize:10}}>🚩P{parsed.priority}</span>}
-              {parsed.tags.map(t=><span key={t} style={{background:'rgba(139,92,246,.12)',color:'#a78bfa',padding:'1px 6px',borderRadius:8,fontSize:10}}>#{t}</span>)}
-            </div>
-          )}
-          <div style={{fontSize:9,color:'#222',marginTop:3}}>data · p1–p4 · #tag</div>
-        </form>
-        <div style={{flex:1,overflowY:'auto'}}>
-          {filtered.length===0?(
-            <div style={{textAlign:'center',padding:'32px 12px',color:'#333'}}>
-              <div style={{fontSize:24,opacity:.2,marginBottom:6}}>📝</div>
-              <div style={{fontSize:12,color:'#555'}}>Nenhuma nota</div>
-            </div>
-          ):filtered.map(note=>{
-            const cl=countChecklist(note.content);
-            const linked=note.linkedItemId?links.find(l=>l.id===note.linkedItemId):null;
-            const isSel=selectedNoteId===note.id;
-            return(
-              <div key={note.id} onClick={()=>setSelectedNoteId(note.id)}
-                style={{padding:'9px 12px',borderBottom:'1px solid #0f0f0f',cursor:'pointer',background:isSel?'rgba(229,9,20,.05)':'transparent',borderLeft:isSel?'2px solid #e50914':'2px solid transparent'}}>
-                <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:3}}>
-                  {note.priority<4&&<span style={{color:NOTE_PC[note.priority],fontSize:10}}>🚩</span>}
-                  <span style={{fontSize:12,fontWeight:600,color:note.isCompleted?'#444':'#fff',textDecoration:note.isCompleted?'line-through':'none',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{note.title}</span>
-                  <button onClick={e=>{e.stopPropagation();handleDelete(note.id);}} style={{background:'none',border:'none',cursor:'pointer',color:'#1a1a1a',fontSize:11,padding:'2px',flexShrink:0}} onMouseEnter={e=>e.target.style.color='#f87171'} onMouseLeave={e=>e.target.style.color='#1a1a1a'}>✕</button>
-                </div>
-                <div style={{display:'flex',gap:6,alignItems:'center',flexWrap:'wrap'}}>
-                  {cl&&<span style={{fontSize:10,color:'#555'}}>☑ {cl.done}/{cl.total}</span>}
-                  {linked&&<span style={{fontSize:10,color:'#3b82f6'}}>🎬</span>}
-                  {note.isCompleted&&<span style={{fontSize:10,color:'#22c55e'}}>✓ Feita</span>}
-                  {(note.tags||[]).map(t=><span key={t} style={{fontSize:9,color:'#6b21a8',background:'rgba(139,92,246,.1)',padding:'1px 4px',borderRadius:6}}>#{t}</span>)}
-                  {note.dueDate&&<span style={{fontSize:10,color:note.dueDate<today?'#f87171':note.dueDate===today?'#22c55e':'#555',marginLeft:'auto'}}>{note.dueDate}</span>}
-                </div>
-                {note.content&&!cl&&!note.isCompleted&&<div style={{fontSize:10,color:'#333',marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{note.content.slice(0,50)}</div>}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ── EDITOR ── */}
-      {selectedNote?(
-        <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0}}>
-          {/* Toolbar */}
-          <div style={{padding:'8px 16px',borderBottom:'1px solid #1a1a1a',display:'flex',alignItems:'center',gap:8,flexShrink:0,flexWrap:'wrap'}}>
-            <button onClick={()=>patch(selectedNote.id,{isCompleted:!selectedNote.isCompleted})}
-              style={{background:selectedNote.isCompleted?'rgba(34,197,94,.15)':'none',border:`1px solid ${selectedNote.isCompleted?'#22c55e':'#333'}`,color:selectedNote.isCompleted?'#22c55e':'#888',cursor:'pointer',padding:'4px 12px',borderRadius:6,fontSize:12,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>
-              {selectedNote.isCompleted?'✓ Feita':'Marcar como feita'}
-            </button>
-            <button onClick={insertTodo} title="Inserir checkbox (- [ ] )" style={{background:'none',border:'1px solid #1a1a1a',color:'#888',cursor:'pointer',padding:'4px 10px',borderRadius:6,fontSize:12,fontFamily:"'Inter',sans-serif"}}>☑ Todo</button>
-            {[1,2,3,4].map(p=>(
-              <button key={p} onClick={()=>patch(selectedNote.id,{priority:p})} style={{background:selectedNote.priority===p?NOTE_PC[p]:'none',border:`1px solid ${NOTE_PC[p]}`,color:selectedNote.priority===p?'#fff':NOTE_PC[p],cursor:'pointer',padding:'3px 8px',borderRadius:5,fontSize:11,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>P{p}</button>
-            ))}
-            {/* Folder selector */}
-            <select value={selectedNote.folderName||''} onChange={e=>patch(selectedNote.id,{folderName:e.target.value||null})}
-              style={{background:'#0a0a0a',border:'1px solid #1a1a1a',color:'#888',padding:'4px 8px',borderRadius:6,fontSize:11,fontFamily:"'Inter',sans-serif",outline:'none'}}>
-              <option value="">📥 Inbox</option>
-              {buildFolderTree(folders).map(f=><option key={f.id} value={f.name}>{'—'.repeat(f.depth)} 📁 {f.name}</option>)}
-            </select>
-            <button onClick={()=>setShowLinkPicker(s=>!s)} style={{background:selectedNote.linkedItemId?'rgba(59,130,246,.12)':'none',border:`1px solid ${selectedNote.linkedItemId?'#3b82f6':'#1a1a1a'}`,color:selectedNote.linkedItemId?'#64b5f6':'#888',cursor:'pointer',padding:'4px 10px',borderRadius:6,fontSize:12,fontFamily:"'Inter',sans-serif"}}>
-              🎬 {selectedNote.linkedItemId?'Vinculado':'Vincular vídeo'}
-            </button>
-            <div style={{marginLeft:'auto',display:'flex',gap:6,alignItems:'center'}}>
-              {saving&&<span style={{fontSize:10,color:'#444'}}>salvando...</span>}
-              <button onClick={handleSaveNote} style={{background:'#e50914',border:'none',color:'#fff',cursor:'pointer',padding:'5px 14px',borderRadius:6,fontSize:12,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>Salvar</button>
-            </div>
-          </div>
-
-          {/* Link picker dropdown */}
-          {showLinkPicker&&(
-            <div style={{padding:'10px 16px',borderBottom:'1px solid #1a1a1a',background:'#0d0d0d',flexShrink:0}}>
-              <div style={{display:'flex',gap:6,marginBottom:8}}>
-                <input value={linkSearch} onChange={e=>setLinkSearch(e.target.value)} autoFocus placeholder="Buscar vídeo salvo..." style={{flex:1,background:'#141414',border:'1px solid #1a1a1a',color:'#fff',padding:'7px 10px',borderRadius:6,fontSize:12,fontFamily:"'Inter',sans-serif",outline:'none'}}/>
-                {selectedNote.linkedItemId&&<button onClick={()=>{patch(selectedNote.id,{linkedItemId:null});setShowLinkPicker(false);}} style={{background:'none',border:'1px solid #333',color:'#f87171',cursor:'pointer',padding:'7px 10px',borderRadius:6,fontSize:11,fontFamily:"'Inter',sans-serif"}}>Desvincular</button>}
-                <button onClick={()=>setShowLinkPicker(false)} style={{background:'none',border:'1px solid #1a1a1a',color:'#555',cursor:'pointer',padding:'7px 10px',borderRadius:6,fontSize:11}}>✕</button>
-              </div>
-              <div style={{display:'flex',gap:6,flexWrap:'wrap',maxHeight:120,overflowY:'auto'}}>
-                {filteredLinks.slice(0,12).map(link=>(
-                  <button key={link.id} onClick={()=>{patch(selectedNote.id,{linkedItemId:link.id});setShowLinkPicker(false);setLinkSearch('');}}
-                    style={{background:selectedNote.linkedItemId===link.id?'rgba(59,130,246,.2)':'#141414',border:`1px solid ${selectedNote.linkedItemId===link.id?'#3b82f6':'#1a1a1a'}`,color:selectedNote.linkedItemId===link.id?'#64b5f6':'#ccc',cursor:'pointer',padding:'5px 10px',borderRadius:6,fontSize:11,fontFamily:"'Inter',sans-serif",display:'flex',alignItems:'center',gap:6,maxWidth:220}}>
-                    {link.thumbnail&&<img src={link.thumbnail} style={{width:28,height:18,borderRadius:2,objectFit:'cover',flexShrink:0}} alt=""/>}
-                    <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{link.title}</span>
+            {/* Inline create form */}
+            {showCreateCat && (
+              <div style={{padding:"12px 14px",borderBottom:"1px solid #1a1a1a",background:"#0d0d0d",flexShrink:0}}>
+                <div style={{fontSize:9,fontWeight:800,textTransform:"uppercase",letterSpacing:".7px",color:"#e50914",marginBottom:8}}>NOVA CATEGORIA</div>
+                <select value={newCatParent} onChange={e=>setNewCatParent(e.target.value)}
+                  style={{width:"100%",background:"#111",border:"1px solid #1a1a1a",color:"#fff",padding:"8px 10px",borderRadius:6,fontSize:12,fontFamily:"'Inter',sans-serif",outline:"none",marginBottom:8}}>
+                  <option value="">Nenhuma (pasta raiz)</option>
+                  {cats.filter(c=>!c.parentId||!existingIds.has(c.parentId)).map(c=>(
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <div style={{display:"flex",gap:8}}>
+                  <input value={newCatName} onChange={e=>setNewCatName(e.target.value)}
+                    onKeyDown={e=>e.key==="Enter"&&handleCreateCat()}
+                    placeholder="Nome da categoria..."
+                    autoFocus
+                    style={{flex:1,background:"#111",border:"1px solid #1a1a1a",color:"#fff",padding:"9px 12px",borderRadius:7,fontSize:13,fontFamily:"'Inter',sans-serif",outline:"none"}}/>
+                  <button onClick={handleCreateCat} disabled={creatingCat||!newCatName.trim()}
+                    style={{background:"#e50914",border:"none",color:"#fff",cursor:"pointer",padding:"9px 16px",borderRadius:7,fontSize:12,fontWeight:700,fontFamily:"'Inter',sans-serif",opacity:(creatingCat||!newCatName.trim())?0.4:1}}>
+                    {creatingCat?"...":"Criar"}
                   </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Linked video */}
-          {linkedItem&&!showLinkPicker&&(
-            <div style={{margin:'10px 16px 0',background:'#141414',border:'1px solid #1a1a1a',borderRadius:7,padding:'8px 12px',display:'flex',alignItems:'center',gap:10,flexShrink:0}}>
-              <span style={{fontSize:10,color:'#3b82f6',fontWeight:800}}>🎬 VINCULADO</span>
-              {linkedItem.thumbnail&&<img src={linkedItem.thumbnail} style={{width:40,height:26,borderRadius:3,objectFit:'cover'}} alt=""/>}
-              <span style={{flex:1,fontSize:12,fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{linkedItem.title}</span>
-              <button onClick={()=>window.open(linkedItem.url,'_blank')} style={{background:'#e50914',border:'none',color:'#fff',cursor:'pointer',padding:'4px 10px',borderRadius:5,fontSize:11,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>Abrir</button>
-            </div>
-          )}
-
-          {/* Title */}
-          <input value={editTitle} onChange={e=>setEditTitle(e.target.value)} onBlur={handleSaveNote}
-            style={{margin:'12px 16px 0',background:'none',border:'none',color:'#fff',fontSize:20,fontWeight:900,fontFamily:"'Inter',sans-serif",outline:'none',letterSpacing:'-.3px'}}
-            placeholder="Título..."/>
-
-          {/* Preview while typing / Raw editor toggle */}
-          <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',margin:'8px 16px 0 16px'}}>
-            <div style={{display:'flex',gap:8,marginBottom:6,flexShrink:0}}>
-              <span style={{fontSize:10,color:'#333'}}>Escreva abaixo · <kbd style={{background:'#111',padding:'1px 4px',borderRadius:2,fontSize:10}}>☑ Todo</kbd> insere checkbox</span>
-            </div>
-            <textarea ref={editorRef} value={editContent} onChange={e=>setEditContent(e.target.value)} onBlur={handleSaveNote}
-              style={{flex:1,background:'#0a0a0a',border:'1px solid #111',color:'#ccc',fontSize:13,lineHeight:1.8,fontFamily:"ui-monospace,'JetBrains Mono',monospace",padding:'12px',borderRadius:7,resize:'none',outline:'none',marginBottom:8}}
-              placeholder={'Escreva notas aqui...\n\n- [ ] Tarefa pendente\n- [x] Tarefa feita\n[12:34] Timestamp\n\nDigite qualquer coisa — auto-salva ao sair do campo.'}/>
-            {/* Checklist preview */}
-            {editContent&&editContent.includes('- [')&&(
-              <div style={{background:'#111',border:'1px solid #1a1a1a',borderRadius:7,padding:'10px 12px',maxHeight:200,overflowY:'auto',flexShrink:0,marginBottom:8}}>
-                <div style={{fontSize:9,fontWeight:800,color:'#333',marginBottom:8,textTransform:'uppercase',letterSpacing:'.5px'}}>PREVIEW DOS CHECKBOXES</div>
-                {renderContent(editContent,selectedNote.id)}
+                </div>
               </div>
             )}
+
+            {/* Category list */}
+            <div style={{flex:1,overflowY:"auto",padding:8}}>
+              {flatCats.length===0?(
+                <div style={{textAlign:"center",padding:"32px 16px",color:"#555"}}>
+                  <div style={{fontSize:28,marginBottom:8,opacity:.2}}>□</div>
+                  <div style={{fontSize:13,fontWeight:700,color:"#888",marginBottom:4}}>Nenhuma categoria</div>
+                  <div style={{fontSize:11}}>Clique em "+ Nova" para criar.</div>
+                </div>
+              ):flatCats.map(cat=>{
+                const indent = cat._depth * 18;
+                const hasSubs = cats.some(c => c.parentId === cat.id);
+                return (
+                  <div key={cat.id} style={{marginBottom:3,marginLeft:indent}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:7,
+                      background: cat._orphan ? "rgba(245,166,35,.06)" : "#0a0a0a",
+                      border: cat._orphan ? "1px solid rgba(245,166,35,.2)" : "1px solid #1a1a1a"}}>
+                      <span style={{fontSize:13}}>📁</span>
+                      <span style={{flex:1,fontSize:13,fontWeight:600,color: cat._orphan ? "#f5a623" : "#fff"}}>{cat.name}</span>
+                      {cat._orphan && <span style={{fontSize:9,color:"#f5a623",padding:"1px 6px",border:"1px solid rgba(245,166,35,.3)",borderRadius:4}}>órfã</span>}
+                      <button
+                        onClick={()=>askConfirm(`Excluir "${cat.name}"${hasSubs?" e suas subcategorias":""}?`, ()=>{ setConfirmState(null); onDeleteCat(cat.id); })}
+                        style={{background:"none",border:"none",cursor:"pointer",color:"#333",fontSize:12,padding:"4px 8px",borderRadius:4,transition:"all .15s"}}
+                        onMouseEnter={e=>e.currentTarget.style.color="#f87171"}
+                        onMouseLeave={e=>e.currentTarget.style.color="#333"}>🗑</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ── TAGS ───────────────────────────────────────────────────── */}
+          <div style={{flex:1,background:"#111",border:"1px solid #1a1a1a",borderRadius:10,overflow:"hidden",display:"flex",flexDirection:"column"}}>
+            <div style={{padding:"12px 16px",borderBottom:"1px solid #1a1a1a",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+              <span style={{fontSize:13,fontWeight:800,display:"flex",alignItems:"center",gap:7}}>
+                <span style={{color:"#e50914"}}>#</span> Tags
+                <span style={{color:"#555",fontWeight:400,fontSize:12}}>{customTags.length}</span>
+              </span>
+              <button onClick={()=>setShowCreateTag(s=>!s)}
+                style={{background:"#e50914",border:"none",color:"#fff",cursor:"pointer",padding:"5px 12px",borderRadius:6,fontSize:11,fontWeight:800,fontFamily:"'Inter',sans-serif"}}>
+                {showCreateTag?"✕ Cancelar":"+ Nova"}
+              </button>
+            </div>
+
+            {/* Inline tag create form */}
+            {showCreateTag && (
+              <div style={{padding:"12px 14px",borderBottom:"1px solid #1a1a1a",background:"#0d0d0d",flexShrink:0}}>
+                <div style={{fontSize:9,fontWeight:800,textTransform:"uppercase",letterSpacing:".7px",color:"#e50914",marginBottom:8}}>NOVA TAG</div>
+                {/* Color picker */}
+                <div style={{display:"flex",gap:8,marginBottom:10,flexWrap:"wrap"}}>
+                  {TAG_COLORS_CYCLE.map(c=>(
+                    <button key={c} onClick={()=>setNewTagColor(c)}
+                      style={{width:24,height:24,borderRadius:"50%",background:c,border:`2px solid ${c===newTagColor?"#fff":"transparent"}`,cursor:"pointer",transition:"all .15s"}}/>
+                  ))}
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  <input value={newTagName} onChange={e=>setNewTagName(e.target.value)}
+                    onKeyDown={e=>e.key==="Enter"&&handleCreateTag()}
+                    placeholder="Nome da tag..."
+                    autoFocus
+                    style={{flex:1,background:"#111",border:`1px solid ${newTagColor}44`,color:"#fff",padding:"9px 12px",borderRadius:7,fontSize:13,fontFamily:"'Inter',sans-serif",outline:"none"}}/>
+                  <button onClick={handleCreateTag} disabled={!newTagName.trim()}
+                    style={{background:newTagColor,border:"none",color:"#fff",cursor:"pointer",padding:"9px 16px",borderRadius:7,fontSize:12,fontWeight:700,fontFamily:"'Inter',sans-serif",opacity:!newTagName.trim()?0.4:1}}>
+                    Criar
+                  </button>
+                </div>
+                {newTagName && (
+                  <div style={{marginTop:8,display:"inline-flex",alignItems:"center",gap:6,padding:"4px 12px",borderRadius:20,border:`1.5px solid ${newTagColor}`,color:newTagColor,fontSize:11,fontWeight:700}}>
+                    ◈ {newTagName}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Tags list */}
+            <div style={{flex:1,overflowY:"auto",padding:"10px 12px",display:"grid",gridTemplateColumns:"1fr",gap:6,alignContent:"start"}}>
+              {customTags.length===0?(
+                <div style={{gridColumn:"1/-1",textAlign:"center",padding:"32px 16px",color:"#555"}}>
+                  <div style={{fontSize:28,marginBottom:8,opacity:.3}}>#</div>
+                  <div style={{fontSize:13,fontWeight:700,color:"#888",marginBottom:4}}>Nenhuma tag ainda</div>
+                  <div style={{fontSize:11,lineHeight:1.5}}>Tags classificam como o item é.<br/>Ex: Favorito, Urgente, Ver depois.</div>
+                </div>
+              ):customTags.map(tag=>(
+                <div key={tag.id||tag.label}
+                  style={{background:"#0f0f0f",borderRadius:8,padding:"12px 14px",display:"flex",alignItems:"center",gap:12,borderTop:"1px solid #1a1a1a",borderRight:"1px solid #1a1a1a",borderBottom:"1px solid #1a1a1a",borderLeft:`3px solid ${tag.color}`}}>
+                  <span style={{color:tag.color,fontSize:18,flexShrink:0}}>{tag.icon||"◈"}</span>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:14,fontWeight:700,color:"#fff",whiteSpace:"normal",lineHeight:1.4,wordBreak:"break-word"}}>{tag.label}</div>
+                    <div style={{fontSize:11,color:"#555",marginTop:2}}>{tag.count||0} itens</div>
+                  </div>
+                  <button onClick={()=>askConfirm(`Excluir tag "${tag.label}"?`, ()=>{ setConfirmState(null); onDeleteTag(tag.id||tag.label); })}
+                    style={{background:"none",border:"none",cursor:"pointer",color:"#333",fontSize:12,padding:"2px 6px",borderRadius:3,transition:"color .15s"}}
+                    onMouseEnter={e=>e.target.style.color="#f87171"} onMouseLeave={e=>e.target.style.color="#333"}>✕</button>
+                </div>
+              ))}
+            </div>
+
+            <div style={{padding:"8px 12px",borderTop:"1px solid #1a1a1a",fontSize:10,color:"#2a2a2a",display:"flex",alignItems:"center",gap:5,flexShrink:0}}>
+              <span style={{width:5,height:5,borderRadius:"50%",background:"#22c55e",display:"inline-block"}}/>
+              {customTags.length} tag{customTags.length!==1?"s":""}
+            </div>
           </div>
         </div>
-      ):(
-        <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:10,color:'#333'}}>
-          <div style={{fontSize:44,opacity:.1}}>📝</div>
-          <div style={{fontSize:14,fontWeight:700,color:'#555'}}>Selecione uma nota</div>
-          <div style={{fontSize:12,color:'#2a2a2a'}}>ou crie uma pelo quick-add</div>
-        </div>
-      )}
+      </div>
     </div>
+    </>
   );
 }
-
 
 // ─── APP ROUTER (root component) ─────────────────────────────────────────────
 export default function App() {
