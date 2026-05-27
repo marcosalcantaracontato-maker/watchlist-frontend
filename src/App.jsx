@@ -2910,10 +2910,10 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
           <div className="logo" onClick={()=>window.location.reload()} style={{cursor:"pointer"}}>Watch<em>List</em></div>
           <nav className="nav">
             {[["all","Início"],["unwatched","Para Assistir"],["watched","Assistidos"]].map(([f,l])=>(
-              <button key={f} className={`nav-btn${filter===f?" on":""}`} onClick={()=>setFilter(f)}>{l}</button>
+              <button key={f} className={`nav-btn${filter===f?" on":""}`} onClick={()=>{setAppPage("home");setFilter(f);}}>{l}</button>
             ))}
             <button className={`nav-btn${appPage==="notes"?" on":""}`} onClick={()=>setAppPage("notes")}>Notas</button>
-            <button className="nav-btn" onClick={()=>setShowOrganizar(true)}>⊞ Organizar</button>
+            <button className="nav-btn" onClick={()=>{setAppPage("home");setShowOrganizar(true);}}>⊞ Organizar</button>
           </nav>
           <div className="hdr-r">
             {/* Desktop: search + filters + add + user */}
@@ -4200,581 +4200,360 @@ function ConfirmModal({ message, onConfirm, onCancel }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // ── Quick-add parser ────────────────────────────────────────────────────────────
+
 function parseNoteInput(text) {
-  let title = text, priority = 4, tags = [], dueDate = null;
-  // Priority
-  const prioMap = [/\b(p1|!!!)\b/i, /\b(p2|!!)\b/i, /\b(p3|!)\b/i, /\b(p4)\b/i];
-  prioMap.forEach((re, i) => {
-    if (re.test(title)) { priority = i+1; title = title.replace(re, '').trim(); }
-  });
-  // Tags
-  const tagRe = /#([\wÀ-ÿ][\wÀ-ÿ-]*)/g;
-  let m;
-  while ((m = tagRe.exec(title)) !== null) tags.push(m[1].toLowerCase());
-  title = title.replace(/#[\wÀ-ÿ][\wÀ-ÿ-]*/g, '').trim();
-  // Dates (simple PT)
-  const dateMap = {
-    'hoje': 0, 'amanhã': 1, 'amanha': 1,
-    'depois de amanhã': 2, 'semana que vem': 7,
-    'próxima semana': 7, 'proxima semana': 7,
-  };
-  for (const [word, days] of Object.entries(dateMap)) {
-    const re = new RegExp(`\\b${word}\\b`, 'i');
-    if (re.test(title)) {
-      const d = new Date(); d.setDate(d.getDate() + days);
-      dueDate = d.toISOString().split('T')[0];
-      title = title.replace(re, '').trim();
-      break;
-    }
+  let title = text.trim(), priority = 4, tags = [], dueDate = null;
+  const prioMap = [{re:/\b(p1|!!!)\b/i,v:1},{re:/\b(p2|!!)\b/i,v:2},{re:/\b(p3|!)\b/i,v:3}];
+  prioMap.forEach(({re,v})=>{ if(re.test(title)){priority=v;title=title.replace(re,'').trim();} });
+  const tagRe=/#([\wÀ-ÿ][\wÀ-ÿ-]*)/g; let m;
+  while((m=tagRe.exec(title))!==null) tags.push(m[1].toLowerCase());
+  title=title.replace(/#[\wÀ-ÿ][\wÀ-ÿ-]*/g,'').trim();
+  const dateMap={'hoje':0,'amanhã':1,'amanha':1,'depois de amanhã':2,'semana que vem':7};
+  for(const[w,d] of Object.entries(dateMap)){
+    const re=new RegExp(`\\b${w}\\b`,'i');
+    if(re.test(title)){const dt=new Date();dt.setDate(dt.getDate()+d);dueDate=dt.toISOString().split('T')[0];title=title.replace(re,'').trim();break;}
   }
-  return { title: title || 'Sem título', priority, tags, dueDate };
+  return {title:title||'Sem título',priority,tags,dueDate};
 }
 
-// ── Note checklist renderer ─────────────────────────────────────────────────────
-function NoteContent({ content, noteId, onToggle }) {
-  const lines = (content || '').split('\n');
-  return (
-    <div style={{lineHeight:1.7,fontSize:14}}>
-      {lines.map((line, i) => {
-        if (line.match(/^- \[x\] /i)) {
-          return (
-            <div key={i} style={{display:'flex',gap:8,alignItems:'flex-start',marginBottom:4}}>
-              <button onClick={()=>onToggle(i)} style={{background:'#22c55e',border:'none',width:17,height:17,borderRadius:4,cursor:'pointer',flexShrink:0,marginTop:2,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <svg width="10" height="10" viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
-              </button>
-              <span style={{textDecoration:'line-through',color:'#555'}}>{line.slice(6)}</span>
-            </div>
-          );
-        }
-        if (line.match(/^- \[ \] /i)) {
-          return (
-            <div key={i} style={{display:'flex',gap:8,alignItems:'flex-start',marginBottom:4}}>
-              <button onClick={()=>onToggle(i)} style={{background:'none',border:'1.5px solid #333',width:17,height:17,borderRadius:4,cursor:'pointer',flexShrink:0,marginTop:2}}/>
-              <span>{line.slice(6)}</span>
-            </div>
-          );
-        }
-        // Timestamp [mm:ss]
-        const tsRe = /\[(\d{1,2}:\d{2})\]/g;
-        if (tsRe.test(line)) {
-          tsRe.lastIndex = 0;
-          const parts = []; let last = 0; let match;
-          while ((match = tsRe.exec(line)) !== null) {
-            if (match.index > last) parts.push(<span key={last}>{line.slice(last, match.index)}</span>);
-            parts.push(<span key={match.index} style={{background:'rgba(229,9,20,.15)',color:'#FF7A7E',padding:'1px 5px',borderRadius:3,fontFamily:'monospace',fontSize:12,cursor:'pointer'}}>{match[0]}</span>);
-            last = match.index + match[0].length;
-          }
-          if (last < line.length) parts.push(<span key={last}>{line.slice(last)}</span>);
-          return <div key={i} style={{marginBottom:4}}>{parts}</div>;
-        }
-        if (!line) return <div key={i} style={{height:8}}/>;
-        return <div key={i} style={{marginBottom:4}}>{line}</div>;
-      })}
-    </div>
-  );
+const NOTE_PC={1:'#e50914',2:'#f97316',3:'#3b82f6',4:'#333'};
+
+// Build folder tree for display
+function buildFolderTree(folders, parentId=null, depth=0) {
+  return folders
+    .filter(f=>(f.parentId||null)===parentId)
+    .sort((a,b)=>a.name.localeCompare(b.name))
+    .flatMap(f=>[{...f,depth},...buildFolderTree(folders,f.id,depth+1)]);
 }
 
-const NOTE_PRIO_COLORS = { 1:'#e50914', 2:'#f97316', 3:'#3b82f6', 4:'#333' };
-const NOTE_PRIO_LABELS = { 1:'P1', 2:'P2', 3:'P3', 4:'' };
+function NotesPage({notes,links,cats,selectedNoteId,setSelectedNoteId,filter,setFilter,search,setSearch,jwt,onRefresh}){
+  const [quickAdd,setQuickAdd]=useState('');
+  const [parsed,setParsed]=useState(null);
+  const [editContent,setEditContent]=useState('');
+  const [editTitle,setEditTitle]=useState('');
+  const [saving,setSaving]=useState(false);
+  const [showLinkPicker,setShowLinkPicker]=useState(false);
+  const [linkSearch,setLinkSearch]=useState('');
+  // Folders stored in localStorage
+  const [folders,setFolders]=useState(()=>{try{return JSON.parse(localStorage.getItem('wl-note-folders')||'[]');}catch{return[];}});
+  const [showAddFolder,setShowAddFolder]=useState(null); // parentId or 'root'
+  const [newFolderName,setNewFolderName]=useState('');
+  const editorRef=useRef(null);
+  const selectedNote=notes.find(n=>n.id===selectedNoteId);
+  const today=new Date().toISOString().split('T')[0];
 
-function NotesPage({ notes, links, cats, selectedNoteId, setSelectedNoteId,
-  filter, setFilter, search, setSearch, jwt, onRefresh, onClose }) {
+  useEffect(()=>{if(!quickAdd.trim())return setParsed(null);setParsed(parseNoteInput(quickAdd));},[quickAdd]);
+  useEffect(()=>{if(selectedNote){setEditTitle(selectedNote.title);setEditContent(selectedNote.content||'');}},[selectedNoteId]);
 
-  const [quickAdd, setQuickAdd] = useState('');
-  const [parsed, setParsed] = useState(null);
-  const [editContent, setEditContent] = useState('');
-  const [editTitle, setEditTitle] = useState('');
-  const [saving, setSaving] = useState(false);
-  const editorRef = useRef(null);
+  // Save folders to localStorage
+  function saveFolders(f){setFolders(f);try{localStorage.setItem('wl-note-folders',JSON.stringify(f));}catch{}}
 
-  const selectedNote = notes.find(n => n.id === selectedNoteId);
+  function addFolder(parentId,name){
+    if(!name.trim())return;
+    const f=[...folders,{id:'nf-'+Date.now(),name:name.trim(),parentId:parentId||null}];
+    saveFolders(f);setNewFolderName('');setShowAddFolder(null);
+  }
 
-  // Parse quick-add in real time
-  useEffect(() => {
-    if (!quickAdd.trim()) return setParsed(null);
-    setParsed(parseNoteInput(quickAdd));
-  }, [quickAdd]);
-
-  // Load note into editor
-  useEffect(() => {
-    if (selectedNote) {
-      setEditTitle(selectedNote.title);
-      setEditContent(selectedNote.content || '');
-    }
-  }, [selectedNoteId]);
+  function deleteFolder(id){
+    // Remove folder and its children recursively
+    const toRemove=new Set([id]);
+    let changed=true;
+    while(changed){changed=false;folders.forEach(f=>{if(toRemove.has(f.parentId)&&!toRemove.has(f.id)){toRemove.add(f.id);changed=true;}});}
+    saveFolders(folders.filter(f=>!toRemove.has(f.id)));
+  }
 
   // Filter notes
-  const today = new Date().toISOString().split('T')[0];
-  const filtered = notes.filter(n => {
-    if (search) return n.title.toLowerCase().includes(search.toLowerCase()) || (n.content||'').toLowerCase().includes(search.toLowerCase());
-    if (filter === 'today') return n.dueDate === today || n.priority === 1;
-    if (filter === 'upcoming') return n.dueDate && n.dueDate > today;
-    if (filter.startsWith('folder:')) return n.folderName === filter.slice(7);
+  const filtered=notes.filter(n=>{
+    if(search)return n.title.toLowerCase().includes(search.toLowerCase())||(n.content||'').toLowerCase().includes(search.toLowerCase());
+    if(filter==='today')return n.dueDate===today||n.priority===1;
+    if(filter==='upcoming')return n.dueDate&&n.dueDate>today;
+    if(filter.startsWith('folder:'))return n.folderName===filter.slice(7);
     return !n.folderName; // inbox
   });
 
-  const folders = [...new Set(notes.map(n=>n.folderName).filter(Boolean))];
+  const folderTree=buildFolderTree(folders);
 
-  async function handleQuickAdd(e) {
+  async function handleQuickAdd(e){
     e.preventDefault();
-    if (!quickAdd.trim() || !jwt) return;
-    const p = parseNoteInput(quickAdd);
-    try {
-      await apiFetch('/api/notes', { method:'POST', body:JSON.stringify({ title:p.title, priority:p.priority, tags:p.tags, dueDate:p.dueDate, content:'' }) }, jwt);
-      setQuickAdd(''); setParsed(null); onRefresh();
-    } catch(e) { console.error(e); }
+    if(!quickAdd.trim()||!jwt)return;
+    const p=parseNoteInput(quickAdd);
+    const folderName=filter.startsWith('folder:')?filter.slice(7):undefined;
+    try{await apiFetch('/api/notes',{method:'POST',body:JSON.stringify({title:p.title,priority:p.priority,tags:p.tags,dueDate:p.dueDate,content:'',folderName:folderName||null})},jwt);
+    setQuickAdd('');setParsed(null);onRefresh();}catch(e){console.error(e);}
   }
 
-  async function handleSaveNote() {
-    if (!selectedNote || !jwt) return;
+  async function patch(id,data){
+    if(!jwt)return;
+    await apiFetch(`/api/notes/${id}`,{method:'PATCH',body:JSON.stringify(data)},jwt);
+    onRefresh();
+  }
+
+  async function handleSaveNote(){
+    if(!selectedNote||!jwt)return;
     setSaving(true);
-    try {
-      await apiFetch(`/api/notes/${selectedNote.id}`, { method:'PATCH', body:JSON.stringify({ title:editTitle, content:editContent }) }, jwt);
-      onRefresh();
-    } finally { setSaving(false); }
+    try{await patch(selectedNote.id,{title:editTitle,content:editContent});}
+    finally{setSaving(false);}
   }
 
-  async function handleDeleteNote(id) {
-    if (!jwt) return;
-    await apiFetch(`/api/notes/${id}`, { method:'DELETE' }, jwt);
-    if (selectedNoteId === id) setSelectedNoteId(null);
+  async function handleDelete(id){
+    if(!jwt)return;
+    await apiFetch(`/api/notes/${id}`,{method:'DELETE'},jwt);
+    if(selectedNoteId===id)setSelectedNoteId(null);
     onRefresh();
   }
 
-  async function toggleCheckbox(noteToEdit, lineIndex) {
-    const lines = (noteToEdit.content||'').split('\n');
-    const line = lines[lineIndex];
-    if (line.match(/^- \[x\] /i)) lines[lineIndex] = '- [ ] ' + line.slice(6);
-    else if (line.match(/^- \[ \] /i)) lines[lineIndex] = '- [x] ' + line.slice(6);
-    const newContent = lines.join('\n');
-    await apiFetch(`/api/notes/${noteToEdit.id}`, { method:'PATCH', body:JSON.stringify({ content:newContent }) }, jwt);
-    if (selectedNoteId === noteToEdit.id) setEditContent(newContent);
-    onRefresh();
-  }
-
-  function countChecklist(content) {
-    const lines = (content||'').split('\n');
-    const total = lines.filter(l => l.match(/^- \[(x| )\] /i)).length;
-    const done = lines.filter(l => l.match(/^- \[x\] /i)).length;
-    return total > 0 ? { total, done } : null;
-  }
-
-  function insertTodo() {
-    const el = editorRef.current;
-    if (!el) return;
-    const pos = el.selectionStart;
-    const before = editContent.slice(0, pos);
-    const after = editContent.slice(pos);
-    const newVal = before + '\n- [ ] ' + after;
+  function insertTodo(){
+    const el=editorRef.current;if(!el)return;
+    const pos=el.selectionStart,before=editContent.slice(0,pos),after=editContent.slice(pos);
+    const insert=before.endsWith('\n')||pos===0?'- [ ] ':'\n- [ ] ';
+    const newVal=before+insert+after;
     setEditContent(newVal);
-    setTimeout(() => { el.selectionStart = el.selectionEnd = pos + 7; el.focus(); }, 0);
+    setTimeout(()=>{el.selectionStart=el.selectionEnd=pos+insert.length;el.focus();},0);
   }
 
-  return (
+  function toggleLine(lineIdx){
+    if(!selectedNote)return;
+    const lines=(editContent||'').split('\n');
+    const l=lines[lineIdx];
+    if(l.match(/^- \[x\] /i))lines[lineIdx]='- [ ] '+l.slice(6);
+    else if(l.match(/^- \[ \] /i))lines[lineIdx]='- [x] '+l.slice(6);
+    const nc=lines.join('\n');
+    setEditContent(nc);
+    patch(selectedNote.id,{content:nc});
+  }
+
+  function countChecklist(content){
+    const lines=(content||'').split('\n');
+    const total=lines.filter(l=>l.match(/^- \[(x| )\] /i)).length;
+    const done=lines.filter(l=>l.match(/^- \[x\] /i)).length;
+    return total>0?{total,done}:null;
+  }
+
+  // Render note content with clickable checkboxes
+  function renderContent(content,noteId){
+    const lines=(content||'').split('\n');
+    return lines.map((line,i)=>{
+      if(line.match(/^- \[x\] /i))return(
+        <div key={i} style={{display:'flex',gap:8,alignItems:'flex-start',marginBottom:3}}>
+          <button onClick={()=>toggleLine(i)} style={{background:'#22c55e',border:'none',width:16,height:16,borderRadius:3,cursor:'pointer',flexShrink:0,marginTop:3,display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <svg width="9" height="9" viewBox="0 0 12 12"><polyline points="2 6 5 9 10 3" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
+          </button>
+          <span style={{textDecoration:'line-through',color:'#444',fontSize:13}}>{line.slice(6)}</span>
+        </div>);
+      if(line.match(/^- \[ \] /i))return(
+        <div key={i} style={{display:'flex',gap:8,alignItems:'flex-start',marginBottom:3}}>
+          <button onClick={()=>toggleLine(i)} style={{background:'none',border:'1.5px solid #333',width:16,height:16,borderRadius:3,cursor:'pointer',flexShrink:0,marginTop:3}}/>
+          <span style={{fontSize:13,color:'#ccc'}}>{line.slice(6)}</span>
+        </div>);
+      if(!line)return <div key={i} style={{height:6}}/>;
+      const tsRe=/\[(\d{1,2}:\d{2})\]/g;
+      if(tsRe.test(line)){
+        tsRe.lastIndex=0;const parts=[];let last=0,mm;
+        while((mm=tsRe.exec(line))!==null){
+          if(mm.index>last)parts.push(<span key={last}>{line.slice(last,mm.index)}</span>);
+          parts.push(<span key={mm.index} style={{background:'rgba(229,9,20,.15)',color:'#FF7A7E',padding:'1px 5px',borderRadius:3,fontFamily:'monospace',fontSize:11,cursor:'pointer'}}>{mm[0]}</span>);
+          last=mm.index+mm[0].length;
+        }
+        if(last<line.length)parts.push(<span key={last}>{line.slice(last)}</span>);
+        return <div key={i} style={{marginBottom:3,fontSize:13,color:'#ccc'}}>{parts}</div>;
+      }
+      return <div key={i} style={{marginBottom:3,fontSize:13,color:'#ccc'}}>{line}</div>;
+    });
+  }
+
+  const linkedItem=selectedNote?.linkedItemId?links.find(l=>l.id===selectedNote.linkedItemId):null;
+  const filteredLinks=links.filter(l=>!linkSearch||l.title.toLowerCase().includes(linkSearch.toLowerCase())||(l.url||'').toLowerCase().includes(linkSearch.toLowerCase()));
+
+  return(
     <div style={{display:'flex',height:'calc(100vh - 64px)',overflow:'hidden',background:'#0a0a0a'}}>
 
-      {/* ── SIDEBAR ─────────────────────────────────────────────────────── */}
-      <div style={{width:220,flexShrink:0,borderRight:'1px solid #1a1a1a',display:'flex',flexDirection:'column',padding:'16px 0',overflowY:'auto'}}>
-        <button onClick={()=>{setSelectedNoteId(null);}} style={{margin:'0 12px 16px',background:'#e50914',border:'none',color:'#fff',cursor:'pointer',padding:'9px 0',borderRadius:8,fontSize:13,fontWeight:800,fontFamily:"'Inter',sans-serif",display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
-          <Plus size={14}/> Nova nota
-        </button>
+      {/* ── SIDEBAR ── */}
+      <div style={{width:210,flexShrink:0,borderRight:'1px solid #1a1a1a',display:'flex',flexDirection:'column',overflowY:'auto',background:'#0a0a0a'}}>
+        <div style={{padding:'12px 10px 8px'}}>
+          <button onClick={async()=>{if(!jwt)return;const p=parseNoteInput('Nova nota');const folderName=filter.startsWith('folder:')?filter.slice(7):null;try{const r=await apiFetch('/api/notes',{method:'POST',body:JSON.stringify({title:p.title,content:'',folderName})},jwt);onRefresh();setSelectedNoteId(r.noteId);}catch{}}}
+            style={{width:'100%',background:'#e50914',border:'none',color:'#fff',cursor:'pointer',padding:'9px 0',borderRadius:8,fontSize:12,fontWeight:800,fontFamily:"'Inter',sans-serif"}}>
+            + Nova nota
+          </button>
+        </div>
 
         {[['inbox','📥','Caixa de entrada'],['today','⭐','Hoje'],['upcoming','📅','Próximas']].map(([f,ico,label])=>(
-          <button key={f} onClick={()=>setFilter(f)} style={{background:filter===f?'rgba(229,9,20,.1)':'none',border:'none',color:filter===f?'#e50914':'#888',cursor:'pointer',padding:'8px 16px',textAlign:'left',fontSize:13,fontWeight:filter===f?700:400,fontFamily:"'Inter',sans-serif",display:'flex',alignItems:'center',gap:8,width:'100%',borderLeft:filter===f?'2px solid #e50914':'2px solid transparent'}}>
-            <span>{ico}</span>{label}
-            <span style={{marginLeft:'auto',fontSize:11,color:'#444'}}>{
-              f==='inbox'?notes.filter(n=>!n.folderName).length:
-              f==='today'?notes.filter(n=>n.dueDate===today||n.priority===1).length:
-              notes.filter(n=>n.dueDate&&n.dueDate>today).length
-            }</span>
+          <button key={f} onClick={()=>setFilter(f)} style={{background:filter===f?'rgba(229,9,20,.08)':'none',border:'none',color:filter===f?'#e50914':'#888',cursor:'pointer',padding:'7px 12px',textAlign:'left',fontSize:12,fontWeight:filter===f?700:400,fontFamily:"'Inter',sans-serif",display:'flex',alignItems:'center',gap:7,width:'100%',borderLeft:filter===f?'2px solid #e50914':'2px solid transparent'}}>
+            <span style={{fontSize:13}}>{ico}</span><span style={{flex:1}}>{label}</span>
+            <span style={{fontSize:10,color:'#444'}}>{f==='inbox'?notes.filter(n=>!n.folderName).length:f==='today'?notes.filter(n=>n.dueDate===today||n.priority===1).length:notes.filter(n=>n.dueDate&&n.dueDate>today).length}</span>
           </button>
         ))}
 
-        {folders.length > 0 && (
-          <>
-            <div style={{padding:'12px 16px 4px',fontSize:10,fontWeight:800,textTransform:'uppercase',letterSpacing:'.7px',color:'#333'}}>PASTAS</div>
-            {folders.map(f=>(
-              <button key={f} onClick={()=>setFilter(`folder:${f}`)} style={{background:filter===`folder:${f}`?'rgba(229,9,20,.1)':'none',border:'none',color:filter===`folder:${f}`?'#e50914':'#888',cursor:'pointer',padding:'8px 16px',textAlign:'left',fontSize:13,fontFamily:"'Inter',sans-serif",display:'flex',alignItems:'center',gap:8,width:'100%',borderLeft:filter===`folder:${f}`?'2px solid #e50914':'2px solid transparent'}}>
-                📁 {f}
-                <span style={{marginLeft:'auto',fontSize:11,color:'#444'}}>{notes.filter(n=>n.folderName===f).length}</span>
-              </button>
-            ))}
-          </>
+        {/* Folders tree */}
+        <div style={{padding:'8px 10px 2px',fontSize:9,fontWeight:800,textTransform:'uppercase',letterSpacing:'.6px',color:'#333',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <span>PASTAS</span>
+          <button onClick={()=>setShowAddFolder('root')} style={{background:'none',border:'none',color:'#555',cursor:'pointer',fontSize:14,padding:'0 2px'}} title="Nova pasta raiz">+</button>
+        </div>
+
+        {folderTree.map(f=>(
+          <div key={f.id} style={{paddingLeft:8+f.depth*14}}>
+            <div style={{display:'flex',alignItems:'center',gap:5,padding:'5px 8px',borderRadius:6,cursor:'pointer',background:filter===`folder:${f.name}`?'rgba(229,9,20,.08)':'transparent',borderLeft:filter===`folder:${f.name}`?'2px solid #e50914':'2px solid transparent',group:'true'}}
+              onClick={()=>setFilter(`folder:${f.name}`)}>
+              <span style={{fontSize:12}}>📁</span>
+              <span style={{flex:1,fontSize:12,color:filter===`folder:${f.name}`?'#e50914':'#888',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{f.name}</span>
+              <span style={{fontSize:10,color:'#333'}}>{notes.filter(n=>n.folderName===f.name).length}</span>
+              <button onClick={e=>{e.stopPropagation();setShowAddFolder(f.id);}} style={{background:'none',border:'none',color:'#333',cursor:'pointer',fontSize:12,padding:'0 2px',flexShrink:0}} title="Subpasta">+</button>
+              <button onClick={e=>{e.stopPropagation();if(window.confirm(`Excluir pasta "${f.name}"?`))deleteFolder(f.id);}} style={{background:'none',border:'none',color:'#222',cursor:'pointer',fontSize:11,padding:'0 2px',flexShrink:0}} onMouseEnter={e=>e.target.style.color='#f87171'} onMouseLeave={e=>e.target.style.color='#222'}>✕</button>
+            </div>
+          </div>
+        ))}
+
+        {/* Inline add folder form */}
+        {showAddFolder!==null&&(
+          <div style={{margin:'4px 8px',display:'flex',gap:4}}>
+            <input value={newFolderName} onChange={e=>setNewFolderName(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')addFolder(showAddFolder==='root'?null:showAddFolder,newFolderName);if(e.key==='Escape'){setShowAddFolder(null);setNewFolderName('');}}}
+              autoFocus placeholder="Nome da pasta..." style={{flex:1,background:'#141414',border:'1px solid #e50914',color:'#fff',padding:'5px 8px',borderRadius:5,fontSize:11,fontFamily:"'Inter',sans-serif",outline:'none'}}/>
+            <button onClick={()=>addFolder(showAddFolder==='root'?null:showAddFolder,newFolderName)} style={{background:'#e50914',border:'none',color:'#fff',cursor:'pointer',padding:'5px 8px',borderRadius:5,fontSize:11,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>+</button>
+            <button onClick={()=>{setShowAddFolder(null);setNewFolderName('');}} style={{background:'none',border:'1px solid #333',color:'#555',cursor:'pointer',padding:'5px',borderRadius:5,fontSize:11}}>✕</button>
+          </div>
         )}
       </div>
 
-      {/* ── NOTES LIST ──────────────────────────────────────────────────── */}
-      <div style={{width:300,flexShrink:0,borderRight:'1px solid #1a1a1a',display:'flex',flexDirection:'column',overflow:'hidden'}}>
-        {/* Search */}
-        <div style={{padding:'12px',borderBottom:'1px solid #1a1a1a',flexShrink:0}}>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar notas..." style={{width:'100%',background:'#141414',border:'1px solid #1a1a1a',color:'#fff',padding:'8px 12px',borderRadius:7,fontSize:12,fontFamily:"'Inter',sans-serif",outline:'none'}}/>
+      {/* ── LIST ── */}
+      <div style={{width:290,flexShrink:0,borderRight:'1px solid #1a1a1a',display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <div style={{padding:'10px',borderBottom:'1px solid #1a1a1a',flexShrink:0}}>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar notas..." style={{width:'100%',background:'#141414',border:'1px solid #1a1a1a',color:'#fff',padding:'7px 10px',borderRadius:6,fontSize:12,fontFamily:"'Inter',sans-serif",outline:'none'}}/>
         </div>
-        {/* Quick-add */}
-        <form onSubmit={handleQuickAdd} style={{padding:'10px 12px',borderBottom:'1px solid #1a1a1a',flexShrink:0}}>
-          <div style={{display:'flex',gap:6}}>
-            <input value={quickAdd} onChange={e=>setQuickAdd(e.target.value)} placeholder="+ Adicionar nota..." style={{flex:1,background:'#0a0a0a',border:'1px dashed #1a1a1a',color:'#fff',padding:'8px 10px',borderRadius:7,fontSize:12,fontFamily:"'Inter',sans-serif",outline:'none'}}/>
-            {quickAdd && <button type="submit" style={{background:'#e50914',border:'none',color:'#fff',cursor:'pointer',padding:'8px 12px',borderRadius:7,fontSize:11,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>+</button>}
+        <form onSubmit={handleQuickAdd} style={{padding:'8px 10px',borderBottom:'1px solid #1a1a1a',flexShrink:0}}>
+          <div style={{display:'flex',gap:5}}>
+            <input value={quickAdd} onChange={e=>setQuickAdd(e.target.value)} placeholder="+ Adicionar nota..." style={{flex:1,background:'none',border:'1px dashed #1a1a1a',color:'#fff',padding:'7px 9px',borderRadius:6,fontSize:12,fontFamily:"'Inter',sans-serif",outline:'none'}}/>
+            {quickAdd&&<button type="submit" style={{background:'#e50914',border:'none',color:'#fff',cursor:'pointer',padding:'7px 11px',borderRadius:6,fontSize:11,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>+</button>}
           </div>
-          {parsed && quickAdd && (
-            <div style={{display:'flex',gap:5,flexWrap:'wrap',marginTop:6}}>
-              {parsed.dueDate && <span style={{background:'rgba(59,130,246,.15)',color:'#64b5f6',padding:'2px 7px',borderRadius:10,fontSize:10}}>📅 {parsed.dueDate}</span>}
-              {parsed.priority < 4 && <span style={{background:`rgba(${parsed.priority===1?'229,9,20':parsed.priority===2?'249,115,22':'59,130,246'},.15)`,color:NOTE_PRIO_COLORS[parsed.priority],padding:'2px 7px',borderRadius:10,fontSize:10}}>🚩 P{parsed.priority}</span>}
-              {parsed.tags.map(t=><span key={t} style={{background:'rgba(139,92,246,.15)',color:'#a78bfa',padding:'2px 7px',borderRadius:10,fontSize:10}}>#{t}</span>)}
+          {parsed&&quickAdd&&(
+            <div style={{display:'flex',gap:4,flexWrap:'wrap',marginTop:5}}>
+              {parsed.dueDate&&<span style={{background:'rgba(59,130,246,.12)',color:'#64b5f6',padding:'1px 6px',borderRadius:8,fontSize:10}}>📅 {parsed.dueDate}</span>}
+              {parsed.priority<4&&<span style={{background:'rgba(229,9,20,.12)',color:NOTE_PC[parsed.priority],padding:'1px 6px',borderRadius:8,fontSize:10}}>🚩P{parsed.priority}</span>}
+              {parsed.tags.map(t=><span key={t} style={{background:'rgba(139,92,246,.12)',color:'#a78bfa',padding:'1px 6px',borderRadius:8,fontSize:10}}>#{t}</span>)}
             </div>
           )}
-          <div style={{fontSize:9,color:'#2a2a2a',marginTop:4}}>Linguagem natural: data, prioridade p1–p4, tags #tag</div>
+          <div style={{fontSize:9,color:'#222',marginTop:3}}>data · p1–p4 · #tag</div>
         </form>
-        {/* List */}
         <div style={{flex:1,overflowY:'auto'}}>
-          {filtered.length === 0 ? (
-            <div style={{textAlign:'center',padding:'40px 16px',color:'#333'}}>
-              <div style={{fontSize:28,marginBottom:8,opacity:.2}}>📝</div>
-              <div style={{fontSize:13,fontWeight:700,color:'#555'}}>Nenhuma nota</div>
+          {filtered.length===0?(
+            <div style={{textAlign:'center',padding:'32px 12px',color:'#333'}}>
+              <div style={{fontSize:24,opacity:.2,marginBottom:6}}>📝</div>
+              <div style={{fontSize:12,color:'#555'}}>Nenhuma nota</div>
             </div>
-          ) : filtered.map(note => {
-            const cl = countChecklist(note.content);
-            const linked = note.linkedItemId ? links.find(l=>l.id===note.linkedItemId) : null;
-            const isSelected = selectedNoteId === note.id;
-            return (
+          ):filtered.map(note=>{
+            const cl=countChecklist(note.content);
+            const linked=note.linkedItemId?links.find(l=>l.id===note.linkedItemId):null;
+            const isSel=selectedNoteId===note.id;
+            return(
               <div key={note.id} onClick={()=>setSelectedNoteId(note.id)}
-                style={{padding:'10px 14px',borderBottom:'1px solid #111',cursor:'pointer',background:isSelected?'rgba(229,9,20,.06)':'transparent',borderLeft:isSelected?'2px solid #e50914':'2px solid transparent',transition:'all .12s'}}>
-                <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:4}}>
-                  {note.priority < 4 && <span style={{color:NOTE_PRIO_COLORS[note.priority],fontSize:10,fontWeight:700}}>🚩</span>}
-                  <span style={{fontSize:13,fontWeight:600,color:note.isCompleted?'#444':'#fff',textDecoration:note.isCompleted?'line-through':'none',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{note.title}</span>
-                  <button onClick={e=>{e.stopPropagation();handleDeleteNote(note.id);}} style={{background:'none',border:'none',cursor:'pointer',color:'#222',fontSize:11,padding:'2px 4px',borderRadius:3,flexShrink:0}} onMouseEnter={e=>e.target.style.color='#f87171'} onMouseLeave={e=>e.target.style.color='#222'}>✕</button>
+                style={{padding:'9px 12px',borderBottom:'1px solid #0f0f0f',cursor:'pointer',background:isSel?'rgba(229,9,20,.05)':'transparent',borderLeft:isSel?'2px solid #e50914':'2px solid transparent'}}>
+                <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:3}}>
+                  {note.priority<4&&<span style={{color:NOTE_PC[note.priority],fontSize:10}}>🚩</span>}
+                  <span style={{fontSize:12,fontWeight:600,color:note.isCompleted?'#444':'#fff',textDecoration:note.isCompleted?'line-through':'none',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{note.title}</span>
+                  <button onClick={e=>{e.stopPropagation();handleDelete(note.id);}} style={{background:'none',border:'none',cursor:'pointer',color:'#1a1a1a',fontSize:11,padding:'2px',flexShrink:0}} onMouseEnter={e=>e.target.style.color='#f87171'} onMouseLeave={e=>e.target.style.color='#1a1a1a'}>✕</button>
                 </div>
-                <div style={{display:'flex',gap:8,alignItems:'center'}}>
-                  {cl && <span style={{fontSize:10,color:'#555'}}>☑ {cl.done}/{cl.total}</span>}
-                  {linked && <span style={{fontSize:10,color:'#3b82f6'}}>🎬 vinculada</span>}
-                  {(note.tags||[]).map(t=><span key={t} style={{fontSize:10,color:'#6b21a8',background:'rgba(139,92,246,.1)',padding:'1px 5px',borderRadius:8}}>#{t}</span>)}
-                  {note.dueDate && <span style={{fontSize:10,color:note.dueDate<today?'#f87171':note.dueDate===today?'#22c55e':'#555',marginLeft:'auto'}}>{note.dueDate}</span>}
+                <div style={{display:'flex',gap:6,alignItems:'center',flexWrap:'wrap'}}>
+                  {cl&&<span style={{fontSize:10,color:'#555'}}>☑ {cl.done}/{cl.total}</span>}
+                  {linked&&<span style={{fontSize:10,color:'#3b82f6'}}>🎬</span>}
+                  {note.isCompleted&&<span style={{fontSize:10,color:'#22c55e'}}>✓ Feita</span>}
+                  {(note.tags||[]).map(t=><span key={t} style={{fontSize:9,color:'#6b21a8',background:'rgba(139,92,246,.1)',padding:'1px 4px',borderRadius:6}}>#{t}</span>)}
+                  {note.dueDate&&<span style={{fontSize:10,color:note.dueDate<today?'#f87171':note.dueDate===today?'#22c55e':'#555',marginLeft:'auto'}}>{note.dueDate}</span>}
                 </div>
-                {note.content && !cl && (
-                  <div style={{fontSize:11,color:'#444',marginTop:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{note.content.slice(0,60)}</div>
-                )}
+                {note.content&&!cl&&!note.isCompleted&&<div style={{fontSize:10,color:'#333',marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{note.content.slice(0,50)}</div>}
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* ── EDITOR ──────────────────────────────────────────────────────── */}
-      <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
-        {selectedNote ? (
-          <>
-            {/* Editor toolbar */}
-            <div style={{padding:'10px 20px',borderBottom:'1px solid #1a1a1a',display:'flex',alignItems:'center',gap:10,flexShrink:0}}>
-              <div style={{display:'flex',gap:5}}>
-                {[1,2,3,4].map(p=>(
-                  <button key={p} onClick={async()=>{await apiFetch(`/api/notes/${selectedNote.id}`,{method:'PATCH',body:JSON.stringify({priority:p})},jwt);onRefresh();}} style={{background:selectedNote.priority===p?NOTE_PRIO_COLORS[p]:'none',border:`1px solid ${NOTE_PRIO_COLORS[p]}`,color:selectedNote.priority===p?'#fff':NOTE_PRIO_COLORS[p],cursor:'pointer',padding:'3px 9px',borderRadius:5,fontSize:11,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>P{p}</button>
+      {/* ── EDITOR ── */}
+      {selectedNote?(
+        <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0}}>
+          {/* Toolbar */}
+          <div style={{padding:'8px 16px',borderBottom:'1px solid #1a1a1a',display:'flex',alignItems:'center',gap:8,flexShrink:0,flexWrap:'wrap'}}>
+            <button onClick={()=>patch(selectedNote.id,{isCompleted:!selectedNote.isCompleted})}
+              style={{background:selectedNote.isCompleted?'rgba(34,197,94,.15)':'none',border:`1px solid ${selectedNote.isCompleted?'#22c55e':'#333'}`,color:selectedNote.isCompleted?'#22c55e':'#888',cursor:'pointer',padding:'4px 12px',borderRadius:6,fontSize:12,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>
+              {selectedNote.isCompleted?'✓ Feita':'Marcar como feita'}
+            </button>
+            <button onClick={insertTodo} title="Inserir checkbox (- [ ] )" style={{background:'none',border:'1px solid #1a1a1a',color:'#888',cursor:'pointer',padding:'4px 10px',borderRadius:6,fontSize:12,fontFamily:"'Inter',sans-serif"}}>☑ Todo</button>
+            {[1,2,3,4].map(p=>(
+              <button key={p} onClick={()=>patch(selectedNote.id,{priority:p})} style={{background:selectedNote.priority===p?NOTE_PC[p]:'none',border:`1px solid ${NOTE_PC[p]}`,color:selectedNote.priority===p?'#fff':NOTE_PC[p],cursor:'pointer',padding:'3px 8px',borderRadius:5,fontSize:11,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>P{p}</button>
+            ))}
+            {/* Folder selector */}
+            <select value={selectedNote.folderName||''} onChange={e=>patch(selectedNote.id,{folderName:e.target.value||null})}
+              style={{background:'#0a0a0a',border:'1px solid #1a1a1a',color:'#888',padding:'4px 8px',borderRadius:6,fontSize:11,fontFamily:"'Inter',sans-serif",outline:'none'}}>
+              <option value="">📥 Inbox</option>
+              {buildFolderTree(folders).map(f=><option key={f.id} value={f.name}>{'—'.repeat(f.depth)} 📁 {f.name}</option>)}
+            </select>
+            <button onClick={()=>setShowLinkPicker(s=>!s)} style={{background:selectedNote.linkedItemId?'rgba(59,130,246,.12)':'none',border:`1px solid ${selectedNote.linkedItemId?'#3b82f6':'#1a1a1a'}`,color:selectedNote.linkedItemId?'#64b5f6':'#888',cursor:'pointer',padding:'4px 10px',borderRadius:6,fontSize:12,fontFamily:"'Inter',sans-serif"}}>
+              🎬 {selectedNote.linkedItemId?'Vinculado':'Vincular vídeo'}
+            </button>
+            <div style={{marginLeft:'auto',display:'flex',gap:6,alignItems:'center'}}>
+              {saving&&<span style={{fontSize:10,color:'#444'}}>salvando...</span>}
+              <button onClick={handleSaveNote} style={{background:'#e50914',border:'none',color:'#fff',cursor:'pointer',padding:'5px 14px',borderRadius:6,fontSize:12,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>Salvar</button>
+            </div>
+          </div>
+
+          {/* Link picker dropdown */}
+          {showLinkPicker&&(
+            <div style={{padding:'10px 16px',borderBottom:'1px solid #1a1a1a',background:'#0d0d0d',flexShrink:0}}>
+              <div style={{display:'flex',gap:6,marginBottom:8}}>
+                <input value={linkSearch} onChange={e=>setLinkSearch(e.target.value)} autoFocus placeholder="Buscar vídeo salvo..." style={{flex:1,background:'#141414',border:'1px solid #1a1a1a',color:'#fff',padding:'7px 10px',borderRadius:6,fontSize:12,fontFamily:"'Inter',sans-serif",outline:'none'}}/>
+                {selectedNote.linkedItemId&&<button onClick={()=>{patch(selectedNote.id,{linkedItemId:null});setShowLinkPicker(false);}} style={{background:'none',border:'1px solid #333',color:'#f87171',cursor:'pointer',padding:'7px 10px',borderRadius:6,fontSize:11,fontFamily:"'Inter',sans-serif"}}>Desvincular</button>}
+                <button onClick={()=>setShowLinkPicker(false)} style={{background:'none',border:'1px solid #1a1a1a',color:'#555',cursor:'pointer',padding:'7px 10px',borderRadius:6,fontSize:11}}>✕</button>
+              </div>
+              <div style={{display:'flex',gap:6,flexWrap:'wrap',maxHeight:120,overflowY:'auto'}}>
+                {filteredLinks.slice(0,12).map(link=>(
+                  <button key={link.id} onClick={()=>{patch(selectedNote.id,{linkedItemId:link.id});setShowLinkPicker(false);setLinkSearch('');}}
+                    style={{background:selectedNote.linkedItemId===link.id?'rgba(59,130,246,.2)':'#141414',border:`1px solid ${selectedNote.linkedItemId===link.id?'#3b82f6':'#1a1a1a'}`,color:selectedNote.linkedItemId===link.id?'#64b5f6':'#ccc',cursor:'pointer',padding:'5px 10px',borderRadius:6,fontSize:11,fontFamily:"'Inter',sans-serif",display:'flex',alignItems:'center',gap:6,maxWidth:220}}>
+                    {link.thumbnail&&<img src={link.thumbnail} style={{width:28,height:18,borderRadius:2,objectFit:'cover',flexShrink:0}} alt=""/>}
+                    <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{link.title}</span>
+                  </button>
                 ))}
               </div>
-              <button onClick={insertTodo} style={{background:'none',border:'1px solid #1a1a1a',color:'#888',cursor:'pointer',padding:'3px 10px',borderRadius:5,fontSize:11,fontFamily:"'Inter',sans-serif"}}>☑ Todo</button>
-              <button onClick={async()=>{await apiFetch(`/api/notes/${selectedNote.id}`,{method:'PATCH',body:JSON.stringify({isCompleted:!selectedNote.isCompleted})},jwt);onRefresh();}} style={{background:selectedNote.isCompleted?'rgba(34,197,94,.15)':'none',border:'1px solid #1a1a1a',color:selectedNote.isCompleted?'#22c55e':'#888',cursor:'pointer',padding:'3px 10px',borderRadius:5,fontSize:11,fontFamily:"'Inter',sans-serif"}}>
-                {selectedNote.isCompleted ? '✓ Concluída' : 'Concluir'}
-              </button>
-              <div style={{marginLeft:'auto',display:'flex',gap:8}}>
-                {saving && <span style={{fontSize:11,color:'#555'}}>Salvando...</span>}
-                <button onClick={handleSaveNote} style={{background:'#e50914',border:'none',color:'#fff',cursor:'pointer',padding:'5px 14px',borderRadius:6,fontSize:12,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>Salvar</button>
-              </div>
             </div>
+          )}
 
-            {/* Linked video block */}
-            {selectedNote.linkedItemId && (() => {
-              const item = links.find(l=>l.id===selectedNote.linkedItemId);
-              return item ? (
-                <div style={{margin:'12px 20px 0',background:'#141414',border:'1px solid #1a1a1a',borderRadius:8,padding:'10px 14px',display:'flex',alignItems:'center',gap:12,flexShrink:0}}>
-                  <div style={{fontSize:10,color:'#e50914',fontWeight:800,letterSpacing:.5}}>🎬 VÍDEO VINCULADO</div>
-                  {item.thumbnail && <img src={item.thumbnail} style={{width:48,height:32,borderRadius:4,objectFit:'cover'}} alt=""/>}
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:12,fontWeight:700,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.title}</div>
-                  </div>
-                  <button onClick={()=>window.open(item.url,'_blank')} style={{background:'#e50914',border:'none',color:'#fff',cursor:'pointer',padding:'5px 12px',borderRadius:6,fontSize:11,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>Abrir</button>
-                  <button onClick={async()=>{await apiFetch(`/api/notes/${selectedNote.id}`,{method:'PATCH',body:JSON.stringify({linkedItemId:null})},jwt);onRefresh();}} style={{background:'none',border:'1px solid #1a1a1a',color:'#555',cursor:'pointer',padding:'5px 10px',borderRadius:6,fontSize:11,fontFamily:"'Inter',sans-serif"}}>Desvincular</button>
-                </div>
-              ) : null;
-            })()}
+          {/* Linked video */}
+          {linkedItem&&!showLinkPicker&&(
+            <div style={{margin:'10px 16px 0',background:'#141414',border:'1px solid #1a1a1a',borderRadius:7,padding:'8px 12px',display:'flex',alignItems:'center',gap:10,flexShrink:0}}>
+              <span style={{fontSize:10,color:'#3b82f6',fontWeight:800}}>🎬 VINCULADO</span>
+              {linkedItem.thumbnail&&<img src={linkedItem.thumbnail} style={{width:40,height:26,borderRadius:3,objectFit:'cover'}} alt=""/>}
+              <span style={{flex:1,fontSize:12,fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{linkedItem.title}</span>
+              <button onClick={()=>window.open(linkedItem.url,'_blank')} style={{background:'#e50914',border:'none',color:'#fff',cursor:'pointer',padding:'4px 10px',borderRadius:5,fontSize:11,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>Abrir</button>
+            </div>
+          )}
 
-            {/* Title */}
-            <input value={editTitle} onChange={e=>setEditTitle(e.target.value)} onBlur={handleSaveNote}
-              style={{margin:'16px 20px 0',background:'none',border:'none',color:'#fff',fontSize:22,fontWeight:900,fontFamily:"'Inter',sans-serif",outline:'none',letterSpacing:'-.5px'}}
-              placeholder="Título da nota..."/>
+          {/* Title */}
+          <input value={editTitle} onChange={e=>setEditTitle(e.target.value)} onBlur={handleSaveNote}
+            style={{margin:'12px 16px 0',background:'none',border:'none',color:'#fff',fontSize:20,fontWeight:900,fontFamily:"'Inter',sans-serif",outline:'none',letterSpacing:'-.3px'}}
+            placeholder="Título..."/>
 
-            {/* Tags */}
-            {(selectedNote.tags||[]).length > 0 && (
-              <div style={{padding:'6px 20px',display:'flex',gap:6,flexWrap:'wrap'}}>
-                {(selectedNote.tags||[]).map(t=><span key={t} style={{background:'rgba(139,92,246,.12)',color:'#a78bfa',padding:'2px 8px',borderRadius:10,fontSize:11}}>#{t}</span>)}
-              </div>
-            )}
-
-            {/* Editor */}
+          {/* Preview while typing / Raw editor toggle */}
+          <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',margin:'8px 16px 0 16px'}}>
+            <div style={{display:'flex',gap:8,marginBottom:6,flexShrink:0}}>
+              <span style={{fontSize:10,color:'#333'}}>Escreva abaixo · <kbd style={{background:'#111',padding:'1px 4px',borderRadius:2,fontSize:10}}>☑ Todo</kbd> insere checkbox</span>
+            </div>
             <textarea ref={editorRef} value={editContent} onChange={e=>setEditContent(e.target.value)} onBlur={handleSaveNote}
-              style={{flex:1,margin:'12px 20px 20px',background:'#0a0a0a',border:'1px solid #111',color:'#ccc',fontSize:14,lineHeight:1.7,fontFamily:"ui-monospace,'JetBrains Mono',monospace",padding:'14px',borderRadius:8,resize:'none',outline:'none'}}
-              placeholder={'Digite suas notas aqui...\n\n- [ ] Item de checklist\n- [x] Item concluído\n[12:34] Timestamp clicável\n\nUse - [ ] para criar checklists'}/>
-
-            <div style={{padding:'8px 20px',fontSize:10,color:'#2a2a2a',borderTop:'1px solid #111',flexShrink:0,display:'flex',alignItems:'center',gap:12}}>
-              <span>Clique em ☑ Todo para inserir checkbox · <kbd style={{background:'#111',padding:'1px 5px',borderRadius:3}}>Ctrl+S</kbd> salva</span>
-            </div>
-          </>
-        ) : (
-          <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',gap:12,color:'#333'}}>
-            <div style={{fontSize:52,opacity:.1}}>📝</div>
-            <div style={{fontSize:15,fontWeight:700,color:'#555'}}>Selecione ou crie uma nota</div>
-            <div style={{fontSize:12,color:'#333'}}>Use o quick-add ou clique em uma nota na lista</div>
+              style={{flex:1,background:'#0a0a0a',border:'1px solid #111',color:'#ccc',fontSize:13,lineHeight:1.8,fontFamily:"ui-monospace,'JetBrains Mono',monospace",padding:'12px',borderRadius:7,resize:'none',outline:'none',marginBottom:8}}
+              placeholder={'Escreva notas aqui...\n\n- [ ] Tarefa pendente\n- [x] Tarefa feita\n[12:34] Timestamp\n\nDigite qualquer coisa — auto-salva ao sair do campo.'}/>
+            {/* Checklist preview */}
+            {editContent&&editContent.includes('- [')&&(
+              <div style={{background:'#111',border:'1px solid #1a1a1a',borderRadius:7,padding:'10px 12px',maxHeight:200,overflowY:'auto',flexShrink:0,marginBottom:8}}>
+                <div style={{fontSize:9,fontWeight:800,color:'#333',marginBottom:8,textTransform:'uppercase',letterSpacing:'.5px'}}>PREVIEW DOS CHECKBOXES</div>
+                {renderContent(editContent,selectedNote.id)}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      ):(
+        <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:10,color:'#333'}}>
+          <div style={{fontSize:44,opacity:.1}}>📝</div>
+          <div style={{fontSize:14,fontWeight:700,color:'#555'}}>Selecione uma nota</div>
+          <div style={{fontSize:12,color:'#2a2a2a'}}>ou crie uma pelo quick-add</div>
+        </div>
+      )}
     </div>
   );
 }
-
-// ─── ORGANIZAR MODAL ────────────────────────────────────────────────────────────
-const TAG_COLORS_CYCLE = ["#FF6B6B","#FFB74D","#64B5F6","#81C784","#BA68C8","#F06292","#FF8A65","#90A4AE"];
-
-function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, onCreateTag, onDeleteTag }) {
-  const [newCatName, setNewCatName] = useState("");
-  const [newCatParent, setNewCatParent] = useState("");
-  const [showCreateCat, setShowCreateCat] = useState(false);
-  const [newTagName, setNewTagName] = useState("");
-  const [newTagColor, setNewTagColor] = useState(TAG_COLORS_CYCLE[customTags.length % TAG_COLORS_CYCLE.length]);
-  const [showCreateTag, setShowCreateTag] = useState(false);
-  const [creatingCat, setCreatingCat] = useState(false);
-  const [pendingDelete, setPendingDelete] = useState(null); // {id, name, hasSubs}
-  const [dupTagMsg, setDupTagMsg] = useState("");
-  const [confirmState, setConfirmState] = useState(null); // {message, onConfirm}
-  const askConfirm = (message, onConfirm) => setConfirmState({message, onConfirm});
-
-  // Show EVERY category — no filtering, no tree logic
-  const existingIds = new Set(cats.map(c => c.id));
-  const flatCats = cats.map(c => ({
-    ...c,
-    _depth: 0,
-    _orphan: !!(c.parentId && !existingIds.has(c.parentId))
-  }));
-
-  async function handleCreateCat() {
-    if (!newCatName.trim()) return;
-    setCreatingCat(true);
-    await onCreateCat(newCatName.trim(), newCatParent||null);
-    setNewCatName(""); setNewCatParent(""); setShowCreateCat(false); setCreatingCat(false);
-  }
-
-  function handleCreateTag() {
-    if (!newTagName.trim()) return;
-    if (customTags.find(t => t.label.toLowerCase() === newTagName.trim().toLowerCase())) {
-      setDupTagMsg("Já existe uma tag com esse nome."); return;
-    }
-    setDupTagMsg("");
-    onCreateTag({ id:"t-"+Date.now(), label:newTagName.trim(), color:newTagColor, icon:"◈", count:0 });
-    setNewTagName(""); setShowCreateTag(false);
-    setNewTagColor(TAG_COLORS_CYCLE[(customTags.length+1) % TAG_COLORS_CYCLE.length]);
-  }
-
-  return (
-    <>
-    {confirmState && <ConfirmModal message={confirmState.message} onConfirm={confirmState.onConfirm} onCancel={()=>setConfirmState(null)}/>}
-    <div className="modal-bg" onClick={onClose}>
-      <div className="modal" style={{width:"min(1100px,96vw)",maxHeight:"92vh",overflowY:"auto",padding:28}} onClick={e=>e.stopPropagation()}>
-        {/* Header */}
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
-          <div>
-            <h2 style={{fontSize:20,fontWeight:900,letterSpacing:"-.5px",marginBottom:4}}>Organizar</h2>
-            <p style={{fontSize:12,color:"#555"}}>
-              Categorias dizem <em style={{color:"#e50914",fontStyle:"normal",fontWeight:700}}>onde</em> mora. Tags dizem <em style={{color:"#3b82f6",fontStyle:"normal",fontWeight:700}}>como</em> é.
-            </p>
-          </div>
-          <button className="modal-x" onClick={onClose}><X size={18}/></button>
-        </div>
-
-        {/* Dual pane */}
-        <div style={{display:"flex",gap:16,minHeight:520}}>
-
-          {/* ── CATEGORIES ─────────────────────────────────────────────── */}
-          <div style={{flex:1,background:"#111",border:"1px solid #1a1a1a",borderRadius:10,overflow:"hidden",display:"flex",flexDirection:"column"}}>
-            <div style={{padding:"12px 16px",borderBottom:"1px solid #1a1a1a",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
-              <span style={{fontSize:13,fontWeight:800,display:"flex",alignItems:"center",gap:7}}>
-                <span style={{color:"#e50914"}}>□</span> Categorias
-                <span style={{color:"#555",fontWeight:400,fontSize:12}}>{cats.length}</span>
-              </span>
-              <button onClick={()=>setShowCreateCat(s=>!s)}
-                style={{background:"#e50914",border:"none",color:"#fff",cursor:"pointer",padding:"5px 12px",borderRadius:6,fontSize:11,fontWeight:800,fontFamily:"'Inter',sans-serif"}}>
-                {showCreateCat?"✕ Cancelar":"+ Nova"}
-              </button>
-            </div>
-
-            {/* Inline create form */}
-            {showCreateCat && (
-              <div style={{padding:"12px 14px",borderBottom:"1px solid #1a1a1a",background:"#0d0d0d",flexShrink:0}}>
-                <div style={{fontSize:9,fontWeight:800,textTransform:"uppercase",letterSpacing:".7px",color:"#e50914",marginBottom:8}}>NOVA CATEGORIA</div>
-                <select value={newCatParent} onChange={e=>setNewCatParent(e.target.value)}
-                  style={{width:"100%",background:"#111",border:"1px solid #1a1a1a",color:"#fff",padding:"8px 10px",borderRadius:6,fontSize:12,fontFamily:"'Inter',sans-serif",outline:"none",marginBottom:8}}>
-                  <option value="">Nenhuma (pasta raiz)</option>
-                  {cats.filter(c=>!c.parentId||!existingIds.has(c.parentId)).map(c=>(
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-                <div style={{display:"flex",gap:8}}>
-                  <input value={newCatName} onChange={e=>setNewCatName(e.target.value)}
-                    onKeyDown={e=>e.key==="Enter"&&handleCreateCat()}
-                    placeholder="Nome da categoria..."
-                    autoFocus
-                    style={{flex:1,background:"#111",border:"1px solid #1a1a1a",color:"#fff",padding:"9px 12px",borderRadius:7,fontSize:13,fontFamily:"'Inter',sans-serif",outline:"none"}}/>
-                  <button onClick={handleCreateCat} disabled={creatingCat||!newCatName.trim()}
-                    style={{background:"#e50914",border:"none",color:"#fff",cursor:"pointer",padding:"9px 16px",borderRadius:7,fontSize:12,fontWeight:700,fontFamily:"'Inter',sans-serif",opacity:(creatingCat||!newCatName.trim())?0.4:1}}>
-                    {creatingCat?"...":"Criar"}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Category list */}
-            <div style={{flex:1,overflowY:"auto",padding:8}}>
-              {flatCats.length===0?(
-                <div style={{textAlign:"center",padding:"32px 16px",color:"#555"}}>
-                  <div style={{fontSize:28,marginBottom:8,opacity:.2}}>□</div>
-                  <div style={{fontSize:13,fontWeight:700,color:"#888",marginBottom:4}}>Nenhuma categoria</div>
-                  <div style={{fontSize:11}}>Clique em "+ Nova" para criar.</div>
-                </div>
-              ):flatCats.map(cat=>{
-                const indent = cat._depth * 18;
-                const hasSubs = cats.some(c => c.parentId === cat.id);
-                return (
-                  <div key={cat.id} style={{marginBottom:3,marginLeft:indent}}>
-                    <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:7,
-                      background: cat._orphan ? "rgba(245,166,35,.06)" : "#0a0a0a",
-                      border: cat._orphan ? "1px solid rgba(245,166,35,.2)" : "1px solid #1a1a1a"}}>
-                      <span style={{fontSize:13}}>📁</span>
-                      <span style={{flex:1,fontSize:13,fontWeight:600,color: cat._orphan ? "#f5a623" : "#fff"}}>{cat.name}</span>
-                      {cat._orphan && <span style={{fontSize:9,color:"#f5a623",padding:"1px 6px",border:"1px solid rgba(245,166,35,.3)",borderRadius:4}}>órfã</span>}
-                      <button
-                        onClick={()=>askConfirm(`Excluir "${cat.name}"${hasSubs?" e suas subcategorias":""}?`, ()=>{ setConfirmState(null); onDeleteCat(cat.id); })}
-                        style={{background:"none",border:"none",cursor:"pointer",color:"#333",fontSize:12,padding:"4px 8px",borderRadius:4,transition:"all .15s"}}
-                        onMouseEnter={e=>e.currentTarget.style.color="#f87171"}
-                        onMouseLeave={e=>e.currentTarget.style.color="#333"}>🗑</button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* ── TAGS ───────────────────────────────────────────────────── */}
-          <div style={{flex:1,background:"#111",border:"1px solid #1a1a1a",borderRadius:10,overflow:"hidden",display:"flex",flexDirection:"column"}}>
-            <div style={{padding:"12px 16px",borderBottom:"1px solid #1a1a1a",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
-              <span style={{fontSize:13,fontWeight:800,display:"flex",alignItems:"center",gap:7}}>
-                <span style={{color:"#e50914"}}>#</span> Tags
-                <span style={{color:"#555",fontWeight:400,fontSize:12}}>{customTags.length}</span>
-              </span>
-              <button onClick={()=>setShowCreateTag(s=>!s)}
-                style={{background:"#e50914",border:"none",color:"#fff",cursor:"pointer",padding:"5px 12px",borderRadius:6,fontSize:11,fontWeight:800,fontFamily:"'Inter',sans-serif"}}>
-                {showCreateTag?"✕ Cancelar":"+ Nova"}
-              </button>
-            </div>
-
-            {/* Inline tag create form */}
-            {showCreateTag && (
-              <div style={{padding:"12px 14px",borderBottom:"1px solid #1a1a1a",background:"#0d0d0d",flexShrink:0}}>
-                <div style={{fontSize:9,fontWeight:800,textTransform:"uppercase",letterSpacing:".7px",color:"#e50914",marginBottom:8}}>NOVA TAG</div>
-                {/* Color picker */}
-                <div style={{display:"flex",gap:8,marginBottom:10,flexWrap:"wrap"}}>
-                  {TAG_COLORS_CYCLE.map(c=>(
-                    <button key={c} onClick={()=>setNewTagColor(c)}
-                      style={{width:24,height:24,borderRadius:"50%",background:c,border:`2px solid ${c===newTagColor?"#fff":"transparent"}`,cursor:"pointer",transition:"all .15s"}}/>
-                  ))}
-                </div>
-                <div style={{display:"flex",gap:8}}>
-                  <input value={newTagName} onChange={e=>setNewTagName(e.target.value)}
-                    onKeyDown={e=>e.key==="Enter"&&handleCreateTag()}
-                    placeholder="Nome da tag..."
-                    autoFocus
-                    style={{flex:1,background:"#111",border:`1px solid ${newTagColor}44`,color:"#fff",padding:"9px 12px",borderRadius:7,fontSize:13,fontFamily:"'Inter',sans-serif",outline:"none"}}/>
-                  <button onClick={handleCreateTag} disabled={!newTagName.trim()}
-                    style={{background:newTagColor,border:"none",color:"#fff",cursor:"pointer",padding:"9px 16px",borderRadius:7,fontSize:12,fontWeight:700,fontFamily:"'Inter',sans-serif",opacity:!newTagName.trim()?0.4:1}}>
-                    Criar
-                  </button>
-                </div>
-                {newTagName && (
-                  <div style={{marginTop:8,display:"inline-flex",alignItems:"center",gap:6,padding:"4px 12px",borderRadius:20,border:`1.5px solid ${newTagColor}`,color:newTagColor,fontSize:11,fontWeight:700}}>
-                    ◈ {newTagName}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Tags list */}
-            <div style={{flex:1,overflowY:"auto",padding:"10px 12px",display:"grid",gridTemplateColumns:"1fr",gap:6,alignContent:"start"}}>
-              {customTags.length===0?(
-                <div style={{gridColumn:"1/-1",textAlign:"center",padding:"32px 16px",color:"#555"}}>
-                  <div style={{fontSize:28,marginBottom:8,opacity:.3}}>#</div>
-                  <div style={{fontSize:13,fontWeight:700,color:"#888",marginBottom:4}}>Nenhuma tag ainda</div>
-                  <div style={{fontSize:11,lineHeight:1.5}}>Tags classificam como o item é.<br/>Ex: Favorito, Urgente, Ver depois.</div>
-                </div>
-              ):customTags.map(tag=>(
-                <div key={tag.id||tag.label}
-                  style={{background:"#0f0f0f",borderRadius:8,padding:"12px 14px",display:"flex",alignItems:"center",gap:12,borderTop:"1px solid #1a1a1a",borderRight:"1px solid #1a1a1a",borderBottom:"1px solid #1a1a1a",borderLeft:`3px solid ${tag.color}`}}>
-                  <span style={{color:tag.color,fontSize:18,flexShrink:0}}>{tag.icon||"◈"}</span>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:14,fontWeight:700,color:"#fff",whiteSpace:"normal",lineHeight:1.4,wordBreak:"break-word"}}>{tag.label}</div>
-                    <div style={{fontSize:11,color:"#555",marginTop:2}}>{tag.count||0} itens</div>
-                  </div>
-                  <button onClick={()=>askConfirm(`Excluir tag "${tag.label}"?`, ()=>{ setConfirmState(null); onDeleteTag(tag.id||tag.label); })}
-                    style={{background:"none",border:"none",cursor:"pointer",color:"#333",fontSize:12,padding:"2px 6px",borderRadius:3,transition:"color .15s"}}
-                    onMouseEnter={e=>e.target.style.color="#f87171"} onMouseLeave={e=>e.target.style.color="#333"}>✕</button>
-                </div>
-              ))}
-            </div>
-
-            <div style={{padding:"8px 12px",borderTop:"1px solid #1a1a1a",fontSize:10,color:"#2a2a2a",display:"flex",alignItems:"center",gap:5,flexShrink:0}}>
-              <span style={{width:5,height:5,borderRadius:"50%",background:"#22c55e",display:"inline-block"}}/>
-              {customTags.length} tag{customTags.length!==1?"s":""}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    </>
-  );
-}
-
-
-// ─── NOTES PAGE ─────────────────────────────────────────────────────────────────
-
-// Simple NLP parser for quick-add
-
-function renderNoteContent(content, onToggleCheck) {
-  if (!content) return null;
-  const lines = content.split('\n');
-  let checkIdx = 0;
-  return lines.map((line, i) => {
-    const checkMatch = line.match(/^(\s*)-\s*\[([ x])\]\s*(.*)$/);
-    if (checkMatch) {
-      const checked = checkMatch[2] === 'x';
-      const text = checkMatch[3];
-      const idx = checkIdx++;
-      return (
-        <div key={i} className={`note-check-item${checked?' checked':''}`}
-          onClick={()=>onToggleCheck && onToggleCheck(i)}>
-          <span className="note-checkbox">{checked?'✓':''}</span>
-          <span className="note-check-text">{text}</span>
-        </div>
-      );
-    }
-    if (line.startsWith('# ')) return <h2 key={i} className="note-h1">{line.slice(2)}</h2>;
-    if (line.startsWith('## ')) return <h3 key={i} className="note-h2">{line.slice(3)}</h3>;
-    if (line.startsWith('> ')) return <blockquote key={i} className="note-quote">{line.slice(2)}</blockquote>;
-    if (line === '---' || line === '---') return <hr key={i} className="note-divider"/>;
-    return line ? <p key={i} className="note-para">{line}</p> : <br key={i}/>;
-  });
-}
-
-function countChecks(content) {
-  const all = (content||'').match(/^.*-\s*\[[ x]\].*$/gm)||[];
-  const done = (content||'').match(/^.*-\s*\[x\].*$/gm)||[];
-  return { total: all.length, done: done.length };
-}
-
-const PRIORITY_COLORS = { 1:'#e50914', 2:'#ff8a00', 3:'#3b82f6', 4:'transparent' };
-const PRIORITY_LABELS = { 1:'P1', 2:'P2', 3:'P3', 4:'' };
 
 
 // ─── APP ROUTER (root component) ─────────────────────────────────────────────
