@@ -3,7 +3,8 @@ import { Play, Plus, Search, Check, Trash2, Edit2, ChevronRight, ChevronLeft,
   Download, Upload, X, Loader2, Youtube, Link, FolderPlus, MoreVertical,
   Eye, EyeOff, BarChart2, Folder, Volume2, VolumeX, Sparkles, RefreshCw,
   Home, Settings, Menu,
-  FileText, Inbox, Star, Calendar, Flag, ChevronDown, RotateCcw } from "lucide-react";
+  FileText, Inbox, Star, Calendar, Flag, ChevronDown, RotateCcw,
+  CheckCircle2, Circle, CornerUpLeft, CornerDownRight, GripVertical, LayoutGrid } from "lucide-react";
 
 // ─── CONFIGURAÇÃO DA API ──────────────────────────────────────────────────────
 const API_URL = "https://web-production-99f91.up.railway.app";
@@ -1342,6 +1343,201 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
 
 /* — Bottom nav: novo item Notas — */
 .bnav-btn-notes svg{stroke-width:2.2;}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   🌳 HIERARQUIA DE PASTAS — árvore recursiva com drag-and-drop
+   ═══════════════════════════════════════════════════════════════════════════ */
+.np-folder-tree{display:flex;flex-direction:column;}
+.np-folder-node{position:relative;}
+
+.np-folder-row .np-folder-chevron{
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  width:16px;height:16px;cursor:pointer;
+  color:var(--text-tertiary);border-radius:3px;
+  transition:transform .18s var(--ease), color .15s var(--ease);
+  margin-left:-2px;
+}
+.np-folder-row .np-folder-chevron:hover{color:var(--text-body);background:var(--bg-hover);}
+.np-folder-row .np-folder-chevron.expanded{transform:rotate(90deg);}
+.np-folder-row .np-folder-chevron.empty{visibility:hidden;}
+
+/* Indentação por profundidade (até 5 níveis) */
+.np-folder-node[data-depth="0"] > .np-folder-row .np-item{padding-left:10px;}
+.np-folder-node[data-depth="1"] > .np-folder-row .np-item{padding-left:24px;}
+.np-folder-node[data-depth="2"] > .np-folder-row .np-item{padding-left:38px;}
+.np-folder-node[data-depth="3"] > .np-folder-row .np-item{padding-left:52px;}
+.np-folder-node[data-depth="4"] > .np-folder-row .np-item{padding-left:66px;}
+
+/* Drag-and-drop visual feedback */
+.np-folder-row{cursor:default;}
+.np-folder-row.dragging{opacity:.45;}
+.np-folder-row.drag-target > .np-item{
+  background:var(--brand-soft) !important;
+  box-shadow:inset 0 0 0 2px var(--brand);
+}
+.np-drop-indicator{
+  position:absolute;left:24px;right:8px;
+  height:2px;background:var(--brand);
+  border-radius:1px;pointer-events:none;
+  z-index:5;
+}
+.np-drop-indicator.above{top:-1px;}
+.np-drop-indicator.below{bottom:-1px;}
+
+/* Drag handle (aparece no hover) */
+.np-folder-drag-handle{
+  flex-shrink:0;display:none;align-items:center;
+  color:var(--text-tertiary);cursor:grab;
+  padding:2px;margin-left:-4px;margin-right:-2px;
+}
+.np-folder-drag-handle:active{cursor:grabbing;}
+.np-folder-row:hover .np-folder-drag-handle{display:flex;}
+
+/* Botões de hierarquia (← subir, → aninhar) — aparecem no hover junto com rename/excluir */
+.np-folder-row:hover .np-folder-actions{display:flex;gap:2px;padding-right:4px;}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   ✅ COMPLETAR TAREFA — checkbox + animação de realização
+   ═══════════════════════════════════════════════════════════════════════════ */
+.np-note-card{
+  display:flex;align-items:flex-start;gap:12px;
+}
+.np-note-card-main{flex:1;min-width:0;}
+
+.np-complete-circle{
+  flex-shrink:0;
+  width:22px;height:22px;border-radius:50%;
+  border:2px solid var(--text-tertiary);
+  background:transparent;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;padding:0;
+  margin-top:1px;
+  transition:all .2s var(--ease);
+  outline:none;
+}
+.np-complete-circle:hover{
+  border-color:#22c55e;
+  background:rgba(34,197,94,.12);
+}
+.np-complete-circle.done{
+  background:#22c55e;
+  border-color:#22c55e;
+  animation:completePulse .42s var(--ease);
+}
+.np-complete-circle.done svg{color:#fff;}
+.np-complete-circle:hover svg{color:#22c55e;opacity:1 !important;}
+.np-complete-circle.done:hover svg{color:#fff;}
+.np-complete-circle:focus-visible{box-shadow:0 0 0 3px rgba(34,197,94,.35);}
+
+@keyframes completePulse{
+  0%   { transform:scale(1); }
+  40%  { transform:scale(1.32); box-shadow:0 0 0 10px rgba(34,197,94,.22); }
+  100% { transform:scale(1); box-shadow:0 0 0 0 rgba(34,197,94,0); }
+}
+
+/* Card de nota concluída */
+.np-note-card.completed .np-note-title{text-decoration:line-through;color:var(--text-tertiary);}
+.np-note-card.completed .np-note-preview{opacity:.55;}
+
+/* Toggle no header da lista */
+.np-list-toolbar{
+  display:flex;align-items:center;gap:6px;
+  margin-top:6px;
+}
+.np-list-toggle-btn{
+  background:none;border:none;color:var(--text-secondary);
+  cursor:pointer;font-size:var(--font-mini);font-weight:600;
+  padding:4px 10px;border-radius:5px;
+  font-family:'Inter',sans-serif;
+  display:inline-flex;align-items:center;gap:5px;
+  transition:all .15s var(--ease);
+}
+.np-list-toggle-btn:hover{background:var(--bg-hover);color:var(--text-primary);}
+.np-list-toggle-btn.active{
+  background:rgba(34,197,94,.15);color:#22c55e;
+}
+
+/* Botão grande de concluir no editor */
+.np-complete-big{
+  display:inline-flex;align-items:center;gap:8px;
+  background:transparent;
+  border:1.5px solid var(--text-tertiary);
+  color:var(--text-secondary);
+  padding:8px 14px;border-radius:8px;
+  font-size:var(--font-meta);font-weight:600;
+  cursor:pointer;font-family:'Inter',sans-serif;
+  transition:all .2s var(--ease);
+  outline:none;
+}
+.np-complete-big:hover{border-color:#22c55e;color:#22c55e;background:rgba(34,197,94,.08);}
+.np-complete-big.done{
+  background:rgba(34,197,94,.15);
+  border-color:#22c55e;color:#22c55e;
+}
+.np-complete-big.done:hover{background:rgba(34,197,94,.22);}
+.np-complete-big:focus-visible{box-shadow:0 0 0 3px rgba(34,197,94,.35);}
+
+/* Banner de nota concluída no editor */
+.np-completed-banner{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(34,197,94,.12);
+  border:1px solid rgba(34,197,94,.3);
+  color:#22c55e;
+  padding:8px 14px;border-radius:8px;
+  font-size:var(--font-meta);font-weight:600;
+  align-self:flex-start;
+  margin-bottom:6px;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   📐 RESIZE da coluna do meio (lista)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.np-list{position:relative;}
+.np-list-resize{
+  position:absolute;top:0;right:-2px;bottom:0;
+  width:5px;cursor:col-resize;z-index:10;
+  background:transparent;
+  transition:background .15s var(--ease);
+}
+.np-list-resize:hover, .np-list-resize.dragging{background:var(--brand-soft);}
+@media (max-width: 1024px){ .np-list-resize{display:none;} }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   🎨 TOPNAV — ícones alinhados com texto
+   ═══════════════════════════════════════════════════════════════════════════ */
+.nav-btn{
+  display:inline-flex;align-items:center;gap:7px;
+}
+.nav-btn svg{flex-shrink:0;opacity:.85;}
+.nav-btn.on svg, .nav-btn:hover svg{opacity:1;}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   🔧 CORREÇÕES GLOBAIS DE LEGIBILIDADE — fixes cirúrgicos nos piores casos
+   (#555 em fundo escuro = falha WCAG. Substitui por --text-secondary)
+   Não toca cores de elementos críticos do design (vermelho, status, etc).
+   ═══════════════════════════════════════════════════════════════════════════ */
+.fl{color:rgba(255,255,255,.62) !important;font-size:12px;letter-spacing:.6px;}
+.stat-sub{color:rgba(255,255,255,.6) !important;font-size:12px;}
+.stat-lbl{color:rgba(255,255,255,.72) !important;font-size:12px;}
+.cat-link-cnt{color:rgba(255,255,255,.6) !important;font-size:12px;}
+.bc-sep{color:rgba(255,255,255,.32) !important;}
+.cat-act-btn{color:rgba(255,255,255,.55) !important;}
+.cat-act-btn:hover{color:rgba(255,255,255,.95) !important;}
+.cat-drag-handle{color:rgba(255,255,255,.4);}
+.cat-drag-handle:hover{color:rgba(255,255,255,.85) !important;}
+.cinema-ftr{color:rgba(255,255,255,.6) !important;font-size:12px;}
+.fetch-status{color:rgba(255,255,255,.55) !important;font-size:12px;}
+.btn-add-cat-inline{color:rgba(255,255,255,.6) !important;border-color:rgba(255,255,255,.15) !important;font-size:13px;}
+.btn-add-cat-inline:hover{color:rgba(255,255,255,.92) !important;border-color:rgba(255,255,255,.3) !important;}
+.modal-x{color:rgba(255,255,255,.65) !important;}
+.modal-x:hover{color:rgba(255,255,255,1) !important;}
+
+/* Contadores de linhas/itens em cards — sobem 1px e ganham peso */
+.row-cnt{font-size:13px !important;font-weight:600 !important;color:rgba(255,255,255,.75) !important;}
+
+/* Texto de "ainda não assistido" e empty states no grid */
+.hero-empty-s{color:rgba(255,255,255,.72) !important;font-size:15px;line-height:1.7;}
+
 `;
 
 // ─── SAMPLE DATA ─────────────────────────────────────────────────────────────
@@ -2849,50 +3045,80 @@ function NotesPage({ user, links, customTags, onClose }) {
   const [folders, setFolders]         = useState([]);
   const [notes, setNotes]             = useState([]);
   const [trashNotes, setTrashNotes]   = useState([]);
-  const [view, setView]               = useState("inbox");   // inbox|today|upcoming|all|folder:<id>|trash
+  const [view, setView]               = useState("inbox");   // inbox|today|upcoming|all|done|folder:<id>|trash
   const [selectedId, setSelectedId]   = useState(null);
   const [searchQ, setSearchQ]         = useState("");
   const [loading, setLoading]         = useState(true);
   const [savingState, setSavingState] = useState("idle");    // idle|saving|saved
-  const [showFolderModal, setShowFolderModal] = useState(null); // null | {mode:"create"|"rename", folder?:{}}
+  const [showFolderModal, setShowFolderModal] = useState(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [mobileEditorOpen, setMobileEditorOpen] = useState(false);
+  const [showCompleted, setShowCompleted] = useState(false);
 
-  // Sidebar redimensionável
+  // Hierarquia de pastas
+  const [expandedFolders, setExpandedFolders] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem(`wl-notes-exp-${userKey}`) || "[]")); }
+    catch { return new Set(); }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(`wl-notes-exp-${userKey}`, JSON.stringify([...expandedFolders])); } catch {}
+  }, [expandedFolders, userKey]);
+
+  // Drag-and-drop de pastas
+  const [draggingFolderId, setDraggingFolderId] = useState(null);
+  const [dropTargetId, setDropTargetId]         = useState(null);
+
+  // Sidebar redimensionável (esquerda)
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     const w = parseInt(localStorage.getItem(`wl-notes-sb-w-${userKey}`) || "260", 10);
     return isNaN(w) ? 260 : Math.max(200, Math.min(480, w));
   });
-  const dragRef = useRef({ dragging:false, startX:0, startW:260 });
 
-  const onResizeStart = (e) => {
-    dragRef.current = { dragging:true, startX:e.clientX, startW:sidebarWidth };
+  // Lista central redimensionável
+  const [listWidth, setListWidth] = useState(() => {
+    const w = parseInt(localStorage.getItem(`wl-notes-list-w-${userKey}`) || "340", 10);
+    return isNaN(w) ? 340 : Math.max(280, Math.min(560, w));
+  });
+
+  const dragRef     = useRef({ which:null, startX:0, startW:0 });
+
+  const onResizeStart = (which) => (e) => {
+    dragRef.current = { which, startX:e.clientX, startW: which==="sidebar" ? sidebarWidth : listWidth };
     e.target.classList.add("dragging");
     document.body.style.cursor = "col-resize";
     document.body.style.userSelect = "none";
   };
   useEffect(() => {
     const onMove = (e) => {
-      if (!dragRef.current.dragging) return;
-      const dx = e.clientX - dragRef.current.startX;
-      let next = dragRef.current.startW + dx;
-      next = Math.max(200, Math.min(480, next));
-      // Snap points em 200/260/320/400
-      [200, 260, 320, 400].forEach(snap => { if (Math.abs(next-snap) < 8) next = snap; });
-      setSidebarWidth(next);
+      const d = dragRef.current;
+      if (!d.which) return;
+      const dx = e.clientX - d.startX;
+      let next = d.startW + dx;
+      if (d.which === "sidebar") {
+        next = Math.max(200, Math.min(480, next));
+        [200, 260, 320, 400].forEach(s => { if (Math.abs(next-s) < 8) next = s; });
+        setSidebarWidth(next);
+      } else {
+        next = Math.max(280, Math.min(560, next));
+        [280, 340, 400, 480, 560].forEach(s => { if (Math.abs(next-s) < 8) next = s; });
+        setListWidth(next);
+      }
     };
     const onUp = () => {
-      if (!dragRef.current.dragging) return;
-      dragRef.current.dragging = false;
+      const d = dragRef.current;
+      if (!d.which) return;
+      const which = d.which;
+      dragRef.current = { which:null, startX:0, startW:0 };
       document.body.style.cursor = "";
       document.body.style.userSelect = "";
-      document.querySelectorAll(".np-resize-handle.dragging").forEach(el=>el.classList.remove("dragging"));
-      localStorage.setItem(`wl-notes-sb-w-${userKey}`, String(sidebarWidth));
+      document.querySelectorAll(".np-resize-handle.dragging,.np-list-resize.dragging").forEach(el=>el.classList.remove("dragging"));
+      if (which === "sidebar") localStorage.setItem(`wl-notes-sb-w-${userKey}`, String(sidebarWidth));
+      else localStorage.setItem(`wl-notes-list-w-${userKey}`, String(listWidth));
     };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
     return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
-  }, [sidebarWidth, userKey]);
+  }, [sidebarWidth, listWidth, userKey]);
 
   // Carrega folders e notes
   const refreshAll = useCallback(async () => {
@@ -2928,6 +3154,7 @@ function NotesPage({ user, links, customTags, onClose }) {
   const todayEnd = useMemo(() => { const d=new Date(today0); d.setDate(d.getDate()+1); return d; }, [today0]);
   const weekEnd  = useMemo(() => { const d=new Date(today0); d.setDate(d.getDate()+7); return d; }, [today0]);
   const isTrash = view === "trash";
+  const isDoneView = view === "done";
   const currentNotes = useMemo(() => {
     let pool = isTrash ? trashNotes : notes;
     if (view === "inbox") pool = pool.filter(n => !n.folderId);
@@ -2947,28 +3174,55 @@ function NotesPage({ user, links, customTags, onClose }) {
       });
     }
     else if (view === "all") { /* todas */ }
+    else if (view === "done") { pool = pool.filter(n => n.isCompleted); }
     else if (view.startsWith("folder:")) {
       const fid = view.slice(7);
-      pool = pool.filter(n => n.folderId === fid);
+      // Inclui notas das subpastas também
+      const subIds = new Set([fid]);
+      let changed = true;
+      while (changed) {
+        changed = false;
+        folders.forEach(f => { if (f.parentId && subIds.has(f.parentId) && !subIds.has(f.id)) { subIds.add(f.id); changed = true; } });
+      }
+      pool = pool.filter(n => n.folderId && subIds.has(n.folderId));
+    }
+    // Hide completed por padrão (exceto na view "done" e "trash")
+    if (!isTrash && !isDoneView && !showCompleted) {
+      pool = pool.filter(n => !n.isCompleted);
     }
     if (searchQ.trim()) {
       const q = searchQ.toLowerCase();
       pool = pool.filter(n => (n.title||"").toLowerCase().includes(q) || (n.body||"").toLowerCase().includes(q));
     }
+    // Concluídas vão pro final na lista
+    pool = [...pool].sort((a,b) => {
+      if (!!a.isCompleted !== !!b.isCompleted) return a.isCompleted ? 1 : -1;
+      return 0;
+    });
     return pool;
-  }, [notes, trashNotes, view, searchQ, today0, todayEnd, weekEnd, isTrash]);
+  }, [notes, trashNotes, view, searchQ, today0, todayEnd, weekEnd, isTrash, isDoneView, showCompleted, folders]);
 
   // Contadores para o sidebar
   const counts = useMemo(() => {
-    const c = { inbox:0, today:0, upcoming:0, all:notes.length, trash:trashNotes.length };
-    notes.forEach(n => {
+    const active = notes.filter(n => !n.isCompleted);
+    const c = { inbox:0, today:0, upcoming:0, all:notes.length, done:notes.filter(n=>n.isCompleted).length, trash:trashNotes.length };
+    active.forEach(n => {
       if (!n.folderId) c.inbox++;
       const due = n.dueDate ? new Date(n.dueDate) : null;
       if ((n.priority && n.priority<=2) || (due && due>=today0 && due<todayEnd)) c.today++;
       if (due && due>=today0 && due<weekEnd) c.upcoming++;
     });
+    // Contadores de pastas: notas ativas (não concluídas) na pasta E descendentes
     const folderCounts = {};
-    folders.forEach(f => { folderCounts[f.id] = notes.filter(n=>n.folderId===f.id).length; });
+    folders.forEach(f => {
+      const subIds = new Set([f.id]);
+      let changed = true;
+      while (changed) {
+        changed = false;
+        folders.forEach(x => { if (x.parentId && subIds.has(x.parentId) && !subIds.has(x.id)) { subIds.add(x.id); changed = true; } });
+      }
+      folderCounts[f.id] = active.filter(n => n.folderId && subIds.has(n.folderId)).length;
+    });
     return { ...c, folders:folderCounts };
   }, [notes, trashNotes, folders, today0, todayEnd, weekEnd]);
 
@@ -3067,12 +3321,100 @@ function NotesPage({ user, links, customTags, onClose }) {
     broadcastNotes();
   };
 
+  // ─── Conclusão de tarefa ──
+  const handleToggleComplete = useCallback(async (id, currentState) => {
+    const next = !currentState;
+    // Atualização otimista (animação instantânea)
+    setNotes(prev => prev.map(n => n.id===id ? { ...n, isCompleted:next, updatedAt:new Date().toISOString() } : n));
+    try {
+      await api.updateNote(id, { isCompleted: next });
+      broadcastNotes();
+    } catch (e) {
+      // Reverte em caso de erro
+      setNotes(prev => prev.map(n => n.id===id ? { ...n, isCompleted:currentState } : n));
+      console.error("[notes] toggle complete failed", e);
+    }
+  }, [api, broadcastNotes]);
+
+  // ─── Hierarquia de pastas (indent / outdent / drag) ──
+  const isDescendantOf = useCallback((folderId, ancestorId) => {
+    let cur = folders.find(f => f.id === folderId);
+    let depth = 0;
+    while (cur && cur.parentId && depth < 20) {
+      if (cur.parentId === ancestorId) return true;
+      cur = folders.find(f => f.id === cur.parentId);
+      depth++;
+    }
+    return false;
+  }, [folders]);
+
+  const handleMoveFolder = async (folderId, newParentId) => {
+    // Previne ciclos
+    if (folderId === newParentId) return;
+    if (newParentId && isDescendantOf(newParentId, folderId)) return;
+    const f = await api.updateFolder(folderId, { parentId: newParentId || null });
+    if (f) setFolders(prev => prev.map(x => x.id===folderId ? { ...x, parentId:newParentId||null } : x));
+    // Expande o pai automaticamente
+    if (newParentId) {
+      setExpandedFolders(prev => new Set(prev).add(newParentId));
+    }
+    broadcastNotes();
+  };
+
+  // → Aninhar: torna a pasta filha da pasta IRMÃ anterior no mesmo nível
+  const handleIndentFolder = async (folderId) => {
+    const f = folders.find(x => x.id === folderId);
+    if (!f) return;
+    const siblings = folders
+      .filter(x => x.parentId === f.parentId)
+      .sort((a,b) => (a.order||0) - (b.order||0));
+    const idx = siblings.findIndex(x => x.id === folderId);
+    if (idx <= 0) return; // primeira do nível, não dá pra aninhar
+    const prevSibling = siblings[idx-1];
+    await handleMoveFolder(folderId, prevSibling.id);
+  };
+
+  // ← Subir: torna a pasta filha do AVÔ (sobe um nível)
+  const handleOutdentFolder = async (folderId) => {
+    const f = folders.find(x => x.id === folderId);
+    if (!f || !f.parentId) return; // já está no topo
+    const parent = folders.find(x => x.id === f.parentId);
+    await handleMoveFolder(folderId, parent?.parentId || null);
+  };
+
+  const toggleExpanded = (folderId) => {
+    setExpandedFolders(prev => {
+      const next = new Set(prev);
+      if (next.has(folderId)) next.delete(folderId);
+      else next.add(folderId);
+      return next;
+    });
+  };
+
+  // Árvore hierárquica ordenada
+  const folderTree = useMemo(() => {
+    const byId = {};
+    folders.forEach(f => { byId[f.id] = { ...f, children: [] }; });
+    const roots = [];
+    folders.forEach(f => {
+      if (f.parentId && byId[f.parentId]) byId[f.parentId].children.push(byId[f.id]);
+      else roots.push(byId[f.id]);
+    });
+    const sortRec = (nodes) => {
+      nodes.sort((a,b) => (a.order||0) - (b.order||0) || (a.name||"").localeCompare(b.name||""));
+      nodes.forEach(n => sortRec(n.children));
+    };
+    sortRec(roots);
+    return roots;
+  }, [folders]);
+
   // Título da lista central baseado na view
   const viewTitle = {
     inbox: "Caixa de entrada",
     today: "Hoje",
     upcoming: "Próximas",
     all: "Todas as notas",
+    done: "Concluídas",
     trash: "Lixeira",
   }[view] || (folders.find(f=>view===`folder:${f.id}`)?.name || "Notas");
 
@@ -3104,30 +3446,55 @@ function NotesPage({ user, links, customTags, onClose }) {
               <Plus size={14}/>
             </button>
           </div>
-          {folders.length === 0 ? (
+          {folderTree.length === 0 ? (
             <div style={{padding:"6px 12px",fontSize:"var(--font-meta)",color:"var(--text-tertiary)",lineHeight:1.5}}>
               Nenhuma pasta ainda. Clique no <strong>+</strong> acima para criar.
             </div>
-          ) : folders.map(f => (
-            <div key={f.id} className="np-folder-row">
-              <div className={`np-item${view===`folder:${f.id}`?" active":""}`} onClick={()=>setView(`folder:${f.id}`)}>
-                <span className="np-item-ico"><Folder size={17}/></span>
-                <span className="np-item-label" title={f.name}>{f.name}</span>
-                <span className="np-item-count">{counts.folders[f.id] || 0}</span>
-              </div>
-              <div className="np-folder-actions">
-                <button className="np-folder-act-btn" title="Renomear" onClick={()=>setShowFolderModal({mode:"rename",folder:f})}><Edit2 size={13}/></button>
-                <button className="np-folder-act-btn" title="Excluir" onClick={()=>handleDeleteFolder(f.id)}><Trash2 size={13}/></button>
-              </div>
+          ) : (
+            <div className="np-folder-tree"
+              onDragOver={e=>{ if (draggingFolderId) e.preventDefault(); }}
+              onDrop={e=>{
+                // Drop fora de qualquer pasta = mover pra raiz
+                if (draggingFolderId && !e.defaultPrevented) {
+                  if (folders.find(f=>f.id===draggingFolderId)?.parentId) {
+                    handleMoveFolder(draggingFolderId, null);
+                  }
+                  setDraggingFolderId(null);
+                  setDropTargetId(null);
+                }
+              }}>
+              {folderTree.map(root => (
+                <FolderTreeNode
+                  key={root.id}
+                  node={root}
+                  depth={0}
+                  view={view}
+                  setView={setView}
+                  counts={counts}
+                  expanded={expandedFolders}
+                  toggleExpanded={toggleExpanded}
+                  onRename={(f)=>setShowFolderModal({mode:"rename",folder:f})}
+                  onDelete={handleDeleteFolder}
+                  onIndent={handleIndentFolder}
+                  onOutdent={handleOutdentFolder}
+                  onMove={handleMoveFolder}
+                  isDescendantOf={isDescendantOf}
+                  draggingFolderId={draggingFolderId}
+                  setDraggingFolderId={setDraggingFolderId}
+                  dropTargetId={dropTargetId}
+                  setDropTargetId={setDropTargetId}
+                />
+              ))}
             </div>
-          ))}
+          )}
 
           <div className="np-section-label" style={{marginTop:14}}><span>Outros</span></div>
+          <NoteSidebarItem ico={<CheckCircle2 size={17}/>} label="Concluídas" count={counts.done} active={view==="done"} onClick={()=>setView("done")}/>
           <NoteSidebarItem ico={<Trash2 size={17}/>} label="Lixeira" count={counts.trash} active={view==="trash"} onClick={()=>setView("trash")}/>
         </div>
         <div
           className="np-resize-handle"
-          onMouseDown={onResizeStart}
+          onMouseDown={onResizeStart("sidebar")}
           role="separator"
           aria-label="Redimensionar barra lateral"
           aria-valuenow={sidebarWidth}
@@ -3137,7 +3504,7 @@ function NotesPage({ user, links, customTags, onClose }) {
       </aside>
 
       {/* LISTA */}
-      <section className="np-list">
+      <section className="np-list" style={{ flex:`0 0 ${listWidth}px`, width:listWidth }}>
         <div className="np-list-head">
           <div className="np-list-title">{viewTitle}</div>
           <div className="np-list-sub">
@@ -3149,43 +3516,77 @@ function NotesPage({ user, links, customTags, onClose }) {
               >Esvaziar lixeira</button>
             )}
           </div>
+          {!isTrash && !isDoneView && counts.done > 0 && (
+            <div className="np-list-toolbar">
+              <button
+                className={`np-list-toggle-btn${showCompleted?" active":""}`}
+                onClick={()=>setShowCompleted(s=>!s)}
+                title={showCompleted?"Ocultar concluídas":"Mostrar concluídas"}
+              >
+                {showCompleted ? <Eye size={12}/> : <EyeOff size={12}/>}
+                {showCompleted ? "Mostrando concluídas" : "Ocultar concluídas"}
+              </button>
+            </div>
+          )}
         </div>
         <div className="np-list-body">
           {loading ? (
             <div className="np-empty-list"><Loader2 size={28} style={{animation:"spin 1s linear infinite",opacity:.5}}/></div>
           ) : currentNotes.length === 0 ? (
             <div className="np-empty-list">
-              <div className="ico">{view==="trash"?"🗑":"📝"}</div>
-              <div className="t">{view==="trash"?"Lixeira vazia":"Nenhuma nota aqui"}</div>
-              <div className="s">{view==="trash"?"Notas excluídas aparecem aqui por 30 dias.":"Clique em \"+ Nova nota\" para começar."}</div>
+              <div className="ico">{isTrash?"🗑":isDoneView?"🎉":"📝"}</div>
+              <div className="t">{isTrash?"Lixeira vazia":isDoneView?"Nenhuma concluída ainda":"Nenhuma nota aqui"}</div>
+              <div className="s">{isTrash?"Notas excluídas aparecem aqui por 30 dias.":isDoneView?"Quando marcar uma nota como concluída, ela aparece aqui.":"Clique em \"+ Nova nota\" para começar."}</div>
             </div>
           ) : currentNotes.map(n => (
             <div
               key={n.id}
-              className={`np-note-card${selectedId===n.id?" active":""}`}
+              className={`np-note-card${selectedId===n.id?" active":""}${n.isCompleted?" completed":""}`}
               onClick={()=>{ setSelectedId(n.id); setMobileEditorOpen(true); }}
             >
-              <div className={`np-note-title${!n.title?" untitled":""}${n.isCompleted?" completed":""}`}>
-                {n.title || "Sem título"}
-              </div>
-              {n.body && (
-                <div className="np-note-preview">{n.body}</div>
+              {!isTrash && (
+                <button
+                  className={`np-complete-circle${n.isCompleted?" done":""}`}
+                  onClick={(e)=>{ e.stopPropagation(); handleToggleComplete(n.id, n.isCompleted); }}
+                  title={n.isCompleted?"Reabrir":"Marcar como concluída"}
+                  aria-label={n.isCompleted?"Reabrir nota":"Marcar como concluída"}
+                  aria-pressed={!!n.isCompleted}
+                >
+                  <Check size={13} strokeWidth={3.5} style={{opacity:n.isCompleted?1:0,transition:"opacity .15s"}}/>
+                </button>
               )}
-              <div className="np-note-meta">
-                {n.priority && n.priority <= 3 && (
-                  <span className={`np-note-flag p${n.priority}`}><Flag size={11} fill="currentColor"/> P{n.priority}</span>
+              <div className="np-note-card-main">
+                <div className={`np-note-title${!n.title?" untitled":""}`}>
+                  {n.title || "Sem título"}
+                </div>
+                {n.body && (
+                  <div className="np-note-preview">{n.body}</div>
                 )}
-                <span>{formatRelativeDate(n.updatedAt)}</span>
-                {n.folderId && (
-                  <span>· {folders.find(f=>f.id===n.folderId)?.name || "Pasta"}</span>
-                )}
-                {Array.isArray(n.tags) && n.tags.slice(0,2).map(t => (
-                  <span key={t} style={{color:"var(--text-secondary)"}}>#{t}</span>
-                ))}
+                <div className="np-note-meta">
+                  {n.priority && n.priority <= 3 && (
+                    <span className={`np-note-flag p${n.priority}`}><Flag size={11} fill="currentColor"/> P{n.priority}</span>
+                  )}
+                  <span>{formatRelativeDate(n.updatedAt)}</span>
+                  {n.folderId && (
+                    <span>· {folders.find(f=>f.id===n.folderId)?.name || "Pasta"}</span>
+                  )}
+                  {Array.isArray(n.tags) && n.tags.slice(0,2).map(t => (
+                    <span key={t} style={{color:"var(--text-secondary)"}}>#{t}</span>
+                  ))}
+                </div>
               </div>
             </div>
           ))}
         </div>
+        <div
+          className="np-list-resize"
+          onMouseDown={onResizeStart("list")}
+          role="separator"
+          aria-label="Redimensionar lista"
+          aria-valuenow={listWidth}
+          aria-valuemin={280}
+          aria-valuemax={560}
+        />
       </section>
 
       {/* EDITOR */}
@@ -3201,6 +3602,7 @@ function NotesPage({ user, links, customTags, onClose }) {
             onDelete={()=>handleDeleteNote(selectedNote.id)}
             onRestore={()=>handleRestoreNote(selectedNote.id)}
             onPermaDelete={()=>handlePermaDelete(selectedNote.id)}
+            onToggleComplete={()=>handleToggleComplete(selectedNote.id, selectedNote.isCompleted)}
             onMobileBack={()=>setMobileEditorOpen(false)}
             onClose={onClose}
           />
@@ -3243,7 +3645,107 @@ function NoteSidebarItem({ ico, label, count, active, onClick }) {
   );
 }
 
-function NoteEditor({ note, folders, isTrash, savingState, onSave, onDelete, onRestore, onPermaDelete, onMobileBack, onClose }) {
+function FolderTreeNode({ node, depth, view, setView, counts, expanded, toggleExpanded, onRename, onDelete, onIndent, onOutdent, onMove, isDescendantOf, draggingFolderId, setDraggingFolderId, dropTargetId, setDropTargetId }) {
+  const hasChildren = node.children.length > 0;
+  const isExpanded = expanded.has(node.id);
+  const isActive = view === `folder:${node.id}`;
+  const count = counts.folders[node.id] || 0;
+  const canIndent = depth < 4; // limite de profundidade
+
+  // Bloqueia drop em si mesmo ou em descendentes
+  const isValidDropTarget = draggingFolderId && draggingFolderId !== node.id && !isDescendantOf(node.id, draggingFolderId);
+
+  return (
+    <div className="np-folder-node" data-depth={depth}>
+      <div
+        className={`np-folder-row${draggingFolderId===node.id?" dragging":""}${dropTargetId===node.id?" drag-target":""}`}
+        draggable
+        onDragStart={(e)=>{
+          setDraggingFolderId(node.id);
+          e.dataTransfer.effectAllowed = "move";
+          try { e.dataTransfer.setData("text/folder-id", node.id); } catch {}
+        }}
+        onDragEnd={()=>{ setDraggingFolderId(null); setDropTargetId(null); }}
+        onDragOver={(e)=>{
+          if (!isValidDropTarget) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+          if (dropTargetId !== node.id) setDropTargetId(node.id);
+        }}
+        onDragLeave={(e)=>{
+          // só limpa se sair pro lado de fora desta row
+          if (!e.currentTarget.contains(e.relatedTarget)) {
+            if (dropTargetId === node.id) setDropTargetId(null);
+          }
+        }}
+        onDrop={(e)=>{
+          if (!isValidDropTarget) return;
+          e.preventDefault();
+          e.stopPropagation();
+          onMove(draggingFolderId, node.id);
+          setDraggingFolderId(null);
+          setDropTargetId(null);
+        }}
+      >
+        <div className={`np-item${isActive?" active":""}`} onClick={()=>setView(`folder:${node.id}`)}>
+          <span className="np-folder-drag-handle" title="Arraste para mover"><GripVertical size={13}/></span>
+          <span
+            className={`np-folder-chevron${isExpanded?" expanded":""}${hasChildren?"":" empty"}`}
+            onClick={(e)=>{ e.stopPropagation(); if (hasChildren) toggleExpanded(node.id); }}
+            title={hasChildren?(isExpanded?"Recolher":"Expandir"):""}
+          >
+            <ChevronRight size={13}/>
+          </span>
+          <span className="np-item-ico"><Folder size={17}/></span>
+          <span className="np-item-label" title={node.name}>{node.name}</span>
+          {count > 0 && <span className="np-item-count">{count}</span>}
+        </div>
+        <div className="np-folder-actions">
+          <button
+            className="np-folder-act-btn"
+            title="Subir nível (Shift+Tab)"
+            onClick={(e)=>{ e.stopPropagation(); onOutdent(node.id); }}
+            disabled={depth === 0}
+            style={depth===0?{opacity:.25,cursor:"not-allowed"}:undefined}
+          ><CornerUpLeft size={13}/></button>
+          <button
+            className="np-folder-act-btn"
+            title="Aninhar dentro da pasta acima (Tab)"
+            onClick={(e)=>{ e.stopPropagation(); onIndent(node.id); }}
+            disabled={!canIndent}
+            style={!canIndent?{opacity:.25,cursor:"not-allowed"}:undefined}
+          ><CornerDownRight size={13}/></button>
+          <button className="np-folder-act-btn" title="Renomear" onClick={(e)=>{ e.stopPropagation(); onRename(node); }}><Edit2 size={13}/></button>
+          <button className="np-folder-act-btn" title="Excluir" onClick={(e)=>{ e.stopPropagation(); onDelete(node.id); }}><Trash2 size={13}/></button>
+        </div>
+      </div>
+      {hasChildren && isExpanded && node.children.map(child => (
+        <FolderTreeNode
+          key={child.id}
+          node={child}
+          depth={depth+1}
+          view={view}
+          setView={setView}
+          counts={counts}
+          expanded={expanded}
+          toggleExpanded={toggleExpanded}
+          onRename={onRename}
+          onDelete={onDelete}
+          onIndent={onIndent}
+          onOutdent={onOutdent}
+          onMove={onMove}
+          isDescendantOf={isDescendantOf}
+          draggingFolderId={draggingFolderId}
+          setDraggingFolderId={setDraggingFolderId}
+          dropTargetId={dropTargetId}
+          setDropTargetId={setDropTargetId}
+        />
+      ))}
+    </div>
+  );
+}
+
+function NoteEditor({ note, folders, isTrash, savingState, onSave, onDelete, onRestore, onPermaDelete, onToggleComplete, onMobileBack, onClose }) {
   const [title, setTitle] = useState(note.title || "");
   const [body,  setBody]  = useState(note.body || "");
   const [folderId, setFolderId] = useState(note.folderId || "");
@@ -3258,6 +3760,8 @@ function NoteEditor({ note, folders, isTrash, savingState, onSave, onDelete, onR
     debounceRef.current = setTimeout(() => { onSave(patch); }, 800);
   }, [onSave, isTrash]);
 
+  const isDone = !!note.isCompleted;
+
   return (
     <>
       <div className="np-editor-head">
@@ -3266,13 +3770,21 @@ function NoteEditor({ note, folders, isTrash, savingState, onSave, onDelete, onR
             <div style={{display:"flex",alignItems:"center",gap:8,padding:"6px 10px",background:"rgba(245,166,35,.12)",border:"1px solid rgba(245,166,35,.3)",borderRadius:6,color:"#f5a623",fontSize:"var(--font-meta)",fontWeight:600,alignSelf:"flex-start"}}>
               🗑 Esta nota está na lixeira
             </div>
-          ) : (
+          ) : isDone ? (
+            <div className="np-completed-banner">
+              <CheckCircle2 size={15} strokeWidth={2.5}/>
+              Concluída
+              {note.updatedAt && <span style={{opacity:.7,fontWeight:500}}>• {formatRelativeDate(note.updatedAt)}</span>}
+            </div>
+          ) : null}
+          {!isTrash && (
             <input
               className="np-editor-title"
               value={title}
               placeholder="Sem título"
               onChange={e=>{ setTitle(e.target.value); triggerSave({ title:e.target.value }); }}
               aria-label="Título da nota"
+              style={isDone?{textDecoration:"line-through",color:"var(--text-secondary)"}:undefined}
             />
           )}
           <div className="np-editor-meta">
@@ -3309,9 +3821,20 @@ function NoteEditor({ note, folders, isTrash, savingState, onSave, onDelete, onR
               </button>
             </>
           ) : (
-            <button className="np-editor-btn danger" onClick={onDelete} title="Mover para a lixeira">
-              <Trash2 size={14}/> Excluir
-            </button>
+            <>
+              <button
+                className={`np-complete-big${isDone?" done":""}`}
+                onClick={onToggleComplete}
+                title={isDone?"Reabrir tarefa":"Marcar como concluída"}
+                aria-pressed={isDone}
+              >
+                {isDone ? <CheckCircle2 size={15} strokeWidth={2.5}/> : <Circle size={15} strokeWidth={2.2}/>}
+                {isDone ? "Concluída" : "Concluir"}
+              </button>
+              <button className="np-editor-btn danger" onClick={onDelete} title="Mover para a lixeira">
+                <Trash2 size={14}/> Excluir
+              </button>
+            </>
           )}
           <button className="np-editor-btn" onClick={onClose} title="Fechar Notas" aria-label="Fechar">
             <X size={14}/>
@@ -3326,6 +3849,7 @@ function NoteEditor({ note, folders, isTrash, savingState, onSave, onDelete, onR
           readOnly={isTrash}
           onChange={e=>{ setBody(e.target.value); triggerSave({ body:e.target.value }); }}
           aria-label="Corpo da nota"
+          style={isDone?{opacity:.7}:undefined}
         />
       </div>
     </>
@@ -3885,13 +4409,21 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
         <header className={`hdr ${headerUp?"up":"dn"}`}>
           <div className="logo" onClick={()=>window.location.reload()} style={{cursor:"pointer"}}>Watch<em>List</em></div>
           <nav className="nav">
-            {[["all","Início"],["unwatched","Para Assistir"],["watched","Assistidos"]].map(([f,l])=>(
-              <button key={f} className={`nav-btn${activePage==="home" && filter===f?" on":""}`} onClick={()=>{setActivePage("home");setFilter(f);}}>{l}</button>
-            ))}
-            <button className={`nav-btn${activePage==="notes"?" on":""}`} onClick={()=>setActivePage("notes")}>
-              📝 Notas
+            <button className={`nav-btn${activePage==="home" && filter==="all"?" on":""}`} onClick={()=>{setActivePage("home");setFilter("all");}}>
+              <Home size={15}/> Início
             </button>
-            <button className="nav-btn" onClick={()=>setShowOrganizar(true)}>⊞ Organizar</button>
+            <button className={`nav-btn${activePage==="home" && filter==="unwatched"?" on":""}`} onClick={()=>{setActivePage("home");setFilter("unwatched");}}>
+              <Eye size={15}/> Para Assistir
+            </button>
+            <button className={`nav-btn${activePage==="home" && filter==="watched"?" on":""}`} onClick={()=>{setActivePage("home");setFilter("watched");}}>
+              <Check size={15}/> Assistidos
+            </button>
+            <button className={`nav-btn${activePage==="notes"?" on":""}`} onClick={()=>setActivePage("notes")}>
+              <FileText size={15}/> Notas
+            </button>
+            <button className="nav-btn" onClick={()=>setShowOrganizar(true)}>
+              <LayoutGrid size={15}/> Organizar
+            </button>
           </nav>
           <div className="hdr-r">
             {/* Desktop: search + filters + add + user */}
