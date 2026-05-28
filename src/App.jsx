@@ -1567,6 +1567,95 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
 /* Texto de "ainda não assistido" e empty states no grid */
 .hero-empty-s{color:rgba(255,255,255,.72) !important;font-size:15px;line-height:1.7;}
 
+/* ════════════════════════════════════════════════════════════════════════════
+   🌬️ SWEEP 2 — DENSIDADE E ESPAÇAMENTO
+   Overrides centralizados. Mais respiro, hierarquia clara, tap-targets ≥44px.
+   Mantém 100% da paleta e do layout — só ajusta padding, gaps e tamanhos.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Modais: mais respiro interno ── */
+.modal-bg{padding:24px;}
+.modal{padding:32px 36px;border-radius:14px;}
+.modal-x{width:38px;height:38px;top:20px;right:20px;}
+
+/* ── Botões: hierarquia + tap-target ── */
+/* Primário: mais presença */
+.btn-primary{padding:11px 22px;font-size:14px;min-height:42px;border-radius:7px;}
+/* Secundários: respiro consistente, claramente subordinados ao primário */
+.btn-export{padding:12px 16px;font-size:13px;min-height:42px;border-radius:7px;}
+.btn-settings{padding:10px 18px;font-size:13px;min-height:40px;border-radius:7px;}
+.filter-chip{padding:8px 16px;font-size:13px;min-height:36px;}
+.nav-btn{padding:9px 16px;}
+
+/* ── Busca: campo mais alto e confortável ── */
+.srch-inp{padding:10px 38px 10px 14px;font-size:14px;border-radius:7px;}
+
+/* ── Stats: cards mais arejados ── */
+.stats{padding:40px 48px 80px;}
+.stat{padding:24px 22px;border-radius:10px;}
+.stat-val{margin-bottom:7px;}
+.stat-lbl{margin-bottom:6px;letter-spacing:.6px;}
+
+/* ── Settings: linhas mais espaçadas ── */
+.settings-section{margin-bottom:44px;}
+.settings-section-title{color:rgba(255,255,255,.6) !important;font-size:12px;letter-spacing:1.2px;margin-bottom:18px;}
+.settings-card{border-radius:12px;}
+.settings-row{padding:18px 22px;}
+.settings-row-label{font-size:15px;}
+.settings-row-sub{font-size:13px;margin-top:3px;line-height:1.5;}
+
+/* ── Rows do grid: cabeçalho com mais respiro ── */
+.row-hdr{margin-bottom:12px;}
+.row-title{font-size:19px;letter-spacing:.8px;}
+
+/* ── Empty state do hero: mais generoso ── */
+.hero-empty-inner{max-width:460px;gap:0;}
+.hero-empty-ico{font-size:64px;margin-bottom:24px;opacity:.28;}
+.hero-empty-t{font-size:27px;margin-bottom:12px;}
+.hero-empty-s{margin-bottom:32px;}
+
+/* ── Cards de vídeo: detalhe interno com mais respiro ── */
+.card-detail{padding:12px 12px 14px;}
+.card-detail-title{margin-bottom:8px;line-height:1.35;}
+.card-detail-acts{gap:8px;margin-top:10px;}
+.card-detail-btn{padding:9px 12px;min-height:38px;border-radius:7px;}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   📱 TAP-TARGETS MOBILE — mínimo 44×44px (Apple HIG / Material)
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px){
+  /* Bottom nav: itens maiores e mais espaçados */
+  .bottom-nav{height:66px;padding-top:8px;}
+  .bnav-btn{padding:8px 10px;min-height:48px;}
+  .bnav-btn span{font-size:10px;letter-spacing:.3px;}
+  .bnav-btn svg{width:22px;height:22px;}
+  .bnav-add-btn{width:50px;height:50px;}
+
+  /* Botões em geral: garantir alvo de toque */
+  .btn-primary,.btn-export,.btn-settings,.filter-chip{min-height:46px;}
+  .btn-primary{padding:13px 24px;font-size:15px;}
+
+  /* Ações pequenas (editar/excluir em cards, pastas etc.) */
+  .card-detail-btn{min-height:44px;padding:11px 14px;}
+  .cat-act-btn,.np-folder-act-btn,.modal-x{min-width:40px;min-height:40px;}
+  .np-complete-circle{width:26px;height:26px;}
+
+  /* Notas em mobile: editor e itens mais tocáveis */
+  .np-item{padding:12px 12px;min-height:46px;}
+  .np-note-card{padding:16px;}
+  .np-new-btn{min-height:48px;padding:13px 14px;}
+  .np-editor-btn,.np-complete-big{min-height:44px;padding:11px 16px;}
+
+  /* Modais ocupam quase tela cheia no mobile, com respiro */
+  .modal{padding:24px 22px;border-radius:16px;}
+  .modal-bg{padding:12px;}
+}
+
+/* ── Acessibilidade: respeitar usuários que preferem menos movimento ── */
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.01ms !important;transition-duration:.05ms !important;}
+}
+
 `;
 
 // ─── SAMPLE DATA ─────────────────────────────────────────────────────────────
@@ -4866,11 +4955,11 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
               onReorderLinks={reorderLinks}
             />
           )) : links.length === 0 ? null /* hero handles the true empty state */ : (
-            <div style={{padding:"72px 48px",textAlign:"center",fontFamily:"'Inter',sans-serif"}}>
-              <div style={{fontSize:52,marginBottom:20,opacity:.35}}>
+            <div style={{padding:"88px 48px",textAlign:"center",fontFamily:"'Inter',sans-serif"}}>
+              <div style={{fontSize:58,marginBottom:24,opacity:.3}}>
                 {search ? "🔍" : filter==="watched" ? "✅" : "📺"}
               </div>
-              <div style={{fontSize:20,fontWeight:800,color:"#fff",letterSpacing:"-.4px",marginBottom:10}}>
+              <div style={{fontSize:22,fontWeight:800,color:"#fff",letterSpacing:"-.4px",marginBottom:12}}>
                 {search
                   ? `Sem resultados para "${search}"`
                   : filter==="watched"
@@ -4879,7 +4968,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
                       ? "Todos os vídeos foram assistidos 🎉"
                       : "Nenhum item nesta categoria"}
               </div>
-              <div style={{fontSize:14,color:"rgba(255,255,255,.62)",lineHeight:1.7,maxWidth:380,margin:"0 auto 28px"}}>
+              <div style={{fontSize:15,color:"rgba(255,255,255,.72)",lineHeight:1.7,maxWidth:420,margin:"0 auto 32px"}}>
                 {search
                   ? "Tente buscar por outro título, URL ou nota."
                   : filter==="watched"
@@ -4888,16 +4977,16 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
               </div>
               {!search && (
                 <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
-                  <button className="btn-primary" style={{padding:"12px 28px"}} onClick={()=>setShowAdd(true)}>
-                    <Plus size={14}/> Adicionar
+                  <button className="btn-primary" style={{padding:"13px 30px"}} onClick={()=>setShowAdd(true)}>
+                    <Plus size={15}/> Adicionar
                   </button>
                 </div>
               )}
               {search && (
                 <button onClick={()=>setSearch("")} style={{
                   background:"rgba(255,255,255,.06)",border:"1px solid #1a1a1a",color:"rgba(255,255,255,.72)",
-                  padding:"10px 24px",borderRadius:6,cursor:"pointer",fontSize:13,fontWeight:600,
-                  fontFamily:"'Inter',sans-serif",transition:"all .2s"
+                  padding:"12px 26px",borderRadius:7,cursor:"pointer",fontSize:14,fontWeight:600,
+                  fontFamily:"'Inter',sans-serif",transition:"all .2s",minHeight:44
                 }}>
                   ✕ Limpar busca
                 </button>
