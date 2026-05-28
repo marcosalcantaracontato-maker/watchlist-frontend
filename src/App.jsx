@@ -4625,8 +4625,9 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
 
   // Re-fetch from backend when tab regains focus (keeps app in sync with extension)
   useEffect(()=>{
-    const onFocus = async () => {
-      if (!user?.jwtToken || !API_URL) return;
+    if (!user?.jwtToken || !API_URL) return;
+    const onVis = async () => {
+      if (document.visibilityState !== "visible") return;
       try {
         const [freshCats, freshLinks] = await Promise.all([
           apiFetch("/api/categories", {}, user.jwtToken),
@@ -4636,8 +4637,8 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
         if (Array.isArray(freshLinks)) saveLinks(freshLinks);
       } catch {}
     };
-    document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") onFocus(); });
-    return ()=>document.removeEventListener("visibilitychange", onFocus);
+    document.addEventListener("visibilitychange", onVis);
+    return ()=>document.removeEventListener("visibilitychange", onVis);
   },[user?.jwtToken]);
   const undoProgInterval = useRef(null);
   const saveCount = useRef(0);
@@ -4784,10 +4785,17 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
 
   const toggleWatched = useCallback(id=>{
     const l = links.find(l=>l.id===id);
-    saveLinks(links.map(l=>l.id===id?{...l,watched:!l.watched}:l));
-    setPopup(p=>p&&p.link.id===id?{...p,link:{...p.link,watched:!p.link.watched}}:p);
+    const newWatched = !l?.watched;
+    saveLinks(links.map(l=>l.id===id?{...l,watched:newWatched}:l));
+    setPopup(p=>p&&p.link.id===id?{...p,link:{...p.link,watched:newWatched}}:p);
     notify(l?.watched?"↩ Desmarcado como assistido":"✓ Marcado como assistido!");
-  },[links,saveLinks]);
+    // Persiste no backend
+    const jwt = user?.jwtToken;
+    if (jwt && API_URL) {
+      apiFetch(`/api/links/${id}`, { method:"PATCH", body: JSON.stringify({ watched:newWatched }) }, jwt)
+        .catch(e=>console.warn("PATCH watched falhou:", e));
+    }
+  },[links,saveLinks,user]);
 
   const deleteLink = useCallback(id=>{
     const link = links.find(l=>l.id===id);
@@ -4823,7 +4831,18 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
     saveLinks(links.map(l=>l.id===updated.id?updated:l));
     setEditLink(null);
     notify("✓ Item atualizado!");
-  },[links,saveLinks]);
+    // Persiste no backend
+    const jwt = user?.jwtToken;
+    if (jwt && API_URL) {
+      apiFetch(`/api/links/${updated.id}`, {
+        method:"PATCH",
+        body: JSON.stringify({
+          title:updated.title, rawThumb:updated.rawThumb||"", categoryId:updated.categoryId,
+          watched:!!updated.watched, notes:updated.notes||"", tags:updated.tags||[], order:updated.order||0
+        })
+      }, jwt).catch(e=>console.warn("PATCH link falhou:", e));
+    }
+  },[links,saveLinks,user]);
 
   const reorderLinks = useCallback((catId, dragId, targetId)=>{
     const catLinks = links.filter(l=>l.categoryId===catId).sort((a,b)=>(a.order||0)-(b.order||0));
@@ -4835,24 +4854,79 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
     reordered.splice(targetIdx,0,moved);
     const updatedOrders = reordered.reduce((acc,l,i)=>({...acc,[l.id]:i}),{});
     saveLinks(links.map(l=>updatedOrders[l.id]!==undefined?{...l,order:updatedOrders[l.id]}:l));
-  },[links,saveLinks]);
+    // Persiste a nova ordem no backend
+    const jwt = user?.jwtToken;
+    if (jwt && API_URL) {
+      Object.entries(updatedOrders).forEach(([id,order])=>{
+        apiFetch(`/api/links/${id}`, { method:"PATCH", body: JSON.stringify({ order }) }, jwt).catch(()=>{});
+      });
+    }
+  },[links,saveLinks,user]);
 
   const addLink = useCallback(async (data, newCats=[])=>{
-    const allCats = newCats.length>0 ? [...cats,...newCats] : cats;
-    if (newCats.length>0) saveCats(allCats);
-    const link = { id:uid(), ...data, thumbnail:"", watched:false, notes:"", tags:[], order:0, createdAt:new Date().toISOString() };
-    saveLinks([link,...links]);
-    // Fix #3: store the EXACT categoryId (may be a subcategory ID)
+    const jwt = user?.jwtToken;
+    // 1) Persiste categorias novas no backend primeiro (pra ter o id real)
+    let allCats = cats;
+    if (newCats.length>0) {
+      const persisted = [];
+      for (const nc of newCats) {
+        let realId = nc.id;
+        if (jwt && API_URL) {
+          try {
+            const res = await apiFetch("/api/categories", {
+              method:"POST",
+              body: JSON.stringify({ name:nc.name, parentId:nc.parentId||null, order:nc.order||0 })
+            }, jwt);
+            if (res?.catId) realId = res.catId;
+          } catch(e){ console.warn("POST categoria falhou:", e); }
+        }
+        persisted.push({ ...nc, id: realId });
+      }
+      // Se algum id mudou, remapeia o categoryId do link novo
+      const idMap = {};
+      newCats.forEach((nc,i)=>{ idMap[nc.id] = persisted[i].id; });
+      if (idMap[data.categoryId]) data = { ...data, categoryId: idMap[data.categoryId] };
+      allCats = [...cats, ...persisted];
+      saveCats(allCats);
+    }
+
+    // 2) Cria o link com id temporário (otimista)
+    const tempId = uid();
+    const link = { id:tempId, ...data, thumbnail:"", watched:false, notes:"", tags:[], order:0, createdAt:new Date().toISOString() };
+    const nextLinks = [link, ...links];
+    saveLinks(nextLinks);
+
+    // 3) Persiste o link no backend e reconcilia o id
+    if (jwt && API_URL) {
+      try {
+        const res = await apiFetch("/api/links", {
+          method:"POST",
+          body: JSON.stringify({
+            url:link.url, title:link.title, thumbnail:"", rawThumb:link.rawThumb||"",
+            platform:link.platform, videoId:link.videoId||"", categoryId:link.categoryId,
+            watched:false, notes:"", tags:[], order:0
+          })
+        }, jwt);
+        if (res?.linkId) {
+          // Troca o id temporário pelo id real do backend
+          setLinks(prev => prev.map(l => l.id===tempId ? { ...l, id: res.linkId } : l));
+          try {
+            const fixed = nextLinks.map(l => l.id===tempId ? { ...l, id: res.linkId } : l);
+            await wlStorage.set(`wl2-links-${userKey}`, JSON.stringify(fixed));
+          } catch{}
+        }
+      } catch(e){ console.warn("POST link falhou:", e); notify("⚠ Salvo localmente, mas falhou no servidor","#f5a623"); }
+    }
+
     const savedCatId = data.categoryId;
     lastCatRef.current = savedCatId;
     try { await wlStorage.set(`wl2-lastcat-${userKey}`, savedCatId); } catch{}
     setShowAdd(false);
-    // Show category name in confirmation toast
     const catName = allCats.find(c=>c.id===savedCatId)?.name || "";
     const parentCat = allCats.find(c=>c.id===allCats.find(x=>x.id===savedCatId)?.parentId);
     const catDisplay = parentCat ? `${parentCat.name} › ${catName}` : catName;
     notify(`✓ Adicionado em ${catDisplay || "sua lista"}!`);
-  },[cats,links,saveCats,saveLinks,userKey]);
+  },[cats,links,saveCats,saveLinks,userKey,user]);
 
   // Wire refs so SettingsPage can call these
   useEffect(()=>{
