@@ -3,7 +3,7 @@ import { Play, Plus, Search, Check, Trash2, Edit2, ChevronRight, ChevronLeft,
   Download, Upload, X, Loader2, Youtube, Link, FolderPlus, MoreVertical,
   Eye, EyeOff, BarChart2, Folder, Volume2, VolumeX, Sparkles, RefreshCw,
   Home, Settings, Menu,
-  FileText, Inbox, Star, Calendar, Flag, ChevronDown, RotateCcw,
+  FileText, Inbox, Star, Calendar, Flag, ChevronDown, ChevronUp, RotateCcw,
   CheckCircle2, Circle, CornerUpLeft, CornerDownRight, GripVertical, LayoutGrid } from "lucide-react";
 
 // ─── CONFIGURAÇÃO DA API ──────────────────────────────────────────────────────
@@ -1345,6 +1345,35 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
 .bnav-btn-notes svg{stroke-width:2.2;}
 
 /* ════════════════════════════════════════════════════════════════════════════
+   🔁 NOTAS — Botões de reordenação + indicadores de drop
+   ═══════════════════════════════════════════════════════════════════════════ */
+.np-note-card{position:relative;cursor:pointer;}
+.np-note-card[draggable=true]{cursor:grab;}
+.np-note-card[draggable=true]:active{cursor:grabbing;}
+.np-note-card.dragging{opacity:.4;}
+
+.np-note-reorder{
+  display:none;
+  flex-direction:column;gap:1px;
+  flex-shrink:0;
+  margin:-2px -4px -2px 0;
+}
+.np-note-card:hover .np-note-reorder{display:flex;}
+
+/* Indicador de drop entre notas (linha vermelha fina) */
+.np-note-card.drop-above::before,
+.np-note-card.drop-below::after{
+  content:"";
+  position:absolute;left:8px;right:8px;
+  height:2px;background:var(--brand);
+  border-radius:1px;pointer-events:none;
+  z-index:5;
+  box-shadow:0 0 6px var(--brand);
+}
+.np-note-card.drop-above::before{top:-1px;}
+.np-note-card.drop-below::after{bottom:-1px;}
+
+/* ════════════════════════════════════════════════════════════════════════════
    🌳 HIERARQUIA DE PASTAS — árvore recursiva com drag-and-drop
    ═══════════════════════════════════════════════════════════════════════════ */
 .np-folder-tree{display:flex;flex-direction:column;}
@@ -1620,7 +1649,7 @@ function CinemaModal({ link, onClose }) {
         <div className="cinema-hdr">
           <div className="cinema-title">{link.title}</div>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <span style={{fontSize:10,fontWeight:800,padding:"3px 8px",borderRadius:3,background:plat.bg,color:plat.color,textTransform:"uppercase"}}>{plat.label}</span>
+            <span style={{fontSize:12,fontWeight:800,padding:"3px 8px",borderRadius:3,background:plat.bg,color:plat.color,textTransform:"uppercase"}}>{plat.label}</span>
             <button className="cinema-close" onClick={onClose}><X size={16}/></button>
           </div>
         </div>
@@ -1638,7 +1667,7 @@ function CinemaModal({ link, onClose }) {
           )}
         </div>
         {link.notes && (
-          <div style={{marginTop:10,padding:"8px 12px",background:"rgba(255,255,255,.04)",borderRadius:6,fontSize:12,color:"#a0a0a0",fontFamily:"'Inter',sans-serif"}}>
+          <div style={{marginTop:10,padding:"8px 12px",background:"rgba(255,255,255,.04)",borderRadius:6,fontSize:12,color:"rgba(255,255,255,.72)",fontFamily:"'Inter',sans-serif"}}>
             📝 {link.notes}
           </div>
         )}
@@ -1650,7 +1679,7 @@ function CinemaModal({ link, onClose }) {
             })}
           </div>
           <div className="cinema-hint">
-            <span className="cinema-key">ESC</span><span style={{color:"#555"}}>fechar</span>
+            <span className="cinema-key">ESC</span><span style={{color:"rgba(255,255,255,.62)"}}>fechar</span>
           </div>
         </div>
       </div>
@@ -1684,7 +1713,7 @@ function ImportPreviewModal({ data, onConfirm, onClose }) {
           </div>
         </div>
         {data.exportedAt && (
-          <div style={{fontSize:12,color:"#555",marginBottom:12}}>
+          <div style={{fontSize:12,color:"rgba(255,255,255,.62)",marginBottom:12}}>
             Backup de: {new Date(data.exportedAt).toLocaleDateString("pt-BR",{day:"2-digit",month:"long",year:"numeric",hour:"2-digit",minute:"2-digit"})}
           </div>
         )}
@@ -1750,9 +1779,9 @@ function EditModal({ link, categories, onSave, onClose }) {
           </div>
           <div style={{flex:1}}>
             <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
-              <span style={{fontSize:10,fontWeight:800,padding:"2px 8px",borderRadius:3,background:plat.bg,color:plat.color,textTransform:"uppercase",letterSpacing:.5}}>{plat.label}</span>
+              <span style={{fontSize:12,fontWeight:800,padding:"2px 8px",borderRadius:3,background:plat.bg,color:plat.color,textTransform:"uppercase",letterSpacing:.5}}>{plat.label}</span>
             </div>
-            <div style={{fontSize:11,color:"#606060",lineHeight:1.5}}>
+            <div style={{fontSize:13,color:"#606060",lineHeight:1.5}}>
               <a href={link.url} target="_blank" rel="noopener noreferrer" style={{color:"#606060",textDecoration:"none",wordBreak:"break-all"}}>{link.url.slice(0,50)}...</a>
             </div>
           </div>
@@ -1791,7 +1820,7 @@ function EditModal({ link, categories, onSave, onClose }) {
           <div className="tag-select">
             {PRESET_TAGS.map(pt=>(
               <button key={pt.label} className="tag-toggle" onClick={()=>toggleTag(pt.label)}
-                style={{borderColor:tags.includes(pt.label)?pt.color:"#1a1a1a",color:tags.includes(pt.label)?pt.color:"#555",background:tags.includes(pt.label)?pt.color+"18":"transparent"}}>
+                style={{borderColor:tags.includes(pt.label)?pt.color:"#1a1a1a",color:tags.includes(pt.label)?pt.color:"rgba(255,255,255,.62)",background:tags.includes(pt.label)?pt.color+"18":"transparent"}}>
                 {pt.label}
               </button>
             ))}
@@ -2133,7 +2162,7 @@ function Row({ cat, subCats=[], links, catIdx, isOrphaned, allCats, allLinks, on
         <div className="row-hdr-l">
           <div className="row-title" onClick={() => onNavigate && subCats.length > 0 && onNavigate(cat.id)} style={{...(subCats.length>0?{cursor:"pointer"}:{}),color:isOrphaned?"#f5a623":""}}>
             {cat.name}
-            {isOrphaned && <span style={{fontSize:11,color:"#888",marginLeft:8,fontWeight:400}}>— links sem categoria (mova ou exclua)</span>}
+            {isOrphaned && <span style={{fontSize:13,color:"rgba(255,255,255,.72)",marginLeft:8,fontWeight:400}}>— links sem categoria (mova ou exclua)</span>}
           </div>
           {links.length > 0 && <div className="row-cnt">{wd} de {links.length} assistidos</div>}
           {subCats.length > 0 && <div className="row-cnt" style={{color:"#f5a623"}}>{subCats.length} pasta{subCats.length!==1?"s":""}</div>}
@@ -2260,8 +2289,8 @@ function AddModal({ categories, lastCatId, onSave, onClose }) {
           <div className="fetch-area">
             {fetching && <><Loader2 size={20} style={{color:"#e50914",animation:"spin 1s linear infinite",flexShrink:0}}/><div><div className="fetch-plat">Buscando metadados...</div><div className="fetch-status">aguarde</div></div></>}
             {!fetching && !fetchOk && !url && <><Link size={18} style={{color:"#404040",flexShrink:0}}/><div className="fetch-status">Cole uma URL — título e thumbnail serão buscados automaticamente</div></>}
-            {!fetching && !fetchOk && url && <><div style={{width:80,height:45,borderRadius:6,background:plat.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:plat.color,flexShrink:0}}>{plat.label}</div><div><div className="fetch-plat">Plataforma: {plat.label}</div><div className="fetch-status">Título não encontrado — preencha manualmente</div></div></>}
-            {!fetching && fetchOk && <>{thumb?<img className="fetch-thumb" src={thumb} alt="" onError={e=>{e.target.style.display="none";}}/>:<div style={{width:80,height:45,borderRadius:6,background:plat.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}/>}<div><div className="fetch-plat">✓ {plat.label} — metadados obtidos</div><div className="fetch-status" style={{color:"#22c55e",fontSize:10}}>Título e thumbnail carregados</div></div></>}
+            {!fetching && !fetchOk && url && <><div style={{width:80,height:45,borderRadius:6,background:plat.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700,color:plat.color,flexShrink:0}}>{plat.label}</div><div><div className="fetch-plat">Plataforma: {plat.label}</div><div className="fetch-status">Título não encontrado — preencha manualmente</div></div></>}
+            {!fetching && fetchOk && <>{thumb?<img className="fetch-thumb" src={thumb} alt="" onError={e=>{e.target.style.display="none";}}/>:<div style={{width:80,height:45,borderRadius:6,background:plat.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}/>}<div><div className="fetch-plat">✓ {plat.label} — metadados obtidos</div><div className="fetch-status" style={{color:"#22c55e",fontSize:12}}>Título e thumbnail carregados</div></div></>}
           </div>
         </div>
 
@@ -2278,7 +2307,7 @@ function AddModal({ categories, lastCatId, onSave, onClose }) {
             {hasCats && (
               <button
                 onClick={()=>setShowCreate(s=>!s)}
-                style={{background:"none",border:"none",cursor:"pointer",fontSize:11,fontWeight:700,
+                style={{background:"none",border:"none",cursor:"pointer",fontSize:13,fontWeight:700,
                   color:showCreate?"#4caf50":"#555",display:"flex",alignItems:"center",gap:4,
                   padding:"2px 0",transition:"color .2s",fontFamily:"'Inter',sans-serif"}}
               >
@@ -2303,9 +2332,9 @@ function AddModal({ categories, lastCatId, onSave, onClose }) {
 
           {/* Pre-selected subcategory indicator (Fix #3 visibility) */}
           {hasCats && catId && selectedCatPath && !showCreate && (
-            <div style={{display:"flex",alignItems:"center",gap:6,marginTop:7,fontSize:12,color:"#555",fontFamily:"'Inter',sans-serif"}}>
-              <span style={{color:"#333"}}>📍</span>
-              <span>Selecionado: <strong style={{color:"#a0a0a0",fontWeight:600}}>{selectedCatPath}</strong></span>
+            <div style={{display:"flex",alignItems:"center",gap:6,marginTop:7,fontSize:12,color:"rgba(255,255,255,.62)",fontFamily:"'Inter',sans-serif"}}>
+              <span style={{color:"rgba(255,255,255,.45)"}}>📍</span>
+              <span>Selecionado: <strong style={{color:"rgba(255,255,255,.72)",fontWeight:600}}>{selectedCatPath}</strong></span>
             </div>
           )}
 
@@ -2369,7 +2398,7 @@ function AddModal({ categories, lastCatId, onSave, onClose }) {
                       {newCatName.trim() || "Nome da categoria..."}
                     </span>
                     {newCatName.trim() && (
-                      <span style={{fontSize:10,fontWeight:700,color:"#4caf50",padding:"1px 7px",
+                      <span style={{fontSize:12,fontWeight:700,color:"#4caf50",padding:"1px 7px",
                         background:"rgba(76,175,80,.1)",borderRadius:10,border:"1px solid rgba(76,175,80,.25)"}}>
                         nova raiz
                       </span>
@@ -2382,12 +2411,12 @@ function AddModal({ categories, lastCatId, onSave, onClose }) {
                     {newCatParent ? (
                       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
                         <span style={{fontSize:14}}>📁</span>
-                        <span style={{fontSize:13,fontWeight:700,color:"#a0a0a0"}}>
+                        <span style={{fontSize:13,fontWeight:700,color:"rgba(255,255,255,.72)"}}>
                           {rootCats.find(c=>c.id===newCatParent)?.name || "..."}
                         </span>
                       </div>
                     ) : (
-                      <div style={{fontSize:12,color:"#333",marginBottom:6,fontStyle:"italic"}}>
+                      <div style={{fontSize:12,color:"rgba(255,255,255,.45)",marginBottom:6,fontStyle:"italic"}}>
                         ← selecione a pasta pai abaixo
                       </div>
                     )}
@@ -2407,7 +2436,7 @@ function AddModal({ categories, lastCatId, onSave, onClose }) {
                         {newCatName.trim() || "Nome da subcategoria..."}
                       </span>
                       {newCatName.trim() && newCatParent && (
-                        <span style={{fontSize:10,fontWeight:700,color:"#4caf50",marginLeft:8,padding:"1px 7px",
+                        <span style={{fontSize:12,fontWeight:700,color:"#4caf50",marginLeft:8,padding:"1px 7px",
                           background:"rgba(76,175,80,.1)",borderRadius:10,border:"1px solid rgba(76,175,80,.25)"}}>
                           nova sub
                         </span>
@@ -2420,8 +2449,8 @@ function AddModal({ categories, lastCatId, onSave, onClose }) {
               {/* Parent selector when creating sub — visual cards instead of select */}
               {newCatType === "sub" && rootCats.length > 0 && (
                 <div style={{marginBottom:10}}>
-                  <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".7px",
-                    color:"#555",marginBottom:7,fontFamily:"'Inter',sans-serif"}}>
+                  <div style={{fontSize:12,fontWeight:700,textTransform:"uppercase",letterSpacing:".7px",
+                    color:"rgba(255,255,255,.62)",marginBottom:7,fontFamily:"'Inter',sans-serif"}}>
                     Dentro de qual pasta?
                   </div>
                   <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
@@ -2475,7 +2504,7 @@ function AddModal({ categories, lastCatId, onSave, onClose }) {
                   </button>
                 )}
               </div>
-              <div style={{fontSize:10,color:"#2a2a2a",fontFamily:"'Inter',sans-serif"}}>
+              <div style={{fontSize:12,color:"rgba(255,255,255,.32)",fontFamily:"'Inter',sans-serif"}}>
                 Enter para criar • Esc para fechar
               </div>
             </div>
@@ -2539,7 +2568,7 @@ function AddModal({ categories, lastCatId, onSave, onClose }) {
                     <span style={{flex:1,fontSize:isRoot?13:12,fontWeight:isRoot?700:500,
                       color:isRoot?"#fff":"#b0b0b0",fontFamily:"'Inter',sans-serif",
                       whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
-                      {parent ? <span style={{color:"#444",marginRight:4}}>{parent.name} ›</span> : null}
+                      {parent ? <span style={{color:"rgba(255,255,255,.5)",marginRight:4}}>{parent.name} ›</span> : null}
                       {c.name}
                     </span>
                     {isPending && (
@@ -2795,7 +2824,7 @@ function CatModal({ categories, links, onSave, onClose }) {
               {isDropAfter && <div className="cat-drop-bar"/>}
               {addSubOf===c.id && (
                 <div className="cat-create-form" style={{margin:"4px 0 4px 12px",padding:10}}>
-                  <div className="cat-create-form-title" style={{fontSize:10,marginBottom:8}}>Sub-subcategoria em "{c.name}"</div>
+                  <div className="cat-create-form-title" style={{fontSize:12,marginBottom:8}}>Sub-subcategoria em "{c.name}"</div>
                   <div className="cat-create-row">
                     <input className="cat-create-inp" placeholder="Nome..." value={subName}
                       onChange={e=>setSubName(e.target.value)}
@@ -2851,7 +2880,7 @@ function CatModal({ categories, links, onSave, onClose }) {
             </span>
           )}
           {subs.length > 0 && (
-            <span style={{fontSize:10,color:"#444",flexShrink:0,fontFamily:"'Inter',sans-serif",fontWeight:600}}>
+            <span style={{fontSize:12,color:"rgba(255,255,255,.5)",flexShrink:0,fontFamily:"'Inter',sans-serif",fontWeight:600}}>
               {subs.length} {subs.length===1?"pasta":"pastas"}
             </span>
           )}
@@ -2875,7 +2904,7 @@ function CatModal({ categories, links, onSave, onClose }) {
         {isDropAfter && !subs.length && <div className="cat-drop-bar"/>}
         {addSubOf===c.id && (
           <div className="cat-create-form" style={{margin:"4px 0 6px 16px",padding:12}}>
-            <div className="cat-create-form-title" style={{fontSize:10,marginBottom:8}}>Nova subcategoria em "{c.name}"</div>
+            <div className="cat-create-form-title" style={{fontSize:12,marginBottom:8}}>Nova subcategoria em "{c.name}"</div>
             <div className="cat-create-row">
               <input className="cat-create-inp" placeholder="Nome da subcategoria..." value={subName}
                 onChange={e=>setSubName(e.target.value)}
@@ -2901,8 +2930,8 @@ function CatModal({ categories, links, onSave, onClose }) {
             <div className="modal-t" style={{marginBottom:4}}>Gerenciar Categorias</div>
             <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
               {[["⠿","arrastar"],["↑↓","mover"],["→","recuar"],["←","promover"],["✎","duplo clique"]].map(([icon,label])=>(
-                <span key={label} style={{fontSize:10,color:"#333",display:"flex",alignItems:"center",gap:4,fontFamily:"'Inter',sans-serif"}}>
-                  <span style={{background:"#1a1a1a",borderRadius:3,padding:"1px 5px",fontWeight:700,color:"#555"}}>{icon}</span>
+                <span key={label} style={{fontSize:12,color:"rgba(255,255,255,.45)",display:"flex",alignItems:"center",gap:4,fontFamily:"'Inter',sans-serif"}}>
+                  <span style={{background:"#1a1a1a",borderRadius:3,padding:"1px 5px",fontWeight:700,color:"rgba(255,255,255,.62)"}}>{icon}</span>
                   {label}
                 </span>
               ))}
@@ -2913,17 +2942,17 @@ function CatModal({ categories, links, onSave, onClose }) {
 
         {/* Legend */}
         <div style={{display:"flex",gap:16,marginBottom:12,marginTop:8,padding:"8px 12px",background:"rgba(255,255,255,.02)",borderRadius:6,flexWrap:"wrap"}}>
-          <span style={{fontSize:11,color:"#333",fontFamily:"'Inter',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+          <span style={{fontSize:13,color:"rgba(255,255,255,.45)",fontFamily:"'Inter',sans-serif",display:"flex",alignItems:"center",gap:5}}>
             <span style={{fontSize:12}}>📁</span><span>Categoria raiz</span>
           </span>
-          <span style={{fontSize:11,color:"#333",fontFamily:"'Inter',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+          <span style={{fontSize:13,color:"rgba(255,255,255,.45)",fontFamily:"'Inter',sans-serif",display:"flex",alignItems:"center",gap:5}}>
             <span style={{fontSize:12}}>📄</span><span>Subcategoria</span>
           </span>
-          <span style={{fontSize:11,color:"#555",fontFamily:"'Inter',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+          <span style={{fontSize:13,color:"rgba(255,255,255,.62)",fontFamily:"'Inter',sans-serif",display:"flex",alignItems:"center",gap:5}}>
             <span style={{background:"rgba(229,9,20,.3)",width:24,height:2,borderRadius:1,display:"inline-block"}}/>
             <span>arrastar para reordenar</span>
           </span>
-          <span style={{fontSize:11,color:"#555",fontFamily:"'Inter',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+          <span style={{fontSize:13,color:"rgba(255,255,255,.62)",fontFamily:"'Inter',sans-serif",display:"flex",alignItems:"center",gap:5}}>
             <span style={{background:"rgba(76,175,80,.3)",width:24,height:2,borderRadius:1,display:"inline-block"}}/>
             <span>arrastar para a direita para aninhar</span>
           </span>
@@ -2943,7 +2972,7 @@ function CatModal({ categories, links, onSave, onClose }) {
 
         {/* Add root category */}
         <div style={{marginBottom:20}}>
-          <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".7px",color:"#444",marginBottom:8,fontFamily:"'Inter',sans-serif"}}>
+          <div style={{fontSize:13,fontWeight:700,textTransform:"uppercase",letterSpacing:".7px",color:"rgba(255,255,255,.5)",marginBottom:8,fontFamily:"'Inter',sans-serif"}}>
             Nova categoria raiz
           </div>
           <div className="cat-create-row">
@@ -3149,6 +3178,17 @@ function NotesPage({ user, links, customTags, onClose }) {
     } catch {}
   }, []);
 
+  // Drag-and-drop de notas (reordenação dentro da lista)
+  const [draggingNoteId, setDraggingNoteId] = useState(null);
+  const [dropNoteTarget, setDropNoteTarget] = useState(null); // { id, where: "above"|"below" }
+
+  const notePositionOf = (n) => {
+    if (n.position != null && !isNaN(n.position)) return Number(n.position);
+    if (n.updatedAt)  return Date.parse(n.updatedAt) || 0;
+    if (n.createdAt)  return Date.parse(n.createdAt) || 0;
+    return 0;
+  };
+
   // Notas filtradas para a view atual
   const today0 = useMemo(() => { const d=new Date(); d.setHours(0,0,0,0); return d; }, []);
   const todayEnd = useMemo(() => { const d=new Date(today0); d.setDate(d.getDate()+1); return d; }, [today0]);
@@ -3194,15 +3234,19 @@ function NotesPage({ user, links, customTags, onClose }) {
       const q = searchQ.toLowerCase();
       pool = pool.filter(n => (n.title||"").toLowerCase().includes(q) || (n.body||"").toLowerCase().includes(q));
     }
-    // Concluídas vão pro final na lista
+    // Concluídas vão pro final; dentro de cada grupo ordena por posição desc
     pool = [...pool].sort((a,b) => {
       if (!!a.isCompleted !== !!b.isCompleted) return a.isCompleted ? 1 : -1;
-      return 0;
+      return notePositionOf(b) - notePositionOf(a);
     });
     return pool;
   }, [notes, trashNotes, view, searchQ, today0, todayEnd, weekEnd, isTrash, isDoneView, showCompleted, folders]);
 
-  // Contadores para o sidebar
+  // Contadores para o sidebar.
+  // Notas:
+  //   foldersDirect[id]  = notas diretamente nessa pasta (ativas)
+  //   foldersTotal[id]   = direct + descendentes (recursivo)
+  // O render escolhe qual mostrar baseado em "pasta aberta vs fechada".
   const counts = useMemo(() => {
     const active = notes.filter(n => !n.isCompleted);
     const c = { inbox:0, today:0, upcoming:0, all:notes.length, done:notes.filter(n=>n.isCompleted).length, trash:trashNotes.length };
@@ -3212,8 +3256,11 @@ function NotesPage({ user, links, customTags, onClose }) {
       if ((n.priority && n.priority<=2) || (due && due>=today0 && due<todayEnd)) c.today++;
       if (due && due>=today0 && due<weekEnd) c.upcoming++;
     });
-    // Contadores de pastas: notas ativas (não concluídas) na pasta E descendentes
-    const folderCounts = {};
+    const foldersDirect = {};
+    folders.forEach(f => {
+      foldersDirect[f.id] = active.filter(n => n.folderId === f.id).length;
+    });
+    const foldersTotal = {};
     folders.forEach(f => {
       const subIds = new Set([f.id]);
       let changed = true;
@@ -3221,9 +3268,9 @@ function NotesPage({ user, links, customTags, onClose }) {
         changed = false;
         folders.forEach(x => { if (x.parentId && subIds.has(x.parentId) && !subIds.has(x.id)) { subIds.add(x.id); changed = true; } });
       }
-      folderCounts[f.id] = active.filter(n => n.folderId && subIds.has(n.folderId)).length;
+      foldersTotal[f.id] = active.filter(n => n.folderId && subIds.has(n.folderId)).length;
     });
-    return { ...c, folders:folderCounts };
+    return { ...c, foldersDirect, foldersTotal };
   }, [notes, trashNotes, folders, today0, todayEnd, weekEnd]);
 
   // Nota selecionada
@@ -3336,6 +3383,57 @@ function NotesPage({ user, links, customTags, onClose }) {
     }
   }, [api, broadcastNotes]);
 
+  // ─── Reordenação de notas ──
+  // Move uma nota ↑ ou ↓ dentro da view atual (swap de position com vizinha)
+  const handleMoveNote = useCallback(async (noteId, direction) => {
+    const list = currentNotes.filter(n => !n.isCompleted); // não reordena com concluídas
+    const idx = list.findIndex(n => n.id === noteId);
+    if (idx === -1) return;
+    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= list.length) return;
+    const a = list[idx], b = list[targetIdx];
+    const aPos = notePositionOf(a), bPos = notePositionOf(b);
+    // Atualização otimista
+    setNotes(prev => prev.map(n => {
+      if (n.id === a.id) return { ...n, position: bPos };
+      if (n.id === b.id) return { ...n, position: aPos };
+      return n;
+    }));
+    try {
+      await Promise.all([
+        api.updateNote(a.id, { position: bPos }),
+        api.updateNote(b.id, { position: aPos }),
+      ]);
+      broadcastNotes();
+    } catch (e) { console.error("[notes] swap failed", e); }
+  }, [currentNotes, api, broadcastNotes]);
+
+  // Reposiciona a nota entre dois vizinhos (drag-and-drop)
+  const handleReorderNoteDrop = useCallback(async (droppedId, targetId, where /* "above"|"below" */) => {
+    if (droppedId === targetId) return;
+    const list = currentNotes.filter(n => !n.isCompleted);
+    const targetIdx = list.findIndex(n => n.id === targetId);
+    if (targetIdx === -1) return;
+    const target = list[targetIdx];
+    const neighbor = where === "above" ? list[targetIdx - 1] : list[targetIdx + 1];
+    let newPos;
+    if (!neighbor) {
+      // No topo ou no fundo da lista
+      const tPos = notePositionOf(target);
+      newPos = where === "above" ? tPos + 1000 : tPos - 1000;
+    } else if (neighbor.id === droppedId) {
+      return; // arrastou pro mesmo lugar
+    } else {
+      newPos = (notePositionOf(target) + notePositionOf(neighbor)) / 2;
+    }
+    // Atualização otimista
+    setNotes(prev => prev.map(n => n.id === droppedId ? { ...n, position: newPos } : n));
+    try {
+      await api.updateNote(droppedId, { position: newPos });
+      broadcastNotes();
+    } catch (e) { console.error("[notes] reorder drop failed", e); }
+  }, [currentNotes, api, broadcastNotes]);
+
   // ─── Hierarquia de pastas (indent / outdent / drag) ──
   const isDescendantOf = useCallback((folderId, ancestorId) => {
     let cur = folders.find(f => f.id === folderId);
@@ -3380,6 +3478,55 @@ function NotesPage({ user, links, customTags, onClose }) {
     if (!f || !f.parentId) return; // já está no topo
     const parent = folders.find(x => x.id === f.parentId);
     await handleMoveFolder(folderId, parent?.parentId || null);
+  };
+
+  // ↑ Mover pra cima: swap de order com a irmã anterior no mesmo nível
+  const handleMoveFolderUp = async (folderId) => {
+    const f = folders.find(x => x.id === folderId);
+    if (!f) return;
+    const siblings = folders
+      .filter(x => x.parentId === f.parentId)
+      .sort((a,b) => (a.order||0) - (b.order||0) || (a.name||"").localeCompare(b.name||""));
+    const idx = siblings.findIndex(x => x.id === folderId);
+    if (idx <= 0) return;
+    const prev = siblings[idx-1];
+    const newOrder = prev.order ?? 0;
+    const otherNewOrder = f.order ?? 0;
+    // Atualização otimista
+    setFolders(curr => curr.map(x => {
+      if (x.id === f.id)    return { ...x, order: newOrder };
+      if (x.id === prev.id) return { ...x, order: otherNewOrder };
+      return x;
+    }));
+    try {
+      await api.updateFolder(f.id,    { order: newOrder });
+      await api.updateFolder(prev.id, { order: otherNewOrder });
+      broadcastNotes();
+    } catch (e) { console.error("[folders] reorder up failed", e); }
+  };
+
+  // ↓ Mover pra baixo: swap de order com a irmã seguinte no mesmo nível
+  const handleMoveFolderDown = async (folderId) => {
+    const f = folders.find(x => x.id === folderId);
+    if (!f) return;
+    const siblings = folders
+      .filter(x => x.parentId === f.parentId)
+      .sort((a,b) => (a.order||0) - (b.order||0) || (a.name||"").localeCompare(b.name||""));
+    const idx = siblings.findIndex(x => x.id === folderId);
+    if (idx === -1 || idx >= siblings.length - 1) return;
+    const next = siblings[idx+1];
+    const newOrder = next.order ?? 0;
+    const otherNewOrder = f.order ?? 0;
+    setFolders(curr => curr.map(x => {
+      if (x.id === f.id)    return { ...x, order: newOrder };
+      if (x.id === next.id) return { ...x, order: otherNewOrder };
+      return x;
+    }));
+    try {
+      await api.updateFolder(f.id,    { order: newOrder });
+      await api.updateFolder(next.id, { order: otherNewOrder });
+      broadcastNotes();
+    } catch (e) { console.error("[folders] reorder down failed", e); }
   };
 
   const toggleExpanded = (folderId) => {
@@ -3463,7 +3610,7 @@ function NotesPage({ user, links, customTags, onClose }) {
                   setDropTargetId(null);
                 }
               }}>
-              {folderTree.map(root => (
+              {folderTree.map((root, idx) => (
                 <FolderTreeNode
                   key={root.id}
                   node={root}
@@ -3478,11 +3625,15 @@ function NotesPage({ user, links, customTags, onClose }) {
                   onIndent={handleIndentFolder}
                   onOutdent={handleOutdentFolder}
                   onMove={handleMoveFolder}
+                  onMoveUp={handleMoveFolderUp}
+                  onMoveDown={handleMoveFolderDown}
                   isDescendantOf={isDescendantOf}
                   draggingFolderId={draggingFolderId}
                   setDraggingFolderId={setDraggingFolderId}
                   dropTargetId={dropTargetId}
                   setDropTargetId={setDropTargetId}
+                  isFirstSibling={idx === 0}
+                  isLastSibling={idx === folderTree.length - 1}
                 />
               ))}
             </div>
@@ -3538,10 +3689,49 @@ function NotesPage({ user, links, customTags, onClose }) {
               <div className="t">{isTrash?"Lixeira vazia":isDoneView?"Nenhuma concluída ainda":"Nenhuma nota aqui"}</div>
               <div className="s">{isTrash?"Notas excluídas aparecem aqui por 30 dias.":isDoneView?"Quando marcar uma nota como concluída, ela aparece aqui.":"Clique em \"+ Nova nota\" para começar."}</div>
             </div>
-          ) : currentNotes.map(n => (
+          ) : currentNotes.map((n, idx) => {
+            const isFirst = idx === 0 || currentNotes[idx-1]?.isCompleted !== n.isCompleted;
+            const isLast  = idx === currentNotes.length - 1 || currentNotes[idx+1]?.isCompleted !== n.isCompleted;
+            const dropAbove = dropNoteTarget?.id === n.id && dropNoteTarget?.where === "above";
+            const dropBelow = dropNoteTarget?.id === n.id && dropNoteTarget?.where === "below";
+            const isDragSrc = draggingNoteId === n.id;
+            const isReorderable = !isTrash && !n.isCompleted;
+            return (
             <div
               key={n.id}
-              className={`np-note-card${selectedId===n.id?" active":""}${n.isCompleted?" completed":""}`}
+              className={`np-note-card${selectedId===n.id?" active":""}${n.isCompleted?" completed":""}${isDragSrc?" dragging":""}${dropAbove?" drop-above":""}${dropBelow?" drop-below":""}`}
+              draggable={isReorderable}
+              onDragStart={(e)=>{
+                if (!isReorderable) { e.preventDefault(); return; }
+                setDraggingNoteId(n.id);
+                e.dataTransfer.effectAllowed = "move";
+                try { e.dataTransfer.setData("text/note-id", n.id); } catch {}
+              }}
+              onDragEnd={()=>{ setDraggingNoteId(null); setDropNoteTarget(null); }}
+              onDragOver={(e)=>{
+                if (!draggingNoteId || draggingNoteId === n.id || n.isCompleted) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+                const r = e.currentTarget.getBoundingClientRect();
+                const where = (e.clientY - r.top) < r.height/2 ? "above" : "below";
+                if (dropNoteTarget?.id !== n.id || dropNoteTarget?.where !== where) {
+                  setDropNoteTarget({ id:n.id, where });
+                }
+              }}
+              onDragLeave={(e)=>{
+                if (!e.currentTarget.contains(e.relatedTarget)) {
+                  if (dropNoteTarget?.id === n.id) setDropNoteTarget(null);
+                }
+              }}
+              onDrop={(e)=>{
+                if (!draggingNoteId || draggingNoteId === n.id) return;
+                e.preventDefault();
+                e.stopPropagation();
+                const where = dropNoteTarget?.where || "above";
+                handleReorderNoteDrop(draggingNoteId, n.id, where);
+                setDraggingNoteId(null);
+                setDropNoteTarget(null);
+              }}
               onClick={()=>{ setSelectedId(n.id); setMobileEditorOpen(true); }}
             >
               {!isTrash && (
@@ -3575,8 +3765,26 @@ function NotesPage({ user, links, customTags, onClose }) {
                   ))}
                 </div>
               </div>
+              {isReorderable && (
+                <div className="np-note-reorder">
+                  <button
+                    className="np-folder-act-btn"
+                    title="Mover para cima"
+                    onClick={(e)=>{ e.stopPropagation(); handleMoveNote(n.id,"up"); }}
+                    disabled={isFirst}
+                    style={isFirst?{opacity:.25,cursor:"not-allowed"}:undefined}
+                  ><ChevronUp size={14}/></button>
+                  <button
+                    className="np-folder-act-btn"
+                    title="Mover para baixo"
+                    onClick={(e)=>{ e.stopPropagation(); handleMoveNote(n.id,"down"); }}
+                    disabled={isLast}
+                    style={isLast?{opacity:.25,cursor:"not-allowed"}:undefined}
+                  ><ChevronDown size={14}/></button>
+                </div>
+              )}
             </div>
-          ))}
+          );})}
         </div>
         <div
           className="np-list-resize"
@@ -3645,12 +3853,20 @@ function NoteSidebarItem({ ico, label, count, active, onClick }) {
   );
 }
 
-function FolderTreeNode({ node, depth, view, setView, counts, expanded, toggleExpanded, onRename, onDelete, onIndent, onOutdent, onMove, isDescendantOf, draggingFolderId, setDraggingFolderId, dropTargetId, setDropTargetId }) {
+function FolderTreeNode({ node, depth, view, setView, counts, expanded, toggleExpanded, onRename, onDelete, onIndent, onOutdent, onMove, onMoveUp, onMoveDown, isDescendantOf, draggingFolderId, setDraggingFolderId, dropTargetId, setDropTargetId, isFirstSibling, isLastSibling }) {
   const hasChildren = node.children.length > 0;
   const isExpanded = expanded.has(node.id);
   const isActive = view === `folder:${node.id}`;
-  const count = counts.folders[node.id] || 0;
-  const canIndent = depth < 4; // limite de profundidade
+
+  // Contador inteligente:
+  // - Pasta fechada (collapsed)  → mostra TOTAL (direto + descendentes)
+  // - Pasta aberta (expanded)    → mostra apenas DIRETAS
+  // Quando aberta e não tem nota direta, esconde o badge (a info está nas filhas).
+  const directCount = counts.foldersDirect[node.id] || 0;
+  const totalCount  = counts.foldersTotal[node.id]  || 0;
+  const displayCount = (isExpanded && hasChildren) ? directCount : totalCount;
+
+  const canIndent = depth < 4;
 
   // Bloqueia drop em si mesmo ou em descendentes
   const isValidDropTarget = draggingFolderId && draggingFolderId !== node.id && !isDescendantOf(node.id, draggingFolderId);
@@ -3673,7 +3889,6 @@ function FolderTreeNode({ node, depth, view, setView, counts, expanded, toggleEx
           if (dropTargetId !== node.id) setDropTargetId(node.id);
         }}
         onDragLeave={(e)=>{
-          // só limpa se sair pro lado de fora desta row
           if (!e.currentTarget.contains(e.relatedTarget)) {
             if (dropTargetId === node.id) setDropTargetId(null);
           }
@@ -3698,19 +3913,33 @@ function FolderTreeNode({ node, depth, view, setView, counts, expanded, toggleEx
           </span>
           <span className="np-item-ico"><Folder size={17}/></span>
           <span className="np-item-label" title={node.name}>{node.name}</span>
-          {count > 0 && <span className="np-item-count">{count}</span>}
+          {displayCount > 0 && <span className="np-item-count">{displayCount}</span>}
         </div>
         <div className="np-folder-actions">
           <button
             className="np-folder-act-btn"
-            title="Subir nível (Shift+Tab)"
+            title="Mover para cima"
+            onClick={(e)=>{ e.stopPropagation(); onMoveUp(node.id); }}
+            disabled={isFirstSibling}
+            style={isFirstSibling?{opacity:.25,cursor:"not-allowed"}:undefined}
+          ><ChevronUp size={13}/></button>
+          <button
+            className="np-folder-act-btn"
+            title="Mover para baixo"
+            onClick={(e)=>{ e.stopPropagation(); onMoveDown(node.id); }}
+            disabled={isLastSibling}
+            style={isLastSibling?{opacity:.25,cursor:"not-allowed"}:undefined}
+          ><ChevronDown size={13}/></button>
+          <button
+            className="np-folder-act-btn"
+            title="Subir nível"
             onClick={(e)=>{ e.stopPropagation(); onOutdent(node.id); }}
             disabled={depth === 0}
             style={depth===0?{opacity:.25,cursor:"not-allowed"}:undefined}
           ><CornerUpLeft size={13}/></button>
           <button
             className="np-folder-act-btn"
-            title="Aninhar dentro da pasta acima (Tab)"
+            title="Aninhar dentro da pasta acima"
             onClick={(e)=>{ e.stopPropagation(); onIndent(node.id); }}
             disabled={!canIndent}
             style={!canIndent?{opacity:.25,cursor:"not-allowed"}:undefined}
@@ -3719,7 +3948,7 @@ function FolderTreeNode({ node, depth, view, setView, counts, expanded, toggleEx
           <button className="np-folder-act-btn" title="Excluir" onClick={(e)=>{ e.stopPropagation(); onDelete(node.id); }}><Trash2 size={13}/></button>
         </div>
       </div>
-      {hasChildren && isExpanded && node.children.map(child => (
+      {hasChildren && isExpanded && node.children.map((child, idx) => (
         <FolderTreeNode
           key={child.id}
           node={child}
@@ -3734,11 +3963,15 @@ function FolderTreeNode({ node, depth, view, setView, counts, expanded, toggleEx
           onIndent={onIndent}
           onOutdent={onOutdent}
           onMove={onMove}
+          onMoveUp={onMoveUp}
+          onMoveDown={onMoveDown}
           isDescendantOf={isDescendantOf}
           draggingFolderId={draggingFolderId}
           setDraggingFolderId={setDraggingFolderId}
           dropTargetId={dropTargetId}
           setDropTargetId={setDropTargetId}
+          isFirstSibling={idx === 0}
+          isLastSibling={idx === node.children.length - 1}
         />
       ))}
     </div>
@@ -3836,9 +4069,6 @@ function NoteEditor({ note, folders, isTrash, savingState, onSave, onDelete, onR
               </button>
             </>
           )}
-          <button className="np-editor-btn" onClick={onClose} title="Fechar Notas" aria-label="Fechar">
-            <X size={14}/>
-          </button>
         </div>
       </div>
       <div className="np-editor-body">
@@ -4444,7 +4674,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
                 : <div style={{width:30,height:30,borderRadius:"50%",background:"#e50914",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700,color:"#fff"}}>{(user?.name||"U")[0].toUpperCase()}</div>
               }
               <button className="nav-btn" style={{padding:"6px 10px",fontSize:13}} onClick={onSettings} title="Configurações">⚙</button>
-              <button className="nav-btn" style={{padding:"6px 10px",fontSize:13,color:"#555"}} onClick={onLogout} title="Sair">⏻</button>
+              <button className="nav-btn" style={{padding:"6px 10px",fontSize:13,color:"rgba(255,255,255,.62)"}} onClick={onLogout} title="Sair">⏻</button>
             </div>
             {/* Mobile: search icon + menu */}
             <button className="hdr-menu-btn" onClick={()=>setShowMobileSearch(true)} title="Buscar">
@@ -4589,7 +4819,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
               <div style={{background:"rgba(245,166,35,.1)",border:"1px solid rgba(245,166,35,.3)",borderRadius:8,padding:"10px 16px",display:"flex",alignItems:"center",gap:10,color:"#f5a623",fontSize:13}}>
                 <span>⚠</span>
                 <span><strong>{links.length} item{links.length!==1?"s":""}</strong> salvo{links.length!==1?"s":""} sem categoria válida.</span>
-                <button onClick={()=>setShowAdd(true)} style={{background:"rgba(245,166,35,.2)",border:"1px solid rgba(245,166,35,.4)",color:"#f5a623",cursor:"pointer",padding:"4px 12px",borderRadius:5,fontSize:11,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>Adicionar categoria</button>
+                <button onClick={()=>setShowAdd(true)} style={{background:"rgba(245,166,35,.2)",border:"1px solid rgba(245,166,35,.4)",color:"#f5a623",cursor:"pointer",padding:"4px 12px",borderRadius:5,fontSize:13,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>Adicionar categoria</button>
               </div>
             </div>
           )}
@@ -4598,7 +4828,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
               <div className="row-hdr" style={{padding:"0 48px 8px"}}>
                 <div className="row-hdr-l">
                   <div className="row-title" style={{color:"#f5a623"}}>Todos os itens</div>
-                  <span style={{fontSize:11,color:"#666",marginLeft:8}}>{links.length} sem categoria</span>
+                  <span style={{fontSize:13,color:"rgba(255,255,255,.6)",marginLeft:8}}>{links.length} sem categoria</span>
                 </div>
               </div>
               <div className="row-scroll-outer row-scroll-wrap" style={{padding:"0 48px"}}>
@@ -4649,7 +4879,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
                       ? "Todos os vídeos foram assistidos 🎉"
                       : "Nenhum item nesta categoria"}
               </div>
-              <div style={{fontSize:14,color:"#555",lineHeight:1.7,maxWidth:380,margin:"0 auto 28px"}}>
+              <div style={{fontSize:14,color:"rgba(255,255,255,.62)",lineHeight:1.7,maxWidth:380,margin:"0 auto 28px"}}>
                 {search
                   ? "Tente buscar por outro título, URL ou nota."
                   : filter==="watched"
@@ -4665,7 +4895,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
               )}
               {search && (
                 <button onClick={()=>setSearch("")} style={{
-                  background:"rgba(255,255,255,.06)",border:"1px solid #1a1a1a",color:"#a0a0a0",
+                  background:"rgba(255,255,255,.06)",border:"1px solid #1a1a1a",color:"rgba(255,255,255,.72)",
                   padding:"10px 24px",borderRadius:6,cursor:"pointer",fontSize:13,fontWeight:600,
                   fontFamily:"'Inter',sans-serif",transition:"all .2s"
                 }}>
@@ -4796,7 +5026,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
               ))}
             </div>
             {search && (
-              <div style={{marginTop:20,color:"#555",fontSize:13,fontFamily:"'Inter',sans-serif",textAlign:"center"}}>
+              <div style={{marginTop:20,color:"rgba(255,255,255,.62)",fontSize:13,fontFamily:"'Inter',sans-serif",textAlign:"center"}}>
                 Mostrando resultados para <strong style={{color:"#fff"}}>"{search}"</strong>
               </div>
             )}
@@ -4833,7 +5063,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
             <div className="undo-bar" style={{width:`${undoProgress}%`,transition:undoProgress<100?"width 50ms linear":"none"}}/>
             <span className="undo-msg">🗑 {undoStack.msg}</span>
             <button className="btn-undo" onClick={handleUndo}>↩ Desfazer</button>
-            <button onClick={()=>{clearTimeout(undoTimer.current);clearInterval(undoProgInterval.current);setUndoStack(null);}} style={{background:"none",border:"none",color:"#555",cursor:"pointer",padding:"4px",lineHeight:1}}>✕</button>
+            <button onClick={()=>{clearTimeout(undoTimer.current);clearInterval(undoProgInterval.current);setUndoStack(null);}} style={{background:"none",border:"none",color:"rgba(255,255,255,.62)",cursor:"pointer",padding:"4px",lineHeight:1}}>✕</button>
           </div>
         )}
 
@@ -5176,7 +5406,7 @@ function LandingPage({ onGetStarted }) {
                       <div style={{position:"absolute",inset:0,background:"linear-gradient(135deg,#1a0000 0%,#7a0008 50%,#c62828 100%)",opacity:.7}}/>
                       <div style={{position:"absolute",bottom:0,left:0,right:0,background:"linear-gradient(to top,rgba(0,0,0,.9),transparent)",padding:"12px 14px"}}>
                         <div style={{fontSize:7,color:"#e50914",fontWeight:800,textTransform:"uppercase",letterSpacing:".5px",marginBottom:3}}>⭐ EM DESTAQUE</div>
-                        <div className="land-mock-title" style={{fontSize:11}}>Champions League — Melhores Momentos</div>
+                        <div className="land-mock-title" style={{fontSize:13}}>Champions League — Melhores Momentos</div>
                         <div style={{display:"flex",gap:5,marginTop:6}}>
                           <div style={{background:"#fff",borderRadius:3,padding:"2px 8px",fontSize:7,fontWeight:800,color:"#000"}}>▶ Assistir</div>
                           <div style={{background:"rgba(255,255,255,.15)",borderRadius:3,padding:"2px 8px",fontSize:7,fontWeight:700,color:"#fff"}}>✓ Assistido</div>
@@ -5197,11 +5427,11 @@ function LandingPage({ onGetStarted }) {
                 </div>
                 <div className="land-badge" style={{top:-16,right:-16,animation:"popIn .4s .2s both"}}>
                   <div className="land-badge-ico" style={{background:"rgba(34,197,94,.15)"}}>✓</div>
-                  <div><div style={{fontSize:11,fontWeight:700,color:"#22c55e"}}>Marcado!</div><div style={{fontSize:10,color:"#555"}}>React Avançado</div></div>
+                  <div><div style={{fontSize:13,fontWeight:700,color:"#22c55e"}}>Marcado!</div><div style={{fontSize:12,color:"rgba(255,255,255,.62)"}}>React Avançado</div></div>
                 </div>
                 <div className="land-badge" style={{bottom:-16,left:-16,animation:"popIn .4s .4s both"}}>
                   <div className="land-badge-ico" style={{background:"rgba(229,9,20,.15)"}}>▶</div>
-                  <div><div style={{fontSize:11,fontWeight:700,color:"#e50914"}}>Pré-visualizando</div><div style={{fontSize:10,color:"#555"}}>Passe o mouse</div></div>
+                  <div><div style={{fontSize:13,fontWeight:700,color:"#e50914"}}>Pré-visualizando</div><div style={{fontSize:12,color:"rgba(255,255,255,.62)"}}>Passe o mouse</div></div>
                 </div>
               </div>
             )}
@@ -5380,7 +5610,7 @@ function LoginPage({ onLogin, onBack }) {
       <style>{LANDING_CSS}</style>
       <div className="login-page">
         <div className="login-card" style={{position:"relative"}}>
-          <button onClick={onBack} style={{position:"absolute",top:16,left:16,background:"none",border:"none",color:"#555",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:4}}>← Voltar</button>
+          <button onClick={onBack} style={{position:"absolute",top:16,left:16,background:"none",border:"none",color:"rgba(255,255,255,.62)",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:4}}>← Voltar</button>
           <div className="login-logo" style={{marginTop:16}}>Watch<em>List</em></div>
           <p className="login-sub">Faça login com Google para sincronizar sua lista em todos os dispositivos</p>
 
@@ -5413,7 +5643,7 @@ function LoginPage({ onLogin, onBack }) {
             </button>
           ) : (
             <div>
-              <div style={{fontSize:11,color:"#555",marginBottom:8,textAlign:"center"}}>
+              <div style={{fontSize:13,color:"rgba(255,255,255,.62)",marginBottom:8,textAlign:"center"}}>
                 Modo demo — dados salvos apenas neste dispositivo
               </div>
               <div style={{display:"flex",gap:8}}>
@@ -5425,8 +5655,8 @@ function LoginPage({ onLogin, onBack }) {
 
           <p className="login-terms">
             Ao entrar, você concorda com os{" "}
-            <a href="#" style={{color:"#555"}}>Termos de Uso</a> e{" "}
-            <a href="#" style={{color:"#555"}}>Política de Privacidade</a>.
+            <a href="#" style={{color:"rgba(255,255,255,.62)"}}>Termos de Uso</a> e{" "}
+            <a href="#" style={{color:"rgba(255,255,255,.62)"}}>Política de Privacidade</a>.
           </p>
         </div>
       </div>
@@ -5443,7 +5673,7 @@ function OnboardingPage({ user, onComplete }) {
       desc:"WatchList é sua lista pessoal de vídeos. Salve qualquer URL, organize em categorias e nunca perca um vídeo importante.",
       demo: <div className="onboard-demo" style={{display:"flex",gap:12,alignItems:"center"}}>
         <div style={{width:64,height:36,borderRadius:6,background:"linear-gradient(135deg,#3d0006,#c62828)",flexShrink:0}}/>
-        <div><div style={{fontSize:12,fontWeight:700,color:"#fff",marginBottom:4}}>Tutorial de React</div><div style={{fontSize:10,color:"#555"}}>youtube.com • Educação</div></div>
+        <div><div style={{fontSize:12,fontWeight:700,color:"#fff",marginBottom:4}}>Tutorial de React</div><div style={{fontSize:12,color:"rgba(255,255,255,.62)"}}>youtube.com • Educação</div></div>
       </div>
     },
     {
@@ -5452,13 +5682,13 @@ function OnboardingPage({ user, onComplete }) {
       demo: <div className="onboard-demo">
         <div style={{display:"flex",gap:8,marginBottom:8}}>
           <div style={{flex:1,height:36,background:"#0a0a0a",border:"1px solid #1a1a1a",borderRadius:6,display:"flex",alignItems:"center",padding:"0 12px"}}>
-            <span style={{fontSize:12,color:"#333"}}>https://youtube.com/watch?v=...</span>
+            <span style={{fontSize:12,color:"rgba(255,255,255,.45)"}}>https://youtube.com/watch?v=...</span>
           </div>
-          <div style={{width:80,height:36,background:"#e50914",borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"#fff"}}>Buscar</div>
+          <div style={{width:80,height:36,background:"#e50914",borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700,color:"#fff"}}>Buscar</div>
         </div>
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
           <div style={{width:80,height:45,borderRadius:4,background:"linear-gradient(135deg,#1a0030,#8e24aa)"}}/>
-          <div><div style={{fontSize:12,fontWeight:600,color:"#22c55e",marginBottom:2}}>✓ Título carregado</div><div style={{fontSize:11,color:"#555"}}>Metadados buscados automaticamente</div></div>
+          <div><div style={{fontSize:12,fontWeight:600,color:"#22c55e",marginBottom:2}}>✓ Título carregado</div><div style={{fontSize:13,color:"rgba(255,255,255,.62)"}}>Metadados buscados automaticamente</div></div>
         </div>
       </div>
     },
@@ -5469,7 +5699,7 @@ function OnboardingPage({ user, onComplete }) {
         {[["📚 Educação","#3b82f6",3],["🎮 Games","#8b5cf6",7],["📈 Trabalho","#22c55e",2]].map(([n,c,cnt])=>(
           <div key={n} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid #1a1a1a"}}>
             <span style={{fontSize:13,fontWeight:600,color:"#fff"}}>{n}</span>
-            <span style={{fontSize:11,color:c,fontWeight:700}}>{cnt} vídeos</span>
+            <span style={{fontSize:13,color:c,fontWeight:700}}>{cnt} vídeos</span>
           </div>
         ))}
       </div>
@@ -5480,7 +5710,7 @@ function OnboardingPage({ user, onComplete }) {
       demo: <div className="onboard-demo" style={{textAlign:"center",padding:"24px 16px"}}>
         <div style={{fontSize:40,marginBottom:12}}>🚀</div>
         <div style={{fontSize:14,fontWeight:700,color:"#fff",marginBottom:6}}>Sua WatchList está pronta</div>
-        <div style={{fontSize:12,color:"#555"}}>Clique em "Ir para o app" para começar</div>
+        <div style={{fontSize:12,color:"rgba(255,255,255,.62)"}}>Clique em "Ir para o app" para começar</div>
       </div>
     },
   ];
@@ -5613,7 +5843,7 @@ function SettingsPage({ user, cats, links, onBack, onLogout, onExport, onImport 
                   <div className="settings-row-label">📱 App Mobile</div>
                   <div className="settings-row-sub">Em breve — iOS e Android</div>
                 </div>
-                <span style={{fontSize:12,color:"#555",padding:"6px 12px",background:"#1a1a1a",borderRadius:6}}>Em breve</span>
+                <span style={{fontSize:12,color:"rgba(255,255,255,.62)",padding:"6px 12px",background:"#1a1a1a",borderRadius:6}}>Em breve</span>
               </div>
             </div>
           </div>
@@ -5633,7 +5863,7 @@ function SettingsPage({ user, cats, links, onBack, onLogout, onExport, onImport 
             </div>
           </div>
 
-          <div style={{fontSize:12,color:"#333",textAlign:"center",padding:"20px 0"}}>
+          <div style={{fontSize:12,color:"rgba(255,255,255,.45)",textAlign:"center",padding:"20px 0"}}>
             WatchList v2.0 · Feito com ♥ no Brasil
           </div>
         </div>
@@ -5646,11 +5876,11 @@ function SettingsPage({ user, cats, links, onBack, onLogout, onExport, onImport 
 function MigrationModal({ status, result }) {
   // status: "scanning" | "migrating" | "done" | "error"
   const msgs = {
-    scanning:  { ico:"🔍", title:"Verificando dados locais...", sub:"Aguarde um momento", color:"#a0a0a0" },
+    scanning:  { ico:"🔍", title:"Verificando dados locais...", sub:"Aguarde um momento", color:"rgba(255,255,255,.72)" },
     migrating: { ico:"⬆", title:"Migrando sua lista...",       sub:"Transferindo para a nuvem", color:"#3b82f6" },
     done:      { ico:"✅", title:"Migração concluída!",         sub:`${result?.links||0} vídeos e ${result?.categories||0} categorias transferidos`, color:"#22c55e" },
     error:     { ico:"⚠",  title:"Migração parcial",           sub:"Alguns itens já existiam ou atingiram o limite", color:"#f5a623" },
-    skipped:   { ico:"✓",  title:"Nenhum dado local encontrado", sub:"Começando do zero", color:"#a0a0a0" },
+    skipped:   { ico:"✓",  title:"Nenhum dado local encontrado", sub:"Começando do zero", color:"rgba(255,255,255,.72)" },
   };
   const m = msgs[status] || msgs.scanning;
   return (
@@ -5658,7 +5888,7 @@ function MigrationModal({ status, result }) {
       <div style={{background:"#111",border:"1px solid #1a1a1a",borderRadius:12,padding:"36px 40px",textAlign:"center",maxWidth:360,width:"100%",fontFamily:"'Inter',sans-serif"}}>
         <div style={{fontSize:44,marginBottom:16}}>{m.ico}</div>
         <div style={{fontSize:18,fontWeight:800,color:"#fff",marginBottom:8,letterSpacing:"-.3px"}}>{m.title}</div>
-        <div style={{fontSize:13,color:"#a0a0a0",lineHeight:1.6}}>{m.sub}</div>
+        <div style={{fontSize:13,color:"rgba(255,255,255,.72)",lineHeight:1.6}}>{m.sub}</div>
         {(status==="migrating"||status==="scanning") && (
           <div style={{marginTop:20,height:3,background:"#1a1a1a",borderRadius:2,overflow:"hidden"}}>
             <div style={{height:"100%",background:m.color,borderRadius:2,animation:"shimmer 1.4s infinite ease-in-out",backgroundSize:"200% 100%"}}/>
@@ -5668,11 +5898,11 @@ function MigrationModal({ status, result }) {
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:20}}>
             <div style={{background:"#0a0a0a",borderRadius:8,padding:"12px",border:"1px solid #1a1a1a"}}>
               <div style={{fontSize:24,fontWeight:900,color:"#e50914",fontFamily:"'Inter',sans-serif"}}>{result.links}</div>
-              <div style={{fontSize:10,color:"#555",textTransform:"uppercase",letterSpacing:".8px",marginTop:2}}>Vídeos</div>
+              <div style={{fontSize:12,color:"rgba(255,255,255,.62)",textTransform:"uppercase",letterSpacing:".8px",marginTop:2}}>Vídeos</div>
             </div>
             <div style={{background:"#0a0a0a",borderRadius:8,padding:"12px",border:"1px solid #1a1a1a"}}>
               <div style={{fontSize:24,fontWeight:900,color:"#3b82f6",fontFamily:"'Inter',sans-serif"}}>{result.categories}</div>
-              <div style={{fontSize:10,color:"#555",textTransform:"uppercase",letterSpacing:".8px",marginTop:2}}>Categorias</div>
+              <div style={{fontSize:12,color:"rgba(255,255,255,.62)",textTransform:"uppercase",letterSpacing:".8px",marginTop:2}}>Categorias</div>
             </div>
           </div>
         )}
@@ -5692,7 +5922,7 @@ function ConfirmModal({ message, onConfirm, onCancel }) {
         <div style={{fontSize:15,fontWeight:700,color:"#fff",marginBottom:8,lineHeight:1.4}}>{message}</div>
         <div style={{display:"flex",gap:10,justifyContent:"center",marginTop:20}}>
           <button onClick={onConfirm} style={{background:"#e50914",border:"none",color:"#fff",cursor:"pointer",padding:"10px 28px",borderRadius:7,fontSize:14,fontWeight:700,fontFamily:"'Inter',sans-serif"}}>Excluir</button>
-          <button onClick={onCancel} style={{background:"rgba(255,255,255,.07)",border:"1px solid #1a1a1a",color:"#a0a0a0",cursor:"pointer",padding:"10px 24px",borderRadius:7,fontSize:14,fontFamily:"'Inter',sans-serif"}}>Cancelar</button>
+          <button onClick={onCancel} style={{background:"rgba(255,255,255,.07)",border:"1px solid #1a1a1a",color:"rgba(255,255,255,.72)",cursor:"pointer",padding:"10px 24px",borderRadius:7,fontSize:14,fontFamily:"'Inter',sans-serif"}}>Cancelar</button>
         </div>
       </div>
     </div>
@@ -5750,7 +5980,7 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
           <div>
             <h2 style={{fontSize:20,fontWeight:900,letterSpacing:"-.5px",marginBottom:4}}>Organizar</h2>
-            <p style={{fontSize:12,color:"#555"}}>
+            <p style={{fontSize:12,color:"rgba(255,255,255,.62)"}}>
               Categorias dizem <em style={{color:"#e50914",fontStyle:"normal",fontWeight:700}}>onde</em> mora. Tags dizem <em style={{color:"#3b82f6",fontStyle:"normal",fontWeight:700}}>como</em> é.
             </p>
           </div>
@@ -5761,24 +5991,24 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
         <div style={{display:"flex",gap:16,minHeight:520}}>
 
           {/* ── CATEGORIES ─────────────────────────────────────────────── */}
-          <div style={{flex:1,background:"#111",border:"1px solid #1a1a1a",borderRadius:10,overflow:"hidden",display:"flex",flexDirection:"column"}}>
+          <div style={{flex:1,background:"#141414",border:"1px solid #1a1a1a",borderRadius:10,overflow:"hidden",display:"flex",flexDirection:"column"}}>
             <div style={{padding:"12px 16px",borderBottom:"1px solid #1a1a1a",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
               <span style={{fontSize:13,fontWeight:800,display:"flex",alignItems:"center",gap:7}}>
                 <span style={{color:"#e50914"}}>□</span> Categorias
-                <span style={{color:"#555",fontWeight:400,fontSize:12}}>{cats.length}</span>
+                <span style={{color:"rgba(255,255,255,.62)",fontWeight:400,fontSize:12}}>{cats.length}</span>
               </span>
               <button onClick={()=>setShowCreateCat(s=>!s)}
-                style={{background:"#e50914",border:"none",color:"#fff",cursor:"pointer",padding:"5px 12px",borderRadius:6,fontSize:11,fontWeight:800,fontFamily:"'Inter',sans-serif"}}>
+                style={{background:"#e50914",border:"none",color:"#fff",cursor:"pointer",padding:"5px 12px",borderRadius:6,fontSize:13,fontWeight:800,fontFamily:"'Inter',sans-serif"}}>
                 {showCreateCat?"✕ Cancelar":"+ Nova"}
               </button>
             </div>
 
             {/* Inline create form */}
             {showCreateCat && (
-              <div style={{padding:"12px 14px",borderBottom:"1px solid #1a1a1a",background:"#0d0d0d",flexShrink:0}}>
+              <div style={{padding:"12px 14px",borderBottom:"1px solid #1a1a1a",background:"#161616",flexShrink:0}}>
                 <div style={{fontSize:9,fontWeight:800,textTransform:"uppercase",letterSpacing:".7px",color:"#e50914",marginBottom:8}}>NOVA CATEGORIA</div>
                 <select value={newCatParent} onChange={e=>setNewCatParent(e.target.value)}
-                  style={{width:"100%",background:"#111",border:"1px solid #1a1a1a",color:"#fff",padding:"8px 10px",borderRadius:6,fontSize:12,fontFamily:"'Inter',sans-serif",outline:"none",marginBottom:8}}>
+                  style={{width:"100%",background:"#141414",border:"1px solid #1a1a1a",color:"#fff",padding:"8px 10px",borderRadius:6,fontSize:12,fontFamily:"'Inter',sans-serif",outline:"none",marginBottom:8}}>
                   <option value="">Nenhuma (pasta raiz)</option>
                   {cats.filter(c=>!c.parentId||!existingIds.has(c.parentId)).map(c=>(
                     <option key={c.id} value={c.id}>{c.name}</option>
@@ -5789,7 +6019,7 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
                     onKeyDown={e=>e.key==="Enter"&&handleCreateCat()}
                     placeholder="Nome da categoria..."
                     autoFocus
-                    style={{flex:1,background:"#111",border:"1px solid #1a1a1a",color:"#fff",padding:"9px 12px",borderRadius:7,fontSize:13,fontFamily:"'Inter',sans-serif",outline:"none"}}/>
+                    style={{flex:1,background:"#141414",border:"1px solid #1a1a1a",color:"#fff",padding:"9px 12px",borderRadius:7,fontSize:13,fontFamily:"'Inter',sans-serif",outline:"none"}}/>
                   <button onClick={handleCreateCat} disabled={creatingCat||!newCatName.trim()}
                     style={{background:"#e50914",border:"none",color:"#fff",cursor:"pointer",padding:"9px 16px",borderRadius:7,fontSize:12,fontWeight:700,fontFamily:"'Inter',sans-serif",opacity:(creatingCat||!newCatName.trim())?0.4:1}}>
                     {creatingCat?"...":"Criar"}
@@ -5801,10 +6031,10 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
             {/* Category list */}
             <div style={{flex:1,overflowY:"auto",padding:8}}>
               {flatCats.length===0?(
-                <div style={{textAlign:"center",padding:"32px 16px",color:"#555"}}>
+                <div style={{textAlign:"center",padding:"32px 16px",color:"rgba(255,255,255,.62)"}}>
                   <div style={{fontSize:28,marginBottom:8,opacity:.2}}>□</div>
-                  <div style={{fontSize:13,fontWeight:700,color:"#888",marginBottom:4}}>Nenhuma categoria</div>
-                  <div style={{fontSize:11}}>Clique em "+ Nova" para criar.</div>
+                  <div style={{fontSize:13,fontWeight:700,color:"rgba(255,255,255,.72)",marginBottom:4}}>Nenhuma categoria</div>
+                  <div style={{fontSize:13}}>Clique em "+ Nova" para criar.</div>
                 </div>
               ):flatCats.map(cat=>{
                 const indent = cat._depth * 18;
@@ -5819,7 +6049,7 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
                       {cat._orphan && <span style={{fontSize:9,color:"#f5a623",padding:"1px 6px",border:"1px solid rgba(245,166,35,.3)",borderRadius:4}}>órfã</span>}
                       <button
                         onClick={()=>askConfirm(`Excluir "${cat.name}"${hasSubs?" e suas subcategorias":""}?`, ()=>{ setConfirmState(null); onDeleteCat(cat.id); })}
-                        style={{background:"none",border:"none",cursor:"pointer",color:"#333",fontSize:12,padding:"4px 8px",borderRadius:4,transition:"all .15s"}}
+                        style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.45)",fontSize:12,padding:"4px 8px",borderRadius:4,transition:"all .15s"}}
                         onMouseEnter={e=>e.currentTarget.style.color="#f87171"}
                         onMouseLeave={e=>e.currentTarget.style.color="#333"}>🗑</button>
                     </div>
@@ -5830,21 +6060,21 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
           </div>
 
           {/* ── TAGS ───────────────────────────────────────────────────── */}
-          <div style={{flex:1,background:"#111",border:"1px solid #1a1a1a",borderRadius:10,overflow:"hidden",display:"flex",flexDirection:"column"}}>
+          <div style={{flex:1,background:"#141414",border:"1px solid #1a1a1a",borderRadius:10,overflow:"hidden",display:"flex",flexDirection:"column"}}>
             <div style={{padding:"12px 16px",borderBottom:"1px solid #1a1a1a",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
               <span style={{fontSize:13,fontWeight:800,display:"flex",alignItems:"center",gap:7}}>
                 <span style={{color:"#e50914"}}>#</span> Tags
-                <span style={{color:"#555",fontWeight:400,fontSize:12}}>{customTags.length}</span>
+                <span style={{color:"rgba(255,255,255,.62)",fontWeight:400,fontSize:12}}>{customTags.length}</span>
               </span>
               <button onClick={()=>setShowCreateTag(s=>!s)}
-                style={{background:"#e50914",border:"none",color:"#fff",cursor:"pointer",padding:"5px 12px",borderRadius:6,fontSize:11,fontWeight:800,fontFamily:"'Inter',sans-serif"}}>
+                style={{background:"#e50914",border:"none",color:"#fff",cursor:"pointer",padding:"5px 12px",borderRadius:6,fontSize:13,fontWeight:800,fontFamily:"'Inter',sans-serif"}}>
                 {showCreateTag?"✕ Cancelar":"+ Nova"}
               </button>
             </div>
 
             {/* Inline tag create form */}
             {showCreateTag && (
-              <div style={{padding:"12px 14px",borderBottom:"1px solid #1a1a1a",background:"#0d0d0d",flexShrink:0}}>
+              <div style={{padding:"12px 14px",borderBottom:"1px solid #1a1a1a",background:"#161616",flexShrink:0}}>
                 <div style={{fontSize:9,fontWeight:800,textTransform:"uppercase",letterSpacing:".7px",color:"#e50914",marginBottom:8}}>NOVA TAG</div>
                 {/* Color picker */}
                 <div style={{display:"flex",gap:8,marginBottom:10,flexWrap:"wrap"}}>
@@ -5858,14 +6088,14 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
                     onKeyDown={e=>e.key==="Enter"&&handleCreateTag()}
                     placeholder="Nome da tag..."
                     autoFocus
-                    style={{flex:1,background:"#111",border:`1px solid ${newTagColor}44`,color:"#fff",padding:"9px 12px",borderRadius:7,fontSize:13,fontFamily:"'Inter',sans-serif",outline:"none"}}/>
+                    style={{flex:1,background:"#141414",border:`1px solid ${newTagColor}44`,color:"#fff",padding:"9px 12px",borderRadius:7,fontSize:13,fontFamily:"'Inter',sans-serif",outline:"none"}}/>
                   <button onClick={handleCreateTag} disabled={!newTagName.trim()}
                     style={{background:newTagColor,border:"none",color:"#fff",cursor:"pointer",padding:"9px 16px",borderRadius:7,fontSize:12,fontWeight:700,fontFamily:"'Inter',sans-serif",opacity:!newTagName.trim()?0.4:1}}>
                     Criar
                   </button>
                 </div>
                 {newTagName && (
-                  <div style={{marginTop:8,display:"inline-flex",alignItems:"center",gap:6,padding:"4px 12px",borderRadius:20,border:`1.5px solid ${newTagColor}`,color:newTagColor,fontSize:11,fontWeight:700}}>
+                  <div style={{marginTop:8,display:"inline-flex",alignItems:"center",gap:6,padding:"4px 12px",borderRadius:20,border:`1.5px solid ${newTagColor}`,color:newTagColor,fontSize:13,fontWeight:700}}>
                     ◈ {newTagName}
                   </div>
                 )}
@@ -5875,10 +6105,10 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
             {/* Tags list */}
             <div style={{flex:1,overflowY:"auto",padding:"10px 12px",display:"grid",gridTemplateColumns:"1fr",gap:6,alignContent:"start"}}>
               {customTags.length===0?(
-                <div style={{gridColumn:"1/-1",textAlign:"center",padding:"32px 16px",color:"#555"}}>
+                <div style={{gridColumn:"1/-1",textAlign:"center",padding:"32px 16px",color:"rgba(255,255,255,.62)"}}>
                   <div style={{fontSize:28,marginBottom:8,opacity:.3}}>#</div>
-                  <div style={{fontSize:13,fontWeight:700,color:"#888",marginBottom:4}}>Nenhuma tag ainda</div>
-                  <div style={{fontSize:11,lineHeight:1.5}}>Tags classificam como o item é.<br/>Ex: Favorito, Urgente, Ver depois.</div>
+                  <div style={{fontSize:13,fontWeight:700,color:"rgba(255,255,255,.72)",marginBottom:4}}>Nenhuma tag ainda</div>
+                  <div style={{fontSize:13,lineHeight:1.5}}>Tags classificam como o item é.<br/>Ex: Favorito, Urgente, Ver depois.</div>
                 </div>
               ):customTags.map(tag=>(
                 <div key={tag.id||tag.label}
@@ -5886,16 +6116,16 @@ function OrganizarModal({ cats, customTags, onClose, onDeleteCat, onCreateCat, o
                   <span style={{color:tag.color,fontSize:18,flexShrink:0}}>{tag.icon||"◈"}</span>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:14,fontWeight:700,color:"#fff",whiteSpace:"normal",lineHeight:1.4,wordBreak:"break-word"}}>{tag.label}</div>
-                    <div style={{fontSize:11,color:"#555",marginTop:2}}>{tag.count||0} itens</div>
+                    <div style={{fontSize:13,color:"rgba(255,255,255,.62)",marginTop:2}}>{tag.count||0} itens</div>
                   </div>
                   <button onClick={()=>askConfirm(`Excluir tag "${tag.label}"?`, ()=>{ setConfirmState(null); onDeleteTag(tag.id||tag.label); })}
-                    style={{background:"none",border:"none",cursor:"pointer",color:"#333",fontSize:12,padding:"2px 6px",borderRadius:3,transition:"color .15s"}}
+                    style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,.45)",fontSize:12,padding:"2px 6px",borderRadius:3,transition:"color .15s"}}
                     onMouseEnter={e=>e.target.style.color="#f87171"} onMouseLeave={e=>e.target.style.color="#333"}>✕</button>
                 </div>
               ))}
             </div>
 
-            <div style={{padding:"8px 12px",borderTop:"1px solid #1a1a1a",fontSize:10,color:"#2a2a2a",display:"flex",alignItems:"center",gap:5,flexShrink:0}}>
+            <div style={{padding:"8px 12px",borderTop:"1px solid #1a1a1a",fontSize:12,color:"rgba(255,255,255,.32)",display:"flex",alignItems:"center",gap:5,flexShrink:0}}>
               <span style={{width:5,height:5,borderRadius:"50%",background:"#22c55e",display:"inline-block"}}/>
               {customTags.length} tag{customTags.length!==1?"s":""}
             </div>
