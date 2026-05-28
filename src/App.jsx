@@ -1689,6 +1689,105 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
   .row-scroll{gap:10px;padding-left:16px;padding-right:16px;}
 }
 
+/* ════════════════════════════════════════════════════════════════════════════
+   🔗 FASE 3 — Vínculo Nota ↔ Vídeo
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* Badge 📝 no card de vídeo (canto superior direito) */
+.card-notes-badge{
+  position:absolute;top:8px;right:8px;z-index:6;
+  display:inline-flex;align-items:center;gap:4px;
+  background:rgba(229,9,20,.92);
+  color:#fff;
+  font-size:11px;font-weight:800;
+  padding:3px 8px;border-radius:20px;
+  cursor:pointer;
+  border:none;font-family:'Inter',sans-serif;
+  box-shadow:0 2px 8px rgba(0,0,0,.5);
+  transition:transform .15s cubic-bezier(.16,1,.3,1), background .15s;
+  opacity:0;
+}
+.card:hover .card-notes-badge{opacity:1;}
+.card-notes-badge.has-notes{opacity:1;}
+.card-notes-badge:hover{transform:scale(1.1);background:#f40d18;}
+.card-notes-badge svg{stroke-width:2.4;}
+
+/* Bloco de vídeo vinculado no topo do editor de nota */
+.np-linked-video{
+  display:flex;align-items:center;gap:12px;
+  background:var(--bg-elevated);
+  border:1px solid var(--border-subtle);
+  border-radius:10px;padding:10px 12px;margin-bottom:16px;
+}
+.np-linked-thumb{flex-shrink:0;width:72px;height:40px;border-radius:6px;object-fit:cover;background:#000;}
+.np-linked-thumb-fallback{
+  width:72px;height:40px;border-radius:6px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#2a2a2a,#1a1a1a);font-size:18px;
+}
+.np-linked-info{flex:1;min-width:0;}
+.np-linked-label{
+  font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;
+  color:var(--brand);display:flex;align-items:center;gap:5px;margin-bottom:3px;
+}
+.np-linked-title{
+  font-size:var(--font-meta);font-weight:600;color:var(--text-primary);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.np-linked-acts{display:flex;gap:6px;flex-shrink:0;}
+.np-linked-btn{
+  background:var(--brand);color:#fff;border:none;
+  padding:7px 12px;border-radius:6px;cursor:pointer;
+  font-size:var(--font-mini);font-weight:700;
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:'Inter',sans-serif;transition:background .15s;
+}
+.np-linked-btn:hover{background:var(--brand-hover);}
+.np-linked-btn.ghost{background:var(--bg-hover);color:var(--text-secondary);}
+.np-linked-btn.ghost:hover{background:rgba(255,255,255,.12);color:var(--text-primary);}
+
+/* Botão "vincular vídeo" quando não há vínculo */
+.np-link-video-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  background:transparent;border:1px dashed var(--border-strong);
+  color:var(--text-secondary);
+  padding:8px 14px;border-radius:8px;cursor:pointer;
+  font-size:var(--font-meta);font-weight:600;
+  font-family:'Inter',sans-serif;transition:all .15s;margin-bottom:16px;
+}
+.np-link-video-btn:hover{border-color:var(--brand);color:var(--brand);}
+
+/* Picker de vídeo */
+.np-video-picker-list{max-height:380px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-top:14px;}
+.np-video-picker-item{
+  display:flex;align-items:center;gap:10px;
+  padding:8px;border-radius:8px;cursor:pointer;border:1px solid transparent;
+  transition:all .15s;
+}
+.np-video-picker-item:hover{background:var(--bg-hover);border-color:var(--border-default);}
+.np-video-picker-thumb{width:56px;height:32px;border-radius:4px;object-fit:cover;background:#000;flex-shrink:0;}
+.np-video-picker-title{
+  font-size:var(--font-meta);color:var(--text-body);font-weight:500;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;
+}
+
+/* Painel de notas no player (CinemaModal) */
+.cinema-notes{margin-top:14px;background:rgba(255,255,255,.03);border:1px solid #1a1a1a;border-radius:10px;padding:14px 16px;}
+.cinema-notes-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.cinema-notes-title{font-size:13px;font-weight:700;color:#fff;display:flex;align-items:center;gap:7px;font-family:'Inter',sans-serif;}
+.cinema-notes-title .cnt{background:rgba(229,9,20,.2);color:#ff7a7e;font-size:11px;font-weight:800;padding:1px 8px;border-radius:10px;}
+.cinema-notes-new{
+  background:var(--brand);color:#fff;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;
+  font-size:12px;font-weight:700;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:5px;transition:background .15s;
+}
+.cinema-notes-new:hover{background:var(--brand-hover);}
+.cinema-notes-list{display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;}
+.cinema-note-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;cursor:pointer;background:rgba(255,255,255,.03);transition:background .15s;}
+.cinema-note-item:hover{background:rgba(255,255,255,.08);}
+.cinema-note-item-title{font-size:13px;color:rgba(255,255,255,.9);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;font-family:'Inter',sans-serif;}
+.cinema-note-item.done .cinema-note-item-title{text-decoration:line-through;opacity:.6;}
+.cinema-notes-empty{font-size:12px;color:rgba(255,255,255,.55);text-align:center;padding:14px;font-family:'Inter',sans-serif;line-height:1.5;}
+@media (max-width:767px){ .cinema-notes{display:none;} }
+
 `;
 
 // ─── SAMPLE DATA ─────────────────────────────────────────────────────────────
@@ -1753,7 +1852,7 @@ function Breadcrumbs({ catId, cats, onNavigate }) {
 }
 
 // ─── CINEMA MODAL ─────────────────────────────────────────────────────────────
-function CinemaModal({ link, onClose }) {
+function CinemaModal({ link, onClose, linkedNotes=[], onOpenNotes }) {
   useEffect(() => {
     const fn = e => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", fn);
@@ -1793,6 +1892,40 @@ function CinemaModal({ link, onClose }) {
             📝 {link.notes}
           </div>
         )}
+
+        {/* Painel de notas vinculadas ao vídeo */}
+        {onOpenNotes && (
+          <div className="cinema-notes">
+            <div className="cinema-notes-hdr">
+              <div className="cinema-notes-title">
+                <FileText size={15}/> Notas
+                {linkedNotes.length > 0 && <span className="cnt">{linkedNotes.length}</span>}
+              </div>
+              <button className="cinema-notes-new" onClick={()=>{ onOpenNotes(link); onClose(); }}>
+                <Plus size={13}/> Nova nota
+              </button>
+            </div>
+            {linkedNotes.length === 0 ? (
+              <div className="cinema-notes-empty">
+                Nenhuma nota ainda. Crie uma para registrar ideias e timestamps deste vídeo.
+              </div>
+            ) : (
+              <div className="cinema-notes-list">
+                {linkedNotes.map(n => (
+                  <div key={n.id} className={`cinema-note-item${n.isCompleted?" done":""}`}
+                    onClick={()=>{ onOpenNotes(link); onClose(); }}>
+                    {n.isCompleted
+                      ? <CheckCircle2 size={14} style={{color:"#22c55e",flexShrink:0}}/>
+                      : <Circle size={14} style={{color:"rgba(255,255,255,.4)",flexShrink:0}}/>}
+                    <span className="cinema-note-item-title">{n.title || "Sem título"}</span>
+                    <ChevronRight size={14} style={{color:"rgba(255,255,255,.4)",flexShrink:0}}/>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="cinema-ftr">
           <div style={{display:"flex",gap:6}}>
             {(link.tags||[]).map(t=>{
@@ -1966,7 +2099,7 @@ function EditModal({ link, categories, onSave, onClose }) {
 }
 
 // ─── CARD ─────────────────────────────────────────────────────────────────────
-function Card({ link, catIdx, onPreviewShow, onPreviewHide, onToggle, onDelete, onEdit, onCinema, onDragStart, onDragOver, onDrop, onDragEnd, isDragging, isDragOver }) {
+function Card({ link, catIdx, noteCount=0, onOpenNotes, onPreviewShow, onPreviewHide, onToggle, onDelete, onEdit, onCinema, onDragStart, onDragOver, onDrop, onDragEnd, isDragging, isDragOver }) {
   const ref  = useRef(null);
   const timer = useRef(null);
   const prevWatched = useRef(link.watched);
@@ -2044,6 +2177,16 @@ function Card({ link, catIdx, onPreviewShow, onPreviewHide, onToggle, onDelete, 
       {/* Gradient + labels */}
       <div className="card-grd"/>
       <div className="card-plat" style={{background:plat.bg,color:plat.color}}>{plat.label}</div>
+      {onOpenNotes && (
+        <button
+          className={`card-notes-badge${noteCount>0?" has-notes":""}`}
+          onClick={(e)=>{ e.stopPropagation(); onOpenNotes(link); }}
+          title={noteCount>0?`${noteCount} nota(s) neste vídeo`:"Adicionar nota a este vídeo"}
+          aria-label="Notas deste vídeo"
+        >
+          <FileText size={12}/>{noteCount>0 ? noteCount : ""}
+        </button>
+      )}
       {!link.watched && (
         <>
           <div className="card-title">{link.title}</div>
@@ -2259,7 +2402,7 @@ function Popup({ link, rect, catIdx, onToggle, onDelete, onEnter, onLeave, onCin
 }
 
 // ─── ROW ──────────────────────────────────────────────────────────────────────
-function Row({ cat, subCats=[], links, catIdx, isOrphaned, allCats, allLinks, onToggle, onDelete, onEdit, onPreviewShow, onPreviewHide, onNavigate, onCinema, onReorderLinks }) {
+function Row({ cat, subCats=[], links, catIdx, isOrphaned, allCats, allLinks, noteCounts={}, onOpenNotes, onToggle, onDelete, onEdit, onPreviewShow, onPreviewHide, onNavigate, onCinema, onReorderLinks }) {
   const ref = useRef(null);
   const scroll = dir => ref.current?.scrollBy({left:dir*580,behavior:"smooth"});
   const wd = links.filter(l=>l.watched).length;
@@ -2304,6 +2447,7 @@ function Row({ cat, subCats=[], links, catIdx, isOrphaned, allCats, allLinks, on
                 ))}
                 {links.map(l => (
                   <Card key={l.id} link={l} catIdx={catIdx}
+                    noteCount={noteCounts[l.id]||0} onOpenNotes={onOpenNotes}
                     onPreviewShow={onPreviewShow} onPreviewHide={onPreviewHide}
                     onToggle={onToggle} onDelete={onDelete} onEdit={onEdit} onCinema={onCinema}
                     onDragStart={handleLinkDragStart} onDragOver={handleLinkDragOver}
@@ -3188,7 +3332,7 @@ function localNotesStore(userKey) {
   };
 }
 
-function NotesPage({ user, links, customTags, onClose }) {
+function NotesPage({ user, links, customTags, linkCtx, onConsumeLinkCtx, onOpenVideo, onClose }) {
   const jwt = user?.jwtToken;
   const userKey = user?.id || "demo";
   const api = useMemo(() => jwt ? notesApi(jwt) : localNotesStore(userKey), [jwt, userKey]);
@@ -3337,6 +3481,10 @@ function NotesPage({ user, links, customTags, onClose }) {
     }
     else if (view === "all") { /* todas */ }
     else if (view === "done") { pool = pool.filter(n => n.isCompleted); }
+    else if (view.startsWith("linked:")) {
+      const vid = view.slice(7);
+      pool = pool.filter(n => n.linkedItemId === vid);
+    }
     else if (view.startsWith("folder:")) {
       const fid = view.slice(7);
       // Inclui notas das subpastas também
@@ -3419,6 +3567,46 @@ function NotesPage({ user, links, customTags, onClose }) {
       broadcastNotes();
     }
   };
+
+  // Cria nota vinculada a um vídeo específico
+  const handleNewLinkedNote = useCallback(async (videoId, suggestedTitle) => {
+    const n = await api.createNote({
+      title: suggestedTitle ? `Notas sobre: ${suggestedTitle.slice(0,60)}` : "",
+      body: "",
+      linkedItemId: videoId,
+    });
+    if (n && n.id) {
+      setNotes(prev => [n, ...prev]);
+      setSelectedId(n.id);
+      setMobileEditorOpen(true);
+      broadcastNotes();
+    }
+    return n;
+  }, [api, broadcastNotes]);
+
+  // Vincular / desvincular vídeo de uma nota existente
+  const handleSetLinkedVideo = useCallback(async (noteId, videoId) => {
+    setNotes(prev => prev.map(n => n.id===noteId ? { ...n, linkedItemId: videoId } : n));
+    try { await api.updateNote(noteId, { linkedItemId: videoId }); broadcastNotes(); }
+    catch (e) { console.error("[notes] link video failed", e); }
+  }, [api, broadcastNotes]);
+
+  // Ao abrir Notas vindo de um vídeo (badge do card / player):
+  // mostra a view daquele vídeo; se não houver nota, cria uma já vinculada.
+  const linkCtxHandled = useRef(false);
+  useEffect(() => {
+    if (!linkCtx || loading) return;
+    if (linkCtxHandled.current) return;
+    linkCtxHandled.current = true;
+    const existing = notes.filter(n => n.linkedItemId === linkCtx.id);
+    setView(`linked:${linkCtx.id}`);
+    if (existing.length > 0) {
+      setSelectedId(existing[0].id);
+    } else {
+      handleNewLinkedNote(linkCtx.id, linkCtx.title);
+    }
+    onConsumeLinkCtx?.();
+  }, [linkCtx, loading, notes, handleNewLinkedNote, onConsumeLinkCtx]);
 
   const handleSaveNote = useCallback(async (id, patch) => {
     setSavingState("saving");
@@ -3685,7 +3873,11 @@ function NotesPage({ user, links, customTags, onClose }) {
     all: "Todas as notas",
     done: "Concluídas",
     trash: "Lixeira",
-  }[view] || (folders.find(f=>view===`folder:${f.id}`)?.name || "Notas");
+  }[view] || (
+    view.startsWith("linked:")
+      ? `📝 ${links.find(l=>l.id===view.slice(7))?.title?.slice(0,40) || "Notas do vídeo"}`
+      : (folders.find(f=>view===`folder:${f.id}`)?.name || "Notas")
+  );
 
   return (
     <div className="notes-page">
@@ -3926,6 +4118,7 @@ function NotesPage({ user, links, customTags, onClose }) {
             key={selectedNote.id}
             note={selectedNote}
             folders={folders}
+            links={links}
             isTrash={!!selectedNote.deletedAt}
             savingState={savingState}
             onSave={(patch)=>handleSaveNote(selectedNote.id, patch)}
@@ -3933,6 +4126,8 @@ function NotesPage({ user, links, customTags, onClose }) {
             onRestore={()=>handleRestoreNote(selectedNote.id)}
             onPermaDelete={()=>handlePermaDelete(selectedNote.id)}
             onToggleComplete={()=>handleToggleComplete(selectedNote.id, selectedNote.isCompleted)}
+            onSetLinkedVideo={(vid)=>handleSetLinkedVideo(selectedNote.id, vid)}
+            onOpenVideo={onOpenVideo}
             onMobileBack={()=>setMobileEditorOpen(false)}
             onClose={onClose}
           />
@@ -4100,10 +4295,12 @@ function FolderTreeNode({ node, depth, view, setView, counts, expanded, toggleEx
   );
 }
 
-function NoteEditor({ note, folders, isTrash, savingState, onSave, onDelete, onRestore, onPermaDelete, onToggleComplete, onMobileBack, onClose }) {
+function NoteEditor({ note, folders, links=[], isTrash, savingState, onSave, onDelete, onRestore, onPermaDelete, onToggleComplete, onSetLinkedVideo, onOpenVideo, onMobileBack, onClose }) {
   const [title, setTitle] = useState(note.title || "");
   const [body,  setBody]  = useState(note.body || "");
   const [folderId, setFolderId] = useState(note.folderId || "");
+  const [showVideoPicker, setShowVideoPicker] = useState(false);
+  const [videoSearch, setVideoSearch] = useState("");
   const debounceRef = useRef(null);
 
   useEffect(() => { setTitle(note.title || ""); setBody(note.body || ""); setFolderId(note.folderId || ""); }, [note.id]);
@@ -4116,6 +4313,11 @@ function NoteEditor({ note, folders, isTrash, savingState, onSave, onDelete, onR
   }, [onSave, isTrash]);
 
   const isDone = !!note.isCompleted;
+  const linkedVideo = note.linkedItemId ? links.find(l => l.id === note.linkedItemId) : null;
+  const thumbFor = (l) => l?.videoId ? ytThumb(l.videoId) : thumbUrl(l?.rawThumb);
+  const filteredVideos = videoSearch.trim()
+    ? links.filter(l => (l.title||"").toLowerCase().includes(videoSearch.toLowerCase()))
+    : links;
 
   return (
     <>
@@ -4194,6 +4396,33 @@ function NoteEditor({ note, folders, isTrash, savingState, onSave, onDelete, onR
         </div>
       </div>
       <div className="np-editor-body">
+        {!isTrash && (
+          linkedVideo ? (
+            <div className="np-linked-video">
+              {thumbFor(linkedVideo)
+                ? <img className="np-linked-thumb" src={thumbFor(linkedVideo)} alt="" onError={e=>{e.target.style.display="none";}}/>
+                : <div className="np-linked-thumb-fallback">🎬</div>}
+              <div className="np-linked-info">
+                <div className="np-linked-label"><Link size={11}/> Vídeo vinculado</div>
+                <div className="np-linked-title" title={linkedVideo.title}>{linkedVideo.title}</div>
+              </div>
+              <div className="np-linked-acts">
+                {onOpenVideo && (
+                  <button className="np-linked-btn" onClick={()=>onOpenVideo(linkedVideo)} title="Abrir player">
+                    <Play size={12} fill="currentColor"/> Abrir
+                  </button>
+                )}
+                <button className="np-linked-btn ghost" onClick={()=>onSetLinkedVideo?.(null)} title="Desvincular">
+                  <X size={12}/>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button className="np-link-video-btn" onClick={()=>{ setShowVideoPicker(true); setVideoSearch(""); }}>
+              <Link size={14}/> Vincular a um vídeo salvo
+            </button>
+          )
+        )}
         <textarea
           className="np-editor-textarea"
           value={body}
@@ -4204,6 +4433,41 @@ function NoteEditor({ note, folders, isTrash, savingState, onSave, onDelete, onR
           style={isDone?{opacity:.7}:undefined}
         />
       </div>
+
+      {/* Picker de vídeo para vincular */}
+      {showVideoPicker && (
+        <div className="np-folder-modal-overlay" onClick={()=>setShowVideoPicker(false)}>
+          <div className="np-folder-modal" style={{maxWidth:520}} onClick={e=>e.stopPropagation()}>
+            <div className="np-folder-modal-title">Vincular vídeo</div>
+            <div className="np-folder-modal-sub">Escolha um vídeo salvo para conectar a esta nota.</div>
+            <input
+              className="np-folder-modal-input"
+              placeholder="Buscar vídeo..."
+              value={videoSearch}
+              onChange={e=>setVideoSearch(e.target.value)}
+              autoFocus
+            />
+            <div className="np-video-picker-list">
+              {filteredVideos.length === 0 ? (
+                <div style={{padding:"24px",textAlign:"center",color:"var(--text-tertiary)",fontSize:"var(--font-meta)"}}>
+                  {links.length === 0 ? "Você ainda não salvou vídeos." : "Nenhum vídeo encontrado."}
+                </div>
+              ) : filteredVideos.map(l => (
+                <div key={l.id} className="np-video-picker-item"
+                  onClick={()=>{ onSetLinkedVideo?.(l.id); setShowVideoPicker(false); }}>
+                  {thumbFor(l)
+                    ? <img className="np-video-picker-thumb" src={thumbFor(l)} alt="" onError={e=>{e.target.style.visibility="hidden";}}/>
+                    : <div className="np-video-picker-thumb" style={{display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>🎬</div>}
+                  <span className="np-video-picker-title" title={l.title}>{l.title}</span>
+                </div>
+              ))}
+            </div>
+            <div className="np-folder-modal-actions">
+              <button className="np-editor-btn" onClick={()=>setShowVideoPicker(false)}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -4297,6 +4561,47 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
   const [showOrganizar, setShowOrganizar] = useState(false);
   // Página ativa: "home" (default, grid de vídeos) | "notes"
   const [activePage, setActivePage] = useState("home");
+  // ─── Fase 3: vínculo nota ↔ vídeo ──
+  const notesApiRef = useMemo(
+    () => user?.jwtToken ? notesApi(user.jwtToken) : localNotesStore(user?.id || "demo"),
+    [user]
+  );
+  const [noteCounts, setNoteCounts]   = useState({});   // { itemId: quantidade }
+  const [notesByItem, setNotesByItem] = useState({});   // { itemId: [notas] }
+  const [notesLinkCtx, setNotesLinkCtx] = useState(null); // vídeo a focar ao abrir Notas
+
+  const refreshNoteCounts = useCallback(async () => {
+    try {
+      const all = await notesApiRef.listNotes("__all__", false);
+      const counts = {}, byItem = {};
+      (all || []).forEach(n => {
+        if (n.linkedItemId) {
+          counts[n.linkedItemId] = (counts[n.linkedItemId] || 0) + 1;
+          (byItem[n.linkedItemId] = byItem[n.linkedItemId] || []).push(n);
+        }
+      });
+      setNoteCounts(counts);
+      setNotesByItem(byItem);
+    } catch (e) { /* silencioso */ }
+  }, [notesApiRef]);
+
+  useEffect(() => { refreshNoteCounts(); }, [refreshNoteCounts]);
+
+  // Atualiza contagens quando NotesPage avisa que algo mudou
+  useEffect(() => {
+    let bc;
+    try {
+      bc = new BroadcastChannel("watchlist-sync");
+      bc.onmessage = (e) => { if (e.data?.type === "NOTES_UPDATED") refreshNoteCounts(); };
+    } catch {}
+    return () => { try { bc?.close(); } catch {} };
+  }, [refreshNoteCounts]);
+
+  // Abre Notas focado num vídeo específico (do badge do card ou do player)
+  const openNotesForVideo = useCallback((link) => {
+    setNotesLinkCtx(link ? { id: link.id, title: link.title, url: link.url, thumb: link.thumb, platform: link.platform } : null);
+    setActivePage("notes");
+  }, []);
   // Re-fetch cats from backend whenever Organizar modal opens
   useEffect(() => {
     if (!showOrganizar) return;
@@ -4957,6 +5262,8 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
                 <div className="row-scroll">
                   {links.map((link,i)=>(
                     <Card key={link.id} link={link} catIdx={i%6}
+                      noteCount={noteCounts[link.id]||0}
+                      onOpenNotes={openNotesForVideo}
                       onToggle={lnk=>saveLinks(links.map(l=>l.id===lnk?{...l,watched:!l.watched}:l))}
                       onDelete={id=>saveLinks(links.filter(l=>l.id!==id),[id])}
                       onEdit={lnk=>setEditLink(lnk)}
@@ -4981,6 +5288,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
             <Row key={cat.id} cat={cat} subCats={subCats||[]} links={ls} catIdx={catIdx}
               isOrphaned={!!isOrphaned}
               allCats={cats} allLinks={links}
+              noteCounts={noteCounts} onOpenNotes={openNotesForVideo}
               onToggle={toggleWatched} onDelete={deleteLink} onEdit={setEditLink}
               onPreviewShow={showPopup} onPreviewHide={startHide}
               onNavigate={setCurrentCatId}
@@ -5056,7 +5364,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
         {showAdd && <AddModal categories={cats} lastCatId={lastCatRef.current} onSave={addLink} onClose={()=>setShowAdd(false)}/>}
 
         {/* CINEMA MODAL */}
-        {cinemaLink && <CinemaModal link={cinemaLink} onClose={()=>setCinemaLink(null)}/>}
+        {cinemaLink && <CinemaModal link={cinemaLink} onClose={()=>setCinemaLink(null)} linkedNotes={notesByItem[cinemaLink.id]||[]} onOpenNotes={openNotesForVideo}/>}
 
         {/* IMPORT PREVIEW */}
         {importData && <ImportPreviewModal data={importData} onConfirm={confirmImport} onClose={()=>setImportData(null)}/>}
@@ -5161,7 +5469,10 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
             user={user}
             links={links}
             customTags={customTags}
-            onClose={()=>setActivePage("home")}
+            linkCtx={notesLinkCtx}
+            onConsumeLinkCtx={()=>setNotesLinkCtx(null)}
+            onOpenVideo={(lnk)=>setCinemaLink(lnk)}
+            onClose={()=>{ setActivePage("home"); setNotesLinkCtx(null); }}
           />
         )}
 
