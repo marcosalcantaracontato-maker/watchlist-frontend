@@ -234,7 +234,7 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
 
 /* ── ROWS ────────────────────────────────────────────────── */
 .rows{padding-bottom:80px;}
-.row-sec{margin-bottom:44px;}
+.row-sec{margin-bottom:18px;}
 .row-hdr{display:flex;align-items:flex-end;justify-content:space-between;padding:0 48px;margin-bottom:8px;}
 .row-hdr-l{display:flex;align-items:center;gap:14px;}
 .row-title{font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:1px;font-family:'Inter',sans-serif;transition:color .2s;}
@@ -247,7 +247,10 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
 .row-wrap{position:relative;}
 .row-scroll-outer{overflow-x:auto;overflow-y:clip;scroll-behavior:smooth;scrollbar-width:none;}
 .row-scroll-outer::-webkit-scrollbar{display:none;}
-.row-scroll{display:flex;gap:16px;padding:4px 48px 120px;-webkit-overflow-scrolling:touch;overflow:visible;}
+/* IMPORTANTE: padding vertical generoso aqui é o que permite o card scaleiar
+   1.58x sem ser cortado. transform não afeta layout, então o card escala
+   "pra fora" da própria caixa — esse padding cria espaço pra ele crescer no lugar. */
+.row-scroll{display:flex;gap:16px;padding:56px 48px 80px;-webkit-overflow-scrolling:touch;overflow:visible;}
 .row-scroll::-webkit-scrollbar{display:none;}
 .row-wrap::before,.row-wrap::after{content:'';position:absolute;top:0;bottom:12px;width:100px;pointer-events:none;z-index:5;}
 .row-wrap::before{left:0;background:linear-gradient(to right,#0a0a0a,transparent);}
@@ -2582,7 +2585,7 @@ function AddModal({ categories, lastCatId, onSave, onClose }) {
           {/* Selector — shown when cats exist */}
           {hasCats && (
             <select className="fsel" value={catId} onChange={e=>setCatId(e.target.value)}>
-              <option value="">📥 Sem categoria</option>
+              <option value="" disabled>— Selecione uma categoria —</option>
               {rootCats.map(c=>(
                 <optgroup key={c.id} label={c.name}>
                   <option value={c.id}>{c.name}</option>
@@ -5454,6 +5457,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
             onClose={()=>setShowOrganizar(false)}
             onDeleteCat={async(id)=>{
               const jwt = user?.jwtToken;
+              const catName = cats.find(c => c.id === id)?.name || "";
               // Iterative BFS to collect all descendants (avoids stack overflow on circular refs)
               const toRemove = new Set([id]);
               const queue = [id];
@@ -5468,7 +5472,7 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
               }
               // Optimistic UI update
               saveCats(cats.filter(c => !toRemove.has(c.id)));
-              // Single DELETE — backend handles cascade
+              // DELETE — backend handles cascade. Se falhar (deleted:0), tenta por nome.
               try {
                 const res = await fetch(`${API_URL}/api/categories/${id}`, {
                   method: "DELETE",
@@ -5477,14 +5481,21 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
                 const body = await res.json().catch(() => ({}));
                 console.log("[WL Delete]", res.status, JSON.stringify(body));
                 if (!res.ok || body.deleted === 0) {
-                  console.error("[WL Delete] FAILED — status:", res.status, "body:", body);
-                  // Show visible error so user knows
-                  const errMsg = `Erro ao deletar (${res.status}). Motivo: ${JSON.stringify(body)}`;
-                  alert(errMsg);
-                  // Rollback
-                  const fresh = await apiFetch("/api/categories", {}, jwt).catch(() => null);
-                  if (fresh) saveCats(fresh);
-                  return;
+                  // 🚨 Fallback: tenta deletar por NOME (resgate quando o ID está estragado/inválido)
+                  console.warn("[WL Delete] ID falhou (deleted:0). Tentando por nome:", catName);
+                  const fallback = await fetch(`${API_URL}/api/categories/by-name/${encodeURIComponent(catName)}`, {
+                    method: "DELETE",
+                    headers: jwt ? { Authorization: `Bearer ${jwt}` } : {}
+                  }).catch(() => null);
+                  const fbody = fallback ? await fallback.json().catch(()=>({})) : {};
+                  console.log("[WL Delete by-name]", fallback?.status, JSON.stringify(fbody));
+                  if (!fallback || !fallback.ok || fbody.deleted === 0) {
+                    alert(`Não foi possível apagar "${catName}" no servidor.\n\nID: ${JSON.stringify(body)}\nPor nome: ${JSON.stringify(fbody)}\n\nA categoria pode estar com dados corrompidos.`);
+                    const fresh = await apiFetch("/api/categories", {}, jwt).catch(() => null);
+                    if (fresh) saveCats(fresh);
+                    return;
+                  }
+                  console.log("[WL Delete] SUCESSO via fallback by-name — deletadas:", fbody.deleted);
                 }
                 console.log("[WL Delete] SUCCESS — deleted:", body.deleted);
                 try { new BroadcastChannel("watchlist-sync").postMessage({type:"CATS_UPDATED", cats: cats.filter(c=>!toRemove.has(c.id))}); }catch{}
@@ -6363,6 +6374,25 @@ function SettingsPage({ user, cats, links, onBack, onLogout, onExport, onImport 
               <div className="settings-row">
                 <div><div className="settings-row-label">Sair da conta</div><div className="settings-row-sub">Você será redirecionado para a tela de login</div></div>
                 <button className="btn-settings danger" onClick={onLogout}>Sair</button>
+              </div>
+              <div className="settings-row">
+                <div>
+                  <div className="settings-row-label" style={{color:"#f87171"}}>🧨 Apagar TODAS as categorias</div>
+                  <div className="settings-row-sub">Útil pra limpar categorias antigas/quebradas que não somem do servidor. Os vídeos NÃO são apagados — viram "Sem categoria".</div>
+                </div>
+                <button className="btn-settings danger" onClick={async()=>{
+                  if (!user?.jwtToken) { alert("Disponível só com conta logada."); return; }
+                  const ok = window.prompt('Isso vai apagar TODAS as suas categorias do servidor.\nOs vídeos viram "Sem categoria" mas continuam salvos.\n\nDigite APAGAR para confirmar:');
+                  if (ok !== "APAGAR") return;
+                  try {
+                    const r = await fetch(`${API_URL}/api/categories/nuke-all`, {
+                      method: "POST",
+                      headers: { Authorization: `Bearer ${user.jwtToken}` }
+                    });
+                    const body = await r.json().catch(()=>({}));
+                    alert(`✓ Apagadas: ${body.deleted || 0} categorias.\nDê F5 pra ver o resultado.`);
+                  } catch(e){ alert("Erro: " + e.message); }
+                }}>Apagar todas</button>
               </div>
               <div className="settings-row">
                 <div><div className="settings-row-label" style={{color:"#f87171"}}>Deletar conta</div><div className="settings-row-sub">Remove todos os dados permanentemente</div></div>
