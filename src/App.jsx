@@ -1692,9 +1692,9 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
 /* ════════════════════════════════════════════════════════════════════════════
    🔗 FASE 3 — Vínculo Nota ↔ Vídeo
    ═══════════════════════════════════════════════════════════════════════════ */
-/* Badge 📝 no card de vídeo (canto superior direito) */
+/* Badge 📝 no card de vídeo (canto superior ESQUERDO, abaixo do plat label) */
 .card-notes-badge{
-  position:absolute;top:8px;right:8px;z-index:6;
+  position:absolute;top:38px;left:9px;z-index:6;
   display:inline-flex;align-items:center;gap:4px;
   background:rgba(229,9,20,.92);
   color:#fff;
@@ -2425,9 +2425,9 @@ function Row({ cat, subCats=[], links, catIdx, isOrphaned, allCats, allLinks, no
     <div className="row-sec">
       <div className="row-hdr">
         <div className="row-hdr-l">
-          <div className="row-title" onClick={() => onNavigate && subCats.length > 0 && onNavigate(cat.id)} style={{...(subCats.length>0?{cursor:"pointer"}:{}),color:isOrphaned?"#f5a623":""}}>
+          <div className="row-title" onClick={() => onNavigate && subCats.length > 0 && onNavigate(cat.id)} style={{...(subCats.length>0?{cursor:"pointer"}:{}),color:isOrphaned?"rgba(255,255,255,.95)":""}}>
             {cat.name}
-            {isOrphaned && <span style={{fontSize:13,color:"rgba(255,255,255,.72)",marginLeft:8,fontWeight:400}}>— links sem categoria (mova ou exclua)</span>}
+            {isOrphaned && <span style={{fontSize:13,color:"rgba(255,255,255,.55)",marginLeft:10,fontWeight:400}}>itens sem pasta — escolha "Mover para categoria" se quiser organizar</span>}
           </div>
           {links.length > 0 && <div className="row-cnt">{wd} de {links.length} assistidos</div>}
           {subCats.length > 0 && <div className="row-cnt" style={{color:"#f5a623"}}>{subCats.length} pasta{subCats.length!==1?"s":""}</div>}
@@ -2466,14 +2466,11 @@ function Row({ cat, subCats=[], links, catIdx, isOrphaned, allCats, allLinks, no
 
 // ─── ADD LINK MODAL ───────────────────────────────────────────────────────────
 function AddModal({ categories, lastCatId, onSave, onClose }) {
-  // ── Fix #3: validate lastCatId exists in categories (handles subcategories) ──
-  const validLastCat = lastCatId && categories.some(c => c.id === lastCatId)
-    ? lastCatId
-    : (categories[0]?.id || "");
-
+  // Default = "" (Sem categoria). NUNCA pré-seleciona categoria.
+  // O usuário escolhe explicitamente — evita ghost categories e perda de item.
   const [url, setUrl]       = useState("");
   const [title, setTitle]   = useState("");
-  const [catId, setCatId]   = useState(validLastCat);
+  const [catId, setCatId]   = useState("");
   const [fetching, setFetching] = useState(false);
   const [fetchOk, setFetchOk]   = useState(false);
   const [rawThumb, setRawThumb] = useState("");
@@ -2585,6 +2582,7 @@ function AddModal({ categories, lastCatId, onSave, onClose }) {
           {/* Selector — shown when cats exist */}
           {hasCats && (
             <select className="fsel" value={catId} onChange={e=>setCatId(e.target.value)}>
+              <option value="">📥 Sem categoria</option>
               {rootCats.map(c=>(
                 <optgroup key={c.id} label={c.name}>
                   <option value={c.id}>{c.name}</option>
@@ -3432,7 +3430,7 @@ function NotesPage({ user, links, customTags, linkCtx, onConsumeLinkCtx, onOpenV
   }, [api]);
   useEffect(() => { refreshAll(); }, [refreshAll]);
 
-  // Sync com extensão
+  // Sync com extensão e MainApp (badge nos cards atualizar sem F5)
   const broadcastNotes = useCallback(() => {
     try {
       if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
@@ -3440,7 +3438,8 @@ function NotesPage({ user, links, customTags, linkCtx, onConsumeLinkCtx, onOpenV
       }
       const bc = new BroadcastChannel("watchlist-sync");
       bc.postMessage({ type:"NOTES_UPDATED" });
-      bc.close();
+      // Fecha DEPOIS de entregar — close() imediato pode descartar a mensagem (race condition).
+      setTimeout(() => { try { bc.close(); } catch {} }, 100);
     } catch {}
   }, []);
 
@@ -4993,11 +4992,12 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
         if (subCats.length === 0 && catLinks.length === 0 && search) return null;
         return { cat, subCats, links: catLinks, catIdx: ci };
       }).filter(Boolean);
-      // Orphaned links (categoryId not matching any existing category)
+      // Orphaned links (categoryId vazio, null ou não correspondente a nenhuma categoria existente)
+      // Vai pro TOPO da lista pra ninguém perder vídeo de vista.
       const catIds = new Set(cats.map(c => c.id));
-      const orphaned = shown.filter(l => !catIds.has(l.categoryId));
+      const orphaned = shown.filter(l => !l.categoryId || !catIds.has(l.categoryId));
       if (orphaned.length > 0) {
-        rows.push({ cat: { id:"__orphaned__", name:"⚠ Sem Categoria", parentId:null, order:9999 }, subCats:[], links:orphaned, catIdx:rows.length, isOrphaned:true });
+        rows.unshift({ cat: { id:"__orphaned__", name:"📥 Sem categoria", parentId:null, order:-1 }, subCats:[], links:orphaned, catIdx:0, isOrphaned:true });
       }
       return rows;
     } else {
@@ -5432,7 +5432,8 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
         </div>
 
         {/* POPUP */}
-        {popup && <Popup link={popup.link} rect={popup.rect} catIdx={popup.catIdx} onToggle={toggleWatched} onDelete={deleteLink} onEnter={cancelHide} onLeave={startHide}/>}
+        {/* Popup hover removido — o card já tem detail panel inline ao scaleiar (Netflix-style).
+            Mantemos o componente Popup definido por compat, mas não renderizamos. */}
 
         {/* ADD MODAL */}
         {showAdd && <AddModal categories={cats} lastCatId={lastCatRef.current} onSave={addLink} onClose={()=>setShowAdd(false)}/>}
