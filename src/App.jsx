@@ -2,8 +2,9 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Play, Plus, Search, Check, Trash2, Edit2, ChevronRight, ChevronLeft,
   Download, Upload, X, Loader2, Youtube, Link, FolderPlus, MoreVertical,
   Eye, EyeOff, BarChart2, Folder, Volume2, VolumeX, Sparkles, RefreshCw,
-  Home, Settings, Menu,
+  Home, Settings, Menu, LogOut, User,
   FileText, Inbox, Star, Calendar, Flag, ChevronDown, ChevronUp, RotateCcw,
+  Calculator, Wallet, ArchiveRestore, Power, ArrowRightCircle, Pencil, Lock,
   CheckCircle2, Circle, CornerUpLeft, CornerDownRight, GripVertical, LayoutGrid } from "lucide-react";
 
 // ─── CONFIGURAÇÃO DA API ──────────────────────────────────────────────────────
@@ -1790,6 +1791,302 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
 .cinema-note-item.done .cinema-note-item-title{text-decoration:line-through;opacity:.6;}
 .cinema-notes-empty{font-size:12px;color:rgba(255,255,255,.55);text-align:center;padding:14px;font-family:'Inter',sans-serif;line-height:1.5;}
 @media (max-width:767px){ .cinema-notes{display:none;} }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   👤 PROFILE DROPDOWN — Menu de perfil no topo direito
+   ═══════════════════════════════════════════════════════════════════════════ */
+.profile-wrap{position:relative;display:inline-block;}
+.profile-trigger{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.04);border:1px solid #1a1a1a;
+  padding:5px 10px 5px 5px;border-radius:24px;
+  cursor:pointer;transition:all .15s;
+  font-family:'Inter',sans-serif;
+}
+.profile-trigger:hover{background:rgba(255,255,255,.08);border-color:#2a2a2a;}
+.profile-trigger.open{background:rgba(229,9,20,.12);border-color:rgba(229,9,20,.4);}
+.profile-trigger-avatar{
+  width:32px;height:32px;border-radius:50%;object-fit:cover;
+  background:#e50914;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;color:#fff;flex-shrink:0;
+}
+.profile-trigger-chev{color:rgba(255,255,255,.55);transition:transform .2s;}
+.profile-trigger.open .profile-trigger-chev{transform:rotate(180deg);color:#fff;}
+
+.profile-menu{
+  position:absolute;top:calc(100% + 8px);right:0;
+  background:#0f0f0f;border:1px solid #222;border-radius:12px;
+  min-width:280px;padding:6px;z-index:1000;
+  box-shadow:0 24px 64px rgba(0,0,0,.85), 0 0 0 1px rgba(255,255,255,.04) inset;
+  animation:popIn .15s ease;font-family:'Inter',sans-serif;
+}
+.profile-menu-hdr{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 12px 14px 12px;
+  border-bottom:1px solid #1a1a1a;margin-bottom:6px;
+}
+.profile-menu-avatar{
+  width:42px;height:42px;border-radius:50%;object-fit:cover;
+  background:#e50914;display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:800;color:#fff;flex-shrink:0;
+}
+.profile-menu-info{flex:1;min-width:0;}
+.profile-menu-name{
+  font-size:14px;font-weight:700;color:#fff;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.profile-menu-email{
+  font-size:12px;color:rgba(255,255,255,.55);margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.profile-menu-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;border-radius:7px;
+  background:transparent;border:none;width:100%;
+  color:rgba(255,255,255,.85);font-size:13.5px;font-weight:500;
+  cursor:pointer;font-family:'Inter',sans-serif;
+  transition:all .12s;text-align:left;
+}
+.profile-menu-item:hover{background:rgba(255,255,255,.06);color:#fff;}
+.profile-menu-item.danger{color:#f87171;}
+.profile-menu-item.danger:hover{background:rgba(248,113,113,.1);color:#fca5a5;}
+.profile-menu-item svg{flex-shrink:0;opacity:.85;}
+.profile-menu-item-badge{
+  margin-left:auto;font-size:10px;font-weight:800;
+  background:rgba(34,197,94,.18);color:#4ade80;
+  padding:2px 7px;border-radius:10px;letter-spacing:.4px;
+}
+.profile-menu-sep{height:1px;background:#1a1a1a;margin:6px 4px;}
+.profile-menu-section-label{
+  font-size:10px;font-weight:800;text-transform:uppercase;
+  letter-spacing:1px;color:rgba(255,255,255,.4);
+  padding:8px 12px 4px;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   💰 FINANCIAL PAGE — Gestão Financeira (integração Central Financeira)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.fin-page{
+  position:fixed;top:64px;left:0;right:0;bottom:0;
+  overflow-y:auto;
+  background:linear-gradient(180deg,#0a0a0a 0%,#0f0f0f 100%);
+  padding:36px 48px 80px;font-family:'Inter',sans-serif;
+  z-index:5;
+}
+.fin-back-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.04);border:1px solid #1a1a1a;
+  color:rgba(255,255,255,.72);padding:8px 14px;border-radius:8px;
+  cursor:pointer;font-size:13px;font-weight:600;margin-bottom:22px;
+  transition:all .15s;font-family:'Inter',sans-serif;
+}
+.fin-back-btn:hover{background:rgba(255,255,255,.08);color:#fff;}
+
+/* Hero card com título + total */
+.fin-hero{
+  background:linear-gradient(135deg,#1a0509 0%,#0f0f0f 70%);
+  border:1px solid #2a0a0e;
+  border-radius:18px;padding:28px 32px;margin-bottom:32px;
+  position:relative;overflow:hidden;
+}
+.fin-hero::before{
+  content:"";position:absolute;top:-40px;right:-40px;
+  width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(229,9,20,.18) 0%,transparent 70%);
+  pointer-events:none;
+}
+.fin-hero-row{display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;position:relative;z-index:1;}
+.fin-hero-title{
+  font-size:24px;font-weight:800;color:#fff;letter-spacing:-.4px;
+  display:flex;align-items:center;gap:10px;margin-bottom:6px;
+}
+.fin-hero-title svg{color:#e50914;}
+.fin-hero-sub{font-size:13px;color:rgba(255,255,255,.62);max-width:520px;line-height:1.55;}
+.fin-totals{
+  display:flex;gap:24px;align-items:center;
+  background:rgba(255,255,255,.04);border:1px solid #1a1a1a;
+  padding:14px 20px;border-radius:14px;
+}
+.fin-totals-label{
+  font-size:10px;font-weight:800;text-transform:uppercase;
+  letter-spacing:1.2px;color:rgba(255,255,255,.5);display:block;margin-bottom:3px;
+}
+.fin-totals-val{font-size:28px;font-weight:800;color:#fff;letter-spacing:-.5px;font-family:'Inter',sans-serif;}
+.fin-totals-sep{height:36px;width:1px;background:#1a1a1a;}
+.fin-totals-meta{font-size:17px;font-weight:800;letter-spacing:-.3px;}
+.fin-totals-meta.ok{color:#22c55e;}
+.fin-totals-meta.over{color:#f5a623;}
+
+/* Tabs */
+.fin-tabs{
+  display:flex;gap:6px;border-bottom:1px solid #1a1a1a;
+  margin-bottom:26px;overflow-x:auto;scrollbar-width:none;
+}
+.fin-tabs::-webkit-scrollbar{display:none;}
+.fin-tab{
+  padding:10px 4px 12px;border:none;background:transparent;
+  border-bottom:2px solid transparent;cursor:pointer;
+  color:rgba(255,255,255,.5);font-size:14px;font-weight:700;
+  font-family:'Inter',sans-serif;display:flex;align-items:center;gap:8px;
+  white-space:nowrap;margin-right:18px;transition:color .15s;
+}
+.fin-tab:hover{color:rgba(255,255,255,.85);}
+.fin-tab.active{color:#fff;border-bottom-color:#e50914;}
+.fin-tab-pill{
+  font-size:11px;font-weight:800;padding:2px 9px;border-radius:10px;
+  background:rgba(255,255,255,.06);color:rgba(255,255,255,.72);
+}
+.fin-tab.active .fin-tab-pill{background:rgba(229,9,20,.18);color:#ff7a7e;}
+
+/* Grid de categorias */
+.fin-cat-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+  gap:18px;
+}
+.fin-cat{
+  background:rgba(255,255,255,.025);border:1px solid #1a1a1a;
+  border-radius:14px;padding:20px 22px;
+  transition:border-color .15s;
+}
+.fin-cat:hover{border-color:#2a2a2a;}
+.fin-cat-hdr{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  gap:12px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #1a1a1a;
+}
+.fin-cat-name{
+  display:flex;align-items:center;gap:8px;
+  font-size:16px;font-weight:700;color:#fff;flex:1;min-width:0;
+}
+.fin-cat-icon{font-size:20px;flex-shrink:0;}
+.fin-cat-total{
+  font-size:14px;font-weight:800;color:#22c55e;
+  background:rgba(34,197,94,.08);padding:5px 11px;border-radius:6px;
+  white-space:nowrap;flex-shrink:0;font-family:'Inter',sans-serif;
+}
+.fin-cat-lock{
+  font-size:9px;font-weight:800;padding:3px 8px;border-radius:10px;
+  background:rgba(34,197,94,.12);color:#4ade80;letter-spacing:.4px;
+  text-transform:uppercase;
+}
+.fin-cat-desc{font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;margin-top:4px;}
+.fin-items{display:flex;flex-direction:column;gap:6px;}
+.fin-item{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);
+  padding:9px 12px;border-radius:8px;
+}
+.fin-item:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.08);}
+.fin-item-name{
+  font-size:13px;color:rgba(255,255,255,.92);font-weight:500;
+  flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;
+}
+.fin-item-cost{
+  font-size:13px;font-weight:700;color:#22c55e;white-space:nowrap;font-family:'Inter',sans-serif;
+}
+.fin-item-del{
+  background:none;border:none;cursor:pointer;color:rgba(255,255,255,.3);
+  padding:3px;border-radius:4px;display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:all .15s;
+}
+.fin-item:hover .fin-item-del{opacity:1;}
+.fin-item-del:hover{color:#f87171;background:rgba(248,113,113,.1);}
+
+/* Inputs inline editáveis */
+.fin-edit-input{
+  background:rgba(229,9,20,.08);border:1px solid rgba(229,9,20,.4);
+  color:#fff;padding:3px 8px;border-radius:5px;outline:none;
+  font-family:'Inter',sans-serif;font-size:inherit;font-weight:inherit;
+  width:100%;min-width:60px;
+}
+.fin-edit-input:focus{border-color:#e50914;background:rgba(229,9,20,.14);}
+.fin-edit-clickable{cursor:text;padding:1px 4px;margin:-1px -4px;border-radius:4px;transition:background .15s;}
+.fin-edit-clickable:hover{background:rgba(229,9,20,.08);}
+
+/* Add buttons */
+.fin-add-item-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:none;border:1px dashed rgba(255,255,255,.18);
+  color:rgba(255,255,255,.55);padding:7px 12px;border-radius:7px;
+  cursor:pointer;font-size:12px;font-weight:600;margin-top:8px;width:fit-content;
+  font-family:'Inter',sans-serif;transition:all .15s;
+}
+.fin-add-item-btn:hover{border-color:#e50914;color:#e50914;background:rgba(229,9,20,.06);}
+.fin-add-cat-btn{
+  display:inline-flex;align-items:center;gap:8px;margin:32px auto 0;
+  background:#e50914;border:none;color:#fff;padding:13px 26px;border-radius:30px;
+  cursor:pointer;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;
+  transition:background .15s;
+}
+.fin-add-cat-btn:hover{background:#f40d18;}
+
+/* Empty states */
+.fin-empty{
+  text-align:center;padding:48px 24px;color:rgba(255,255,255,.55);
+  font-size:14px;line-height:1.6;
+}
+.fin-empty-ico{font-size:42px;opacity:.3;margin-bottom:12px;}
+
+/* Tabela de removidos */
+.fin-table-wrap{
+  overflow:hidden;border:1px solid #1a1a1a;border-radius:12px;
+  background:rgba(255,255,255,.02);overflow-x:auto;
+}
+.fin-table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px;}
+.fin-table th{
+  text-align:left;padding:14px 18px;background:rgba(255,255,255,.03);
+  border-bottom:1px solid #1a1a1a;font-size:10px;font-weight:800;
+  text-transform:uppercase;letter-spacing:1.2px;color:rgba(255,255,255,.5);
+}
+.fin-table td{padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.04);color:rgba(255,255,255,.85);vertical-align:top;}
+.fin-table tr:last-child td{border-bottom:none;}
+.fin-table tr:hover td{background:rgba(255,255,255,.02);}
+.fin-table .cost-cell{color:#f87171;font-weight:700;text-align:right;}
+.fin-table .reason-cell{font-size:11.5px;color:rgba(255,255,255,.55);line-height:1.5;max-width:280px;}
+.fin-table .actions-cell{text-align:right;opacity:0;transition:opacity .15s;white-space:nowrap;}
+.fin-table tr:hover .actions-cell{opacity:1;}
+.fin-table-act-btn{
+  background:none;border:none;cursor:pointer;padding:5px;border-radius:5px;
+  color:rgba(255,255,255,.45);transition:all .15s;display:inline-flex;align-items:center;justify-content:center;
+}
+.fin-table-act-btn:hover{background:rgba(255,255,255,.06);}
+.fin-table-act-btn.green:hover{color:#22c55e;background:rgba(34,197,94,.1);}
+.fin-table-act-btn.amber:hover{color:#f5a623;background:rgba(245,166,35,.1);}
+.fin-table-act-btn.red:hover{color:#f87171;background:rgba(248,113,113,.1);}
+
+/* Inativos / lista de desejos */
+.fin-inactive-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;}
+.fin-inactive-card{
+  background:rgba(255,255,255,.025);border:1px solid #1a1a1a;border-radius:12px;
+  padding:18px 20px;display:flex;flex-direction:column;gap:12px;transition:border-color .15s;
+}
+.fin-inactive-card:hover{border-color:#2a2a2a;}
+.fin-inactive-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.fin-inactive-name{font-size:14px;font-weight:700;color:#fff;flex:1;min-width:0;}
+.fin-inactive-cost{font-size:14px;font-weight:700;color:rgba(255,255,255,.72);white-space:nowrap;}
+.fin-inactive-desc{font-size:12px;color:rgba(255,255,255,.55);line-height:1.5;}
+.fin-inactive-acts{display:flex;justify-content:flex-end;gap:6px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06);}
+.fin-inactive-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(255,255,255,.04);border:none;color:rgba(255,255,255,.72);
+  padding:6px 12px;border-radius:18px;cursor:pointer;
+  font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;
+  font-family:'Inter',sans-serif;transition:all .15s;
+}
+.fin-inactive-btn:hover{background:rgba(34,197,94,.15);color:#22c55e;}
+.fin-inactive-btn.icon{padding:6px;border-radius:50%;}
+.fin-inactive-btn.icon:hover{background:rgba(248,113,113,.12);color:#f87171;}
+
+/* Responsive */
+@media (max-width:767px){
+  .fin-page{padding:18px 16px 60px;}
+  .fin-hero{padding:18px 18px;}
+  .fin-hero-row{flex-direction:column;align-items:stretch;}
+  .fin-totals{padding:12px 14px;gap:14px;}
+  .fin-totals-val{font-size:22px;}
+  .fin-cat-grid{grid-template-columns:1fr;gap:14px;}
+  .fin-cat{padding:16px 18px;}
+  .profile-menu{min-width:calc(100vw - 32px);right:auto;left:50%;transform:translateX(-50%);}
+}
 
 `;
 
@@ -4544,6 +4841,450 @@ function BottomNav({ activePage, onHome, onNotes, onSearch, onAdd, onCats, onSet
 }
 
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
+// ─── PROFILE MENU ─────────────────────────────────────────────────────────────
+function ProfileMenu({ user, onProfile, onSettings, onFinancial, onLogout }) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef(null);
+  useEffect(()=>{
+    if(!open) return;
+    const fn = (e)=>{ if(!wrapRef.current?.contains(e.target)) setOpen(false); };
+    setTimeout(()=>document.addEventListener("click", fn), 50);
+    return ()=>document.removeEventListener("click", fn);
+  }, [open]);
+  useEffect(()=>{
+    if(!open) return;
+    const fn = (e)=>{ if(e.key==="Escape") setOpen(false); };
+    document.addEventListener("keydown", fn);
+    return ()=>document.removeEventListener("keydown", fn);
+  }, [open]);
+
+  const initial = (user?.name || "U")[0]?.toUpperCase() || "U";
+  const isLogged = !!user?.jwtToken;
+
+  return (
+    <div className="profile-wrap" ref={wrapRef}>
+      <button className={`profile-trigger${open?" open":""}`} onClick={()=>setOpen(o=>!o)} aria-label="Menu de perfil">
+        {user?.avatar
+          ? <img src={user.avatar} alt="" className="profile-trigger-avatar"/>
+          : <div className="profile-trigger-avatar">{initial}</div>}
+        <ChevronDown size={14} className="profile-trigger-chev"/>
+      </button>
+
+      {open && (
+        <div className="profile-menu" role="menu">
+          <div className="profile-menu-hdr">
+            {user?.avatar
+              ? <img src={user.avatar} alt="" className="profile-menu-avatar"/>
+              : <div className="profile-menu-avatar">{initial}</div>}
+            <div className="profile-menu-info">
+              <div className="profile-menu-name">{user?.name || "Visitante"}</div>
+              <div className="profile-menu-email">{user?.email || (isLogged ? "Logado" : "Modo demo — entre para sincronizar")}</div>
+            </div>
+          </div>
+
+          <button className="profile-menu-item" onClick={()=>{ setOpen(false); onProfile?.(); }}>
+            <User size={15}/> Ver perfil
+          </button>
+          <button className="profile-menu-item" onClick={()=>{ setOpen(false); onSettings?.(); }}>
+            <Settings size={15}/> Configurações
+          </button>
+
+          <div className="profile-menu-sep"/>
+          <div className="profile-menu-section-label">Outros apps</div>
+          <button className="profile-menu-item" onClick={()=>{ setOpen(false); onFinancial?.(); }}>
+            <Calculator size={15}/> Gestão Financeira
+            <span className="profile-menu-item-badge">NOVO</span>
+          </button>
+
+          <div className="profile-menu-sep"/>
+          <button className="profile-menu-item danger" onClick={()=>{ setOpen(false); onLogout?.(); }}>
+            <LogOut size={15}/> {isLogged ? "Sair" : "Voltar ao login"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── FINANCIAL PAGE — Gestão Financeira (Central Financeira integrada) ────────
+const FIN_INITIAL_CATEGORIES = [
+  { id:"moradia", name:"Moradia", icon:"🏠", locked:true, items:[
+    { id:"m1", name:"Aluguel", cost:500 },
+    { id:"m2", name:"Luz", cost:150 },
+    { id:"m3", name:"Faxina", cost:150 },
+    { id:"m4", name:"Internet", cost:115 },
+    { id:"m5", name:"Coisas da Casa", cost:50 },
+    { id:"m6", name:"Água", cost:45 },
+  ]},
+  { id:"alimentacao", name:"Alimentação", icon:"🍎", locked:true,
+    description:"Valor estratégico de nutrição blindado para assegurar sua subsistência e estabilidade física.",
+    items:[ { id:"a1", name:"Alimentação Geral", cost:800 } ]
+  },
+  { id:"tecnologia", name:"Ferramentas e IA", icon:"💻", items:[
+    { id:"t1", name:"Claude AI", cost:500, locked:true, description:"Criação de lógica de código e redação inteligente" },
+    { id:"t2", name:"Capcut Pro", cost:66, locked:true, description:"Edição de vídeo móvel e Reels" },
+    { id:"t3", name:"Hostinger (Site)", cost:50 },
+    { id:"t4", name:"Google One II", cost:10 },
+    { id:"t5", name:"Google One I", cost:5 },
+    { id:"t6", name:"Domínio", cost:5 },
+  ]},
+  { id:"negocios", name:"Negócios e Ads", icon:"🚀", items:[
+    { id:"n1", name:"Anúncios / Ads (Tráfego)", cost:300 },
+    { id:"n2", name:"Empreender (Aporte)", cost:300 },
+  ]},
+  { id:"saude", name:"Saúde e Suplementação", icon:"💚", items:[
+    { id:"s1", name:"Suplementação", cost:200 },
+    { id:"s2", name:"Academia", cost:80 },
+    { id:"s3", name:"Higiene Pessoal", cost:60 },
+  ]},
+  { id:"lazer", name:"Lazer e Estilo de Vida", icon:"☕", items:[
+    { id:"l1", name:"Sair / Diversão", cost:150 },
+    { id:"l2", name:"Spotify", cost:35 },
+    { id:"l3", name:"Netflix", cost:35 },
+  ]},
+];
+const FIN_INITIAL_INACTIVE = [
+  { id:"heygen", name:"Heygen", cost:200, description:"Geração de avatares ultra-realistas e tradução labial." },
+  { id:"higgs", name:"Higgsfields", cost:200, description:"Criação de vídeos com movimentação física realista." },
+  { id:"runway", name:"Runway", cost:150, description:"IA para geração e composição avançada de vídeo." },
+  { id:"eleven", name:"ElevenLabs", cost:150, description:"Clonagem de voz, dublagem automatizada e IA de áudio." },
+  { id:"agentes", name:"Gestão de Agentes", cost:150, description:"Custo de automações (n8n, VPS, servidores)." },
+  { id:"emergent", name:"Emergent AI", cost:150, description:"Análise avançada de dados e fluxos inteligentes." },
+  { id:"kling", name:"Kling AI", cost:100, description:"Geração de clipes cinematográficos de alta fidelidade." },
+  { id:"manychat", name:"ManyChat", cost:50, description:"Automação de directs e funis comerciais no Instagram." },
+  { id:"meta", name:"Selo de Verificado", cost:50, description:"Meta Verified para expansão comercial no Instagram." },
+];
+const FIN_INITIAL_REMOVED = [
+  { id:"r1", category:"Moradia", name:"Almofada do Vaso Sanitário", cost:150, reason:"Compra única estruturada já efetuada." },
+  { id:"r2", category:"Lazer", name:"Sair com a Mãe", cost:200, reason:"Removido dos custos recorrentes (gasto dinâmico/esporádico)." },
+  { id:"r3", category:"Ferramentas e IA", name:"ChatGPT Plus", cost:100, reason:"Substituído integralmente pelo Claude." },
+  { id:"r4", category:"Ferramentas e IA", name:"Gemini Advanced", cost:100, reason:"Duplicidade evitada (mantendo apenas Claude)." },
+];
+const finUid = () => Math.random().toString(36).slice(2, 9);
+const fmtBRL = (n) => `R$ ${(n||0).toLocaleString("pt-BR")}`;
+
+function FinEditable({ value, onSave, multiline=false, isCost=false, placeholder="", style={} }) {
+  const [editing, setEditing] = useState(false);
+  const [val, setVal] = useState(String(value ?? ""));
+  useEffect(()=>{ setVal(String(value ?? "")); }, [value]);
+  const commit = ()=>{
+    setEditing(false);
+    if (isCost) {
+      const n = parseFloat(String(val).replace(",", ".")) || 0;
+      if (n !== value) onSave(n);
+    } else {
+      const t = val.trim();
+      if (t !== value) onSave(t || placeholder);
+    }
+  };
+  if (editing) {
+    const Tag = multiline ? "textarea" : "input";
+    return (
+      <Tag
+        autoFocus className="fin-edit-input"
+        value={val}
+        onChange={e=>setVal(e.target.value)}
+        onBlur={commit}
+        onKeyDown={e=>{
+          if (e.key==="Enter" && !e.shiftKey) { e.preventDefault(); commit(); }
+          if (e.key==="Escape") { setVal(String(value ?? "")); setEditing(false); }
+        }}
+        type={isCost?"text":undefined}
+        style={multiline?{minHeight:48,resize:"vertical"}:undefined}
+      />
+    );
+  }
+  return (
+    <span className="fin-edit-clickable" style={style} onClick={()=>setEditing(true)} title="Clique para editar">
+      {isCost ? fmtBRL(value) : (value || placeholder || <em style={{color:"rgba(255,255,255,.3)"}}>vazio</em>)}
+    </span>
+  );
+}
+
+function FinancialPage({ onBack }) {
+  // ── Estado (idêntico ao BudgetContext original, simplificado para single component) ──
+  const [categories, setCategories] = useState(()=>{
+    try { const s = localStorage.getItem("budgetCategories"); return s ? JSON.parse(s) : FIN_INITIAL_CATEGORIES; } catch { return FIN_INITIAL_CATEGORIES; }
+  });
+  const [inactiveTools, setInactiveTools] = useState(()=>{
+    try { const s = localStorage.getItem("budgetInactiveTools"); return s ? JSON.parse(s) : FIN_INITIAL_INACTIVE; } catch { return FIN_INITIAL_INACTIVE; }
+  });
+  const [removedItems, setRemovedItems] = useState(()=>{
+    try { const s = localStorage.getItem("budgetRemovedItems"); return s ? JSON.parse(s) : FIN_INITIAL_REMOVED; } catch { return FIN_INITIAL_REMOVED; }
+  });
+  const [activeTab, setActiveTab] = useState("ativos");
+
+  useEffect(()=>{ try { localStorage.setItem("budgetCategories", JSON.stringify(categories)); } catch{} }, [categories]);
+  useEffect(()=>{ try { localStorage.setItem("budgetInactiveTools", JSON.stringify(inactiveTools)); } catch{} }, [inactiveTools]);
+  useEffect(()=>{ try { localStorage.setItem("budgetRemovedItems", JSON.stringify(removedItems)); } catch{} }, [removedItems]);
+
+  // ── Cálculos ──
+  const getCatTotal = (id) => {
+    const c = categories.find(c=>c.id===id);
+    return c ? c.items.reduce((s,i)=>s+(i.cost||0), 0) : 0;
+  };
+  const activeTotal = categories.reduce((s,c)=>s + c.items.reduce((ss,i)=>ss+(i.cost||0),0), 0);
+  const removedTotal = removedItems.reduce((s,i)=>s+(i.cost||0), 0);
+  const targetMeta = 3500;
+  const diff = activeTotal - targetMeta;
+
+  // ── Mutadores ──
+  const updateCategory = (id, patch) => setCategories(p=>p.map(c=>c.id===id?{...c,...patch}:c));
+  const removeCategory = (id) => {
+    if (!confirm("Remover esta categoria e todos os itens dela?")) return;
+    setCategories(p=>p.filter(c=>c.id!==id));
+  };
+  const addCategory = () => setCategories(p=>[...p, { id:finUid(), name:"Nova Categoria", icon:"📦", items:[] }]);
+  const addItem = (catId, item={ name:"Novo Item", cost:0 }) => setCategories(p=>p.map(c=>{
+    if (c.id !== catId) return c;
+    return { ...c, items:[...c.items, { ...item, id:finUid() }] };
+  }));
+  const updateItem = (catId, itemId, patch) => setCategories(p=>p.map(c=>{
+    if (c.id !== catId) return c;
+    return { ...c, items: c.items.map(i=>i.id===itemId?{...i,...patch}:i) };
+  }));
+  const removeItem = (catId, itemId) => setCategories(p=>p.map(c=>{
+    if (c.id !== catId) return c;
+    return { ...c, items: c.items.filter(i=>i.id!==itemId) };
+  }));
+  const updateInactive = (id, patch) => setInactiveTools(p=>p.map(t=>t.id===id?{...t,...patch}:t));
+  const removeInactive = (id) => setInactiveTools(p=>p.filter(t=>t.id!==id));
+  const addInactive = () => setInactiveTools(p=>[...p, { id:finUid(), name:"Novo Desejo", cost:0, description:"" }]);
+  const addRemoved = (item) => setRemovedItems(p=>[...p, { ...item, id:finUid() }]);
+  const updateRemoved = (id, patch) => setRemovedItems(p=>p.map(r=>r.id===id?{...r,...patch}:r));
+  const removeRemovedFinal = (id) => setRemovedItems(p=>p.filter(r=>r.id!==id));
+
+  // ── Ações compostas ──
+  const reactivateInactive = (tool) => {
+    const targetCat = categories[0];
+    if (!targetCat) { alert("Crie uma categoria primeiro!"); return; }
+    addItem(targetCat.id, { name: tool.name, cost: tool.cost });
+    removeInactive(tool.id);
+  };
+  const archiveInactive = (tool) => {
+    const reason = prompt("Motivo para arquivar definitivamente?", "Removido da lista de desejos");
+    if (reason === null) return;
+    addRemoved({ name: tool.name, cost: tool.cost, category: "Lista Desejos", reason: reason || "Sem motivo" });
+    removeInactive(tool.id);
+  };
+  const reactivateRemoved = (item) => {
+    const targetCat = categories[0];
+    if (!targetCat) { alert("Crie uma categoria primeiro!"); return; }
+    addItem(targetCat.id, { name: item.name, cost: item.cost });
+    removeRemovedFinal(item.id);
+  };
+  const wishlistRemoved = (item) => {
+    setInactiveTools(p=>[...p, { id:finUid(), name:item.name, cost:item.cost, description:item.reason }]);
+    removeRemovedFinal(item.id);
+  };
+
+  return (
+    <div className="fin-page">
+      <button className="fin-back-btn" onClick={onBack}>
+        <ChevronLeft size={16}/> Voltar ao WatchList
+      </button>
+
+      {/* HERO */}
+      <div className="fin-hero">
+        <div className="fin-hero-row">
+          <div>
+            <div className="fin-hero-title"><Calculator size={22}/> Central Financeira</div>
+            <div className="fin-hero-sub">Edite nomes, custos e categorias diretamente e veja o impacto no orçamento. Tudo sincroniza automaticamente.</div>
+          </div>
+          <div className="fin-totals">
+            <div>
+              <span className="fin-totals-label">Orçamento Simulado</span>
+              <div className="fin-totals-val">{fmtBRL(activeTotal)}</div>
+            </div>
+            <div className="fin-totals-sep"/>
+            <div>
+              <span className="fin-totals-label">Diferença p/ Meta (R$ 3.500)</span>
+              <div className={`fin-totals-meta ${diff<=0?"ok":"over"}`}>
+                {diff<=0 ? `Meta atingida (${fmtBRL(Math.abs(diff))} sobrando)` : `+ ${fmtBRL(diff)} acima`}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* TABS */}
+      <div className="fin-tabs">
+        <button className={`fin-tab${activeTab==="ativos"?" active":""}`} onClick={()=>setActiveTab("ativos")}>
+          Ativos Reais <span className="fin-tab-pill">{fmtBRL(activeTotal)}</span>
+        </button>
+        <button className={`fin-tab${activeTab==="inativos"?" active":""}`} onClick={()=>setActiveTab("inativos")}>
+          Lista de Desejos <span className="fin-tab-pill">{inactiveTools.length}</span>
+        </button>
+        <button className={`fin-tab${activeTab==="removidos"?" active":""}`} onClick={()=>setActiveTab("removidos")}>
+          Removidos <span className="fin-tab-pill">{fmtBRL(removedTotal)}</span>
+        </button>
+      </div>
+
+      {/* TAB: ATIVOS */}
+      {activeTab === "ativos" && (
+        <>
+          <div className="fin-cat-grid">
+            {categories.map(cat => (
+              <div key={cat.id} className="fin-cat">
+                <div className="fin-cat-hdr">
+                  <div style={{flex:1,minWidth:0}}>
+                    <div className="fin-cat-name">
+                      <FinEditable value={cat.icon} onSave={v=>updateCategory(cat.id, { icon:v })} style={{fontSize:20,minWidth:32}}/>
+                      <FinEditable value={cat.name} onSave={v=>updateCategory(cat.id, { name:v })}/>
+                      {cat.locked && <span className="fin-cat-lock">🔒 Trancado</span>}
+                      {!cat.locked && (
+                        <button className="fin-item-del" style={{opacity:.6,position:"static"}} onClick={()=>removeCategory(cat.id)} title="Remover categoria">
+                          <Trash2 size={13}/>
+                        </button>
+                      )}
+                    </div>
+                    {cat.description !== undefined ? (
+                      <div className="fin-cat-desc">
+                        <FinEditable value={cat.description} onSave={v=>updateCategory(cat.id, { description:v })} multiline placeholder="Adicione uma descrição..."/>
+                      </div>
+                    ) : (
+                      <button onClick={()=>updateCategory(cat.id, { description:"" })} style={{background:"none",border:"none",color:"rgba(255,255,255,.4)",fontSize:11,cursor:"pointer",fontFamily:"'Inter',sans-serif",padding:"4px 0",marginTop:4}}>+ adicionar descrição</button>
+                    )}
+                  </div>
+                  <div className="fin-cat-total">{fmtBRL(getCatTotal(cat.id))}</div>
+                </div>
+                <div className="fin-items">
+                  {cat.items.map(item => (
+                    <div key={item.id} className="fin-item">
+                      <span className="fin-item-name">
+                        <FinEditable value={item.name} onSave={v=>updateItem(cat.id, item.id, { name:v })}/>
+                      </span>
+                      <span className="fin-item-cost">
+                        <FinEditable value={item.cost} onSave={v=>updateItem(cat.id, item.id, { cost:v })} isCost/>
+                      </span>
+                      {!item.locked && (
+                        <button className="fin-item-del" onClick={()=>removeItem(cat.id, item.id)} title="Remover">
+                          <Trash2 size={13}/>
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button className="fin-add-item-btn" onClick={()=>addItem(cat.id)}>
+                    <Plus size={12}/> Adicionar item
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{textAlign:"center"}}>
+            <button className="fin-add-cat-btn" onClick={addCategory}>
+              <Plus size={15}/> Adicionar Categoria
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* TAB: INATIVOS / LISTA DE DESEJOS */}
+      {activeTab === "inativos" && (
+        <>
+          <div style={{fontSize:13,color:"rgba(255,255,255,.62)",marginBottom:16,lineHeight:1.5}}>
+            Itens em lista de desejos ou em pausa. Reative para mover ao orçamento ativo, ou arquive definitivamente.
+          </div>
+          <div className="fin-inactive-grid">
+            {inactiveTools.map(tool => (
+              <div key={tool.id} className="fin-inactive-card">
+                <div className="fin-inactive-hdr">
+                  <div className="fin-inactive-name">
+                    <FinEditable value={tool.name} onSave={v=>updateInactive(tool.id, { name:v })}/>
+                  </div>
+                  <div className="fin-inactive-cost">
+                    <FinEditable value={tool.cost} onSave={v=>updateInactive(tool.id, { cost:v })} isCost/>
+                  </div>
+                </div>
+                <div className="fin-inactive-desc">
+                  <FinEditable value={tool.description||""} onSave={v=>updateInactive(tool.id, { description:v })} multiline placeholder="Adicionar descrição..."/>
+                </div>
+                <div className="fin-inactive-acts">
+                  <button className="fin-inactive-btn" onClick={()=>reactivateInactive(tool)}>
+                    <ArrowRightCircle size={12}/> Reativar
+                  </button>
+                  <button className="fin-inactive-btn icon" onClick={()=>archiveInactive(tool)} title="Arquivar">
+                    <Trash2 size={13}/>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          {inactiveTools.length === 0 && (
+            <div className="fin-empty">
+              <div className="fin-empty-ico">📋</div>
+              Lista de desejos vazia.
+            </div>
+          )}
+          <div style={{textAlign:"center"}}>
+            <button className="fin-add-cat-btn" onClick={addInactive}>
+              <Plus size={15}/> Adicionar à Lista de Desejos
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* TAB: REMOVIDOS */}
+      {activeTab === "removidos" && (
+        <>
+          <div style={{fontSize:13,color:"rgba(255,255,255,.62)",marginBottom:16,lineHeight:1.5}}>
+            Histórico de itens excluídos. Reative para o orçamento ou mova para lista de desejos.
+          </div>
+          {removedItems.length === 0 ? (
+            <div className="fin-empty">
+              <div className="fin-empty-ico">🗑️</div>
+              Nenhum item removido no histórico.
+            </div>
+          ) : (
+            <div className="fin-table-wrap">
+              <table className="fin-table">
+                <thead>
+                  <tr>
+                    <th>Categoria</th>
+                    <th>Item</th>
+                    <th style={{textAlign:"right"}}>Valor</th>
+                    <th>Motivo</th>
+                    <th style={{textAlign:"right"}}>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {removedItems.map(item => (
+                    <tr key={item.id}>
+                      <td style={{color:"rgba(255,255,255,.6)"}}>
+                        <FinEditable value={item.category} onSave={v=>updateRemoved(item.id, { category:v })}/>
+                      </td>
+                      <td style={{fontWeight:600}}>
+                        <FinEditable value={item.name} onSave={v=>updateRemoved(item.id, { name:v })}/>
+                      </td>
+                      <td className="cost-cell">
+                        <FinEditable value={item.cost} onSave={v=>updateRemoved(item.id, { cost:v })} isCost/>
+                      </td>
+                      <td className="reason-cell">
+                        <FinEditable value={item.reason} onSave={v=>updateRemoved(item.id, { reason:v })} multiline/>
+                      </td>
+                      <td className="actions-cell">
+                        <button className="fin-table-act-btn green" onClick={()=>reactivateRemoved(item)} title="Reativar">
+                          <Power size={14}/>
+                        </button>
+                        <button className="fin-table-act-btn amber" onClick={()=>wishlistRemoved(item)} title="Mover para Lista de Desejos">
+                          <ArchiveRestore size={14}/>
+                        </button>
+                        <button className="fin-table-act-btn red" onClick={()=>{ if(confirm("Excluir permanentemente?")) removeRemovedFinal(item.id); }} title="Excluir">
+                          <Trash2 size={14}/>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChange }) {
   const [cats, setCats]   = useState([]);
   const [links, setLinks] = useState([]);
@@ -5172,14 +5913,13 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
               title="Filtros avançados"
             >⚙ Filtros{(filterPlatform!=="all"||filterDate!=="all"||filterTags.length>0)?` (${[filterPlatform!=="all"?1:0,filterDate!=="all"?1:0,filterTags.length].reduce((a,b)=>a+b,0)})`:""}</button>
             <button className="btn-primary" onClick={()=>setShowAdd(true)}><Plus size={14}/> Adicionar</button>
-            <div style={{display:"flex",alignItems:"center",gap:8,marginLeft:4,paddingLeft:12,borderLeft:"1px solid #1a1a1a"}}>
-              {user?.avatar
-                ? <img src={user.avatar} alt="" style={{width:30,height:30,borderRadius:"50%",objectFit:"cover"}}/>
-                : <div style={{width:30,height:30,borderRadius:"50%",background:"#e50914",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700,color:"#fff"}}>{(user?.name||"U")[0].toUpperCase()}</div>
-              }
-              <button className="nav-btn" style={{padding:"6px 10px",fontSize:13}} onClick={onSettings} title="Configurações">⚙</button>
-              <button className="nav-btn" style={{padding:"6px 10px",fontSize:13,color:"rgba(255,255,255,.62)"}} onClick={onLogout} title="Sair">⏻</button>
-            </div>
+            <ProfileMenu
+              user={user}
+              onProfile={onSettings}
+              onSettings={onSettings}
+              onFinancial={()=>setActivePage("financial")}
+              onLogout={onLogout}
+            />
             {/* Mobile: search icon + menu */}
             <button className="hdr-menu-btn" onClick={()=>setShowMobileSearch(true)} title="Buscar">
               <Search size={18}/>
@@ -5560,6 +6300,11 @@ function MainApp({ user, onSettings, onLogout, exportRef, importRef, onStatsChan
             onOpenVideo={(lnk)=>setCinemaLink(lnk)}
             onClose={()=>{ setActivePage("home"); setNotesLinkCtx(null); }}
           />
+        )}
+
+        {/* FINANCIAL PAGE — Gestão Financeira (acessada via dropdown de perfil) */}
+        {activePage === "financial" && (
+          <FinancialPage onBack={()=>setActivePage("home")}/>
         )}
 
         {/* BOTTOM NAV — mobile only */}
