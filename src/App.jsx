@@ -2088,6 +2088,248 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
   .profile-menu{min-width:calc(100vw - 32px);right:auto;left:50%;transform:translateX(-50%);}
 }
 
+/* ────────────────────────────────────────────────────────────────────────────
+   🎬 FASE 2 — MODO APRESENTAÇÃO + IA GEMINI
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* Custom scrollbar (aplicar em qualquer .fin-* com overflow) */
+.fin-page,.fin-table-wrap,.fin-pres-slide-body{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent;}
+.fin-page::-webkit-scrollbar,.fin-table-wrap::-webkit-scrollbar,.fin-pres-slide-body::-webkit-scrollbar{width:8px;height:8px;}
+.fin-page::-webkit-scrollbar-track,.fin-table-wrap::-webkit-scrollbar-track,.fin-pres-slide-body::-webkit-scrollbar-track{background:transparent;}
+.fin-page::-webkit-scrollbar-thumb,.fin-table-wrap::-webkit-scrollbar-thumb,.fin-pres-slide-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:4px;}
+.fin-page::-webkit-scrollbar-thumb:hover,.fin-table-wrap::-webkit-scrollbar-thumb:hover,.fin-pres-slide-body::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.24);}
+
+/* Barra superior: voltar + toggle de view + settings */
+.fin-topbar{
+  display:flex;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap;
+}
+.fin-topbar-spacer{flex:1;}
+.fin-view-toggle{
+  display:inline-flex;background:rgba(255,255,255,.04);border:1px solid #1a1a1a;
+  border-radius:10px;padding:3px;gap:2px;
+}
+.fin-view-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  background:none;border:none;color:rgba(255,255,255,.62);
+  padding:8px 14px;border-radius:7px;cursor:pointer;
+  font-size:13px;font-weight:600;font-family:'Inter',sans-serif;
+  transition:all .15s;white-space:nowrap;
+}
+.fin-view-btn:hover{color:#fff;}
+.fin-view-btn.active{background:#e50914;color:#fff;}
+.fin-icon-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.04);border:1px solid #1a1a1a;
+  color:rgba(255,255,255,.72);padding:9px 12px;border-radius:8px;
+  cursor:pointer;font-size:13px;transition:all .15s;font-family:'Inter',sans-serif;
+}
+.fin-icon-btn:hover{background:rgba(255,255,255,.08);color:#fff;border-color:#2a2a2a;}
+.fin-icon-btn.brand{background:#e50914;border-color:#e50914;color:#fff;}
+.fin-icon-btn.brand:hover{background:#f40d18;border-color:#f40d18;}
+
+/* Settings modal (Gemini API key) */
+.fin-modal-bg{
+  position:fixed;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;z-index:10000;padding:24px;
+  animation:fadeIn .2s ease;
+}
+.fin-modal{
+  background:#0f0f0f;border:1px solid #222;border-radius:16px;
+  padding:32px 34px;max-width:520px;width:100%;
+  box-shadow:0 32px 80px rgba(0,0,0,.9);font-family:'Inter',sans-serif;
+}
+.fin-modal-hdr{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.fin-modal-hdr-ico{
+  width:40px;height:40px;border-radius:10px;
+  background:linear-gradient(135deg,#e50914,#a00610);
+  display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;
+}
+.fin-modal-title{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.3px;}
+.fin-modal-sub{font-size:13px;color:rgba(255,255,255,.62);line-height:1.55;margin-bottom:18px;}
+.fin-modal-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.5);display:block;margin-bottom:7px;}
+.fin-modal-input{
+  width:100%;background:rgba(255,255,255,.04);border:1px solid #222;
+  color:#fff;padding:11px 14px;border-radius:8px;outline:none;
+  font-size:14px;font-family:'JetBrains Mono', ui-monospace, monospace;
+  transition:border-color .15s,background .15s;
+}
+.fin-modal-input:focus{border-color:#e50914;background:rgba(229,9,20,.04);}
+.fin-modal-help{font-size:12px;color:rgba(255,255,255,.55);margin-top:10px;line-height:1.5;}
+.fin-modal-help a{color:#e50914;text-decoration:none;font-weight:600;}
+.fin-modal-help a:hover{text-decoration:underline;}
+.fin-modal-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:24px;}
+.fin-modal-btn{
+  padding:11px 22px;border-radius:8px;cursor:pointer;
+  font-size:13px;font-weight:700;font-family:'Inter',sans-serif;
+  border:none;transition:all .15s;
+}
+.fin-modal-btn.ghost{background:rgba(255,255,255,.04);border:1px solid #1a1a1a;color:rgba(255,255,255,.72);}
+.fin-modal-btn.ghost:hover{background:rgba(255,255,255,.08);color:#fff;}
+.fin-modal-btn.primary{background:#e50914;color:#fff;}
+.fin-modal-btn.primary:hover{background:#f40d18;}
+.fin-modal-btn.primary:disabled{opacity:.4;cursor:not-allowed;}
+
+/* Toggle de colapsar categoria */
+.fin-cat-toggle{
+  background:none;border:none;cursor:pointer;color:rgba(255,255,255,.4);
+  padding:4px;border-radius:4px;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;flex-shrink:0;
+}
+.fin-cat-toggle:hover{color:#fff;background:rgba(255,255,255,.06);}
+.fin-cat-toggle svg{transition:transform .2s;}
+.fin-cat.collapsed .fin-cat-toggle svg{transform:rotate(-90deg);}
+
+/* ─── MODO APRESENTAÇÃO ─── */
+.fin-pres{
+  display:flex;flex-direction:column;height:calc(100vh - 64px - 72px);
+  margin-top:-8px;
+}
+
+/* Estados: chave faltando, loading, erro, vazio */
+.fin-pres-center{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px 24px;text-align:center;
+}
+.fin-pres-center-ico{
+  width:88px;height:88px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(229,9,20,.18),rgba(229,9,20,.04));
+  display:flex;align-items:center;justify-content:center;
+  font-size:38px;margin-bottom:22px;
+  border:1px solid rgba(229,9,20,.2);
+}
+.fin-pres-center h2{font-size:26px;font-weight:800;color:#fff;letter-spacing:-.5px;margin-bottom:10px;}
+.fin-pres-center p{font-size:15px;color:rgba(255,255,255,.62);max-width:440px;line-height:1.6;margin-bottom:22px;}
+.fin-pres-center-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:#e50914;border:none;color:#fff;
+  padding:13px 26px;border-radius:30px;cursor:pointer;
+  font-size:14px;font-weight:700;font-family:'Inter',sans-serif;
+  transition:all .15s;
+}
+.fin-pres-center-btn:hover{background:#f40d18;transform:translateY(-1px);box-shadow:0 8px 24px rgba(229,9,20,.4);}
+
+/* Loading bonito com pulsos */
+.fin-pres-loading-dots{display:flex;gap:8px;margin-bottom:24px;}
+.fin-pres-loading-dots span{
+  width:10px;height:10px;border-radius:50%;background:#e50914;
+  animation:pulseDot 1.4s ease-in-out infinite both;
+}
+.fin-pres-loading-dots span:nth-child(2){animation-delay:.2s;}
+.fin-pres-loading-dots span:nth-child(3){animation-delay:.4s;}
+@keyframes pulseDot{0%,80%,100%{transform:scale(.4);opacity:.4;}40%{transform:scale(1);opacity:1;}}
+.fin-pres-loading-bar{
+  width:280px;height:3px;background:rgba(255,255,255,.06);
+  border-radius:2px;overflow:hidden;margin-top:14px;
+}
+.fin-pres-loading-bar::after{
+  content:"";display:block;height:100%;width:35%;
+  background:linear-gradient(90deg,transparent,#e50914,transparent);
+  animation:loadingBar 1.6s ease-in-out infinite;
+}
+@keyframes loadingBar{0%{transform:translateX(-100%);}100%{transform:translateX(370%);}}
+
+/* Slide viewer principal */
+.fin-pres-viewer{
+  flex:1;display:flex;flex-direction:column;
+  background:radial-gradient(ellipse at top, rgba(229,9,20,.04) 0%, transparent 60%);
+}
+.fin-pres-slide{
+  flex:1;display:flex;flex-direction:column;
+  background:rgba(15,15,15,.4);backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:20px;padding:48px 56px;margin:0 24px;
+  box-shadow:0 24px 64px rgba(0,0,0,.5);
+  animation:slideIn .4s cubic-bezier(.2,.8,.2,1) both;
+  overflow:hidden;
+}
+@keyframes slideIn{from{opacity:0;transform:translateY(20px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+.fin-pres-slide-num{
+  font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+  color:rgba(229,9,20,.78);margin-bottom:14px;font-family:'JetBrains Mono',ui-monospace,monospace;
+}
+.fin-pres-slide-title{
+  font-size:42px;font-weight:800;color:#fff;letter-spacing:-1px;line-height:1.1;
+  margin-bottom:14px;font-family:'Inter',sans-serif;
+}
+.fin-pres-slide-sub{
+  font-size:17px;color:rgba(255,255,255,.72);font-weight:500;line-height:1.5;
+  margin-bottom:28px;letter-spacing:-.2px;
+}
+.fin-pres-slide-body{
+  flex:1;overflow-y:auto;padding-right:8px;
+}
+.fin-pres-slide-content{
+  font-size:16px;color:rgba(255,255,255,.85);line-height:1.75;
+  white-space:pre-wrap;font-weight:400;
+}
+.fin-pres-slide-content p+p{margin-top:14px;}
+.fin-pres-slide-bullets{margin-top:24px;display:flex;flex-direction:column;gap:12px;}
+.fin-pres-slide-bullet{
+  display:flex;gap:14px;align-items:flex-start;
+  padding:14px 18px;border-radius:10px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+}
+.fin-pres-slide-bullet-mark{
+  flex-shrink:0;width:6px;height:6px;border-radius:50%;background:#e50914;
+  margin-top:9px;box-shadow:0 0 12px rgba(229,9,20,.6);
+}
+.fin-pres-slide-bullet-text{font-size:15px;color:rgba(255,255,255,.9);line-height:1.6;}
+
+/* Footer com dots e navegação */
+.fin-pres-foot{
+  display:flex;justify-content:space-between;align-items:center;gap:20px;
+  padding:18px 24px 8px;flex-wrap:wrap;
+}
+.fin-pres-dots{display:flex;gap:6px;flex-wrap:wrap;}
+.fin-pres-dot{
+  height:8px;border-radius:4px;cursor:pointer;
+  background:rgba(255,255,255,.14);border:none;
+  transition:all .25s;padding:0;
+  width:8px;
+}
+.fin-pres-dot:hover{background:rgba(255,255,255,.32);}
+.fin-pres-dot.active{width:28px;background:#e50914;box-shadow:0 0 12px rgba(229,9,20,.5);}
+.fin-pres-nav{display:flex;gap:10px;align-items:center;}
+.fin-pres-nav-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.04);border:1px solid #1a1a1a;
+  color:rgba(255,255,255,.78);padding:10px 20px;border-radius:10px;
+  cursor:pointer;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+  font-family:'Inter',sans-serif;transition:all .15s;
+}
+.fin-pres-nav-btn:hover:not(:disabled){background:rgba(255,255,255,.08);color:#fff;}
+.fin-pres-nav-btn:disabled{opacity:.3;cursor:not-allowed;}
+.fin-pres-nav-btn.primary{background:#e50914;color:#fff;border-color:#e50914;}
+.fin-pres-nav-btn.primary:hover:not(:disabled){background:#f40d18;border-color:#f40d18;}
+.fin-pres-nav-hint{font-size:11px;color:rgba(255,255,255,.4);margin-right:10px;}
+.fin-pres-nav-hint kbd{
+  background:rgba(255,255,255,.08);border:1px solid #2a2a2a;border-radius:4px;
+  padding:2px 6px;font-size:10px;font-family:'JetBrains Mono',ui-monospace,monospace;color:#fff;
+}
+
+/* Mensagem de erro */
+.fin-pres-err{
+  background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);
+  border-radius:14px;padding:24px 28px;max-width:520px;margin:0 auto;
+  text-align:left;
+}
+.fin-pres-err h3{font-size:16px;color:#f87171;margin-bottom:8px;font-weight:700;}
+.fin-pres-err p{font-size:13.5px;color:rgba(255,255,255,.78);line-height:1.6;margin-bottom:0;text-align:left;max-width:none;}
+
+/* Mobile presentation */
+@media (max-width:767px){
+  .fin-pres-slide{padding:28px 22px;margin:0 12px;border-radius:14px;}
+  .fin-pres-slide-title{font-size:28px;}
+  .fin-pres-slide-sub{font-size:14px;margin-bottom:18px;}
+  .fin-pres-slide-content{font-size:14.5px;}
+  .fin-pres-foot{padding:12px 14px;gap:12px;}
+  .fin-pres-nav-btn{padding:8px 14px;font-size:11px;}
+  .fin-pres-nav-hint{display:none;}
+  .fin-view-btn{padding:8px 10px;font-size:12px;}
+}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
 `;
 
 // ─── SAMPLE DATA ─────────────────────────────────────────────────────────────
@@ -5014,6 +5256,19 @@ function FinancialPage({ onBack }) {
   });
   const [activeTab, setActiveTab] = useState("ativos");
 
+  // ── Fase 2: Modo Apresentação + IA Gemini ──
+  const [viewMode, setViewMode] = useState("spreadsheet"); // "spreadsheet" | "presentation"
+  const [apiKey, setApiKey] = useState(() => { try { return localStorage.getItem("budgetGeminiKey") || ""; } catch { return ""; } });
+  const [showSettings, setShowSettings] = useState(false);
+  const [slides, setSlides] = useState(() => {
+    try { const s = localStorage.getItem("budgetSlides"); return s ? JSON.parse(s) : null; } catch { return null; }
+  });
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState(null);
+  const [lastHash, setLastHash] = useState(() => { try { return localStorage.getItem("budgetLastHash") || ""; } catch { return ""; } });
+  const [collapsedCats, setCollapsedCats] = useState(()=>new Set());
+
   useEffect(()=>{ try { localStorage.setItem("budgetCategories", JSON.stringify(categories)); } catch{} }, [categories]);
   useEffect(()=>{ try { localStorage.setItem("budgetInactiveTools", JSON.stringify(inactiveTools)); } catch{} }, [inactiveTools]);
   useEffect(()=>{ try { localStorage.setItem("budgetRemovedItems", JSON.stringify(removedItems)); } catch{} }, [removedItems]);
@@ -5027,6 +5282,137 @@ function FinancialPage({ onBack }) {
   const removedTotal = removedItems.reduce((s,i)=>s+(i.cost||0), 0);
   const targetMeta = 3500;
   const diff = activeTotal - targetMeta;
+
+  // ── Gemini AI: análise consultiva ──
+  const toggleCatCollapse = (id) => setCollapsedCats(prev => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
+
+  const analyzeWithGemini = useCallback(async (force=false) => {
+    if (!apiKey) { setShowSettings(true); return; }
+    const budgetData = { categories, inactiveTools, removedItems, activeTotal, removedTotal, targetMeta };
+    const currentHash = JSON.stringify(budgetData);
+    if (!force && currentHash === lastHash && slides) return; // já analisado, dados iguais
+
+    setIsAnalyzing(true);
+    setAnalysisError(null);
+
+    const prompt = `Você atua como um trio consultor de elite: (1) consultor financeiro sênior de pessoa física de alta complexidade, (2) analista comportamental que enxerga padrões emocionais nos gastos, (3) gestor de patrimônio focado em ativos que EXPANDEM vida vs ativos que apenas MANTÊM.
+
+Analise profundamente este orçamento, considerando:
+- Padrões de consumo e o que revelam (concentrações, vazamentos invisíveis, dependências)
+- Perfil financeiro implícito (conservador, expansivo, em construção, alavancado, sobrevivência, etc.)
+- Riscos invisíveis (assinaturas pequenas que somam, single point of failure, fragilidades)
+- Onde o dinheiro MANTÉM (sobrevivência, status quo) vs onde EXPANDE (ativos, capacidade futura, alavancagem)
+- Itens cortados (Removidos) e o que isso indica sobre prioridades reais
+- Lista de desejos: o que está represado e o que isso significa
+- Meta de R$ ${targetMeta} e a distância dela
+
+DADOS REAIS DO ORÇAMENTO:
+${JSON.stringify(budgetData, null, 2)}
+
+Retorne uma apresentação consultiva premium. Linguagem em português do Brasil, tom executivo, direto, perspicaz — sem genericidades. Use os números reais. Entre 5 e 8 slides, cada um com propósito claro: diagnóstico, alerta, oportunidade, recomendação tática, visão estratégica.`;
+
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "object",
+              properties: {
+                slides: {
+                  type: "array",
+                  minItems: 5, maxItems: 8,
+                  items: {
+                    type: "object",
+                    properties: {
+                      title:    { type: "string", description: "Título impactante de 4-7 palavras" },
+                      subtitle: { type: "string", description: "Subtítulo opcional de contexto, 10-15 palavras" },
+                      content:  { type: "string", description: "Análise densa de 2-4 parágrafos, tom de consultor sênior" },
+                      bullets:  { type: "array", items: { type: "string" }, description: "Pontos focais opcionais (3-5 itens)" }
+                    },
+                    required: ["title","content"]
+                  }
+                }
+              },
+              required: ["slides"]
+            }
+          }
+        })
+      });
+
+      if (response.status === 429) throw new Error("RATE_LIMIT");
+      if (!response.ok) {
+        const errBody = await response.json().catch(()=>({}));
+        throw new Error(errBody.error?.message || `HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      const textOutput = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+      const parsed = JSON.parse(textOutput);
+      if (!parsed.slides || !Array.isArray(parsed.slides) || parsed.slides.length === 0) {
+        throw new Error("Resposta da IA em formato inesperado.");
+      }
+
+      setSlides(parsed.slides);
+      setCurrentSlide(0);
+      setLastHash(currentHash);
+      try {
+        localStorage.setItem("budgetSlides", JSON.stringify(parsed.slides));
+        localStorage.setItem("budgetLastHash", currentHash);
+      } catch {}
+    } catch (e) {
+      console.error("[Gemini] falhou:", e);
+      if (e.message === "RATE_LIMIT") {
+        setAnalysisError("A cota gratuita da API Gemini para hoje foi atingida. Tente novamente em algumas horas ou ative o billing no Google AI Studio.");
+      } else if (String(e.message).toLowerCase().includes("api key")) {
+        setAnalysisError("Chave de API inválida ou expirada. Abra Configurações e cole uma nova.");
+      } else {
+        setAnalysisError("Erro ao gerar análise: " + e.message);
+      }
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [apiKey, categories, inactiveTools, removedItems, activeTotal, removedTotal, lastHash, slides]);
+
+  // Auto-analisa ao entrar no modo apresentação (se faltar análise ou dados mudaram)
+  useEffect(() => {
+    if (viewMode !== "presentation") return;
+    if (!apiKey) { setShowSettings(true); return; }
+    if (isAnalyzing) return;
+    const budgetData = { categories, inactiveTools, removedItems, activeTotal, removedTotal, targetMeta };
+    const currentHash = JSON.stringify(budgetData);
+    if (!slides || currentHash !== lastHash) analyzeWithGemini();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode]);
+
+  // Navegação por teclado no modo apresentação
+  useEffect(() => {
+    if (viewMode !== "presentation" || !slides) return;
+    const fn = (e) => {
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+      if (e.key === "ArrowRight" && currentSlide < slides.length - 1) setCurrentSlide(s => s + 1);
+      else if (e.key === "ArrowLeft" && currentSlide > 0)             setCurrentSlide(s => s - 1);
+      else if (e.key === "Escape") setViewMode("spreadsheet");
+      else if (e.key === "Home") setCurrentSlide(0);
+      else if (e.key === "End")  setCurrentSlide(slides.length - 1);
+    };
+    document.addEventListener("keydown", fn);
+    return () => document.removeEventListener("keydown", fn);
+  }, [viewMode, slides, currentSlide]);
+
+  const saveApiKey = () => {
+    try { localStorage.setItem("budgetGeminiKey", apiKey); } catch {}
+    setShowSettings(false);
+    setAnalysisError(null);
+    if (viewMode === "presentation" && !slides) analyzeWithGemini();
+  };
 
   // ── Mutadores ──
   const updateCategory = (id, patch) => setCategories(p=>p.map(c=>c.id===id?{...c,...patch}:c));
@@ -5080,10 +5466,30 @@ function FinancialPage({ onBack }) {
 
   return (
     <div className="fin-page">
-      <button className="fin-back-btn" onClick={onBack}>
-        <ChevronLeft size={16}/> Voltar ao WatchList
-      </button>
+      {/* TOPBAR — Voltar / Toggle Planilha-Apresentação / Settings */}
+      <div className="fin-topbar">
+        <button className="fin-back-btn" onClick={onBack}>
+          <ChevronLeft size={16}/> Voltar ao WatchList
+        </button>
 
+        <div className="fin-topbar-spacer"/>
+
+        <div className="fin-view-toggle">
+          <button className={`fin-view-btn${viewMode==="spreadsheet"?" active":""}`} onClick={()=>setViewMode("spreadsheet")}>
+            <LayoutGrid size={14}/> Planilha
+          </button>
+          <button className={`fin-view-btn${viewMode==="presentation"?" active":""}`} onClick={()=>setViewMode("presentation")}>
+            <Play size={13} fill="currentColor"/> Apresentação
+          </button>
+        </div>
+
+        <button className="fin-icon-btn" onClick={()=>setShowSettings(true)} title="Configurações da IA">
+          <Settings size={15}/>
+        </button>
+      </div>
+
+      {/* === MODO PLANILHA === */}
+      {viewMode === "spreadsheet" && <>
       {/* HERO */}
       <div className="fin-hero">
         <div className="fin-hero-row">
@@ -5124,11 +5530,16 @@ function FinancialPage({ onBack }) {
       {activeTab === "ativos" && (
         <>
           <div className="fin-cat-grid">
-            {categories.map(cat => (
-              <div key={cat.id} className="fin-cat">
+            {categories.map(cat => {
+              const isCollapsed = collapsedCats.has(cat.id);
+              return (
+              <div key={cat.id} className={`fin-cat${isCollapsed?" collapsed":""}`}>
                 <div className="fin-cat-hdr">
                   <div style={{flex:1,minWidth:0}}>
                     <div className="fin-cat-name">
+                      <button className="fin-cat-toggle" onClick={()=>toggleCatCollapse(cat.id)} title={isCollapsed?"Expandir":"Recolher"}>
+                        <ChevronDown size={16}/>
+                      </button>
                       <FinEditable value={cat.icon} onSave={v=>updateCategory(cat.id, { icon:v })} style={{fontSize:20,minWidth:32}}/>
                       <FinEditable value={cat.name} onSave={v=>updateCategory(cat.id, { name:v })}/>
                       {cat.locked && <span className="fin-cat-lock">🔒 Trancado</span>}
@@ -5148,28 +5559,31 @@ function FinancialPage({ onBack }) {
                   </div>
                   <div className="fin-cat-total">{fmtBRL(getCatTotal(cat.id))}</div>
                 </div>
-                <div className="fin-items">
-                  {cat.items.map(item => (
-                    <div key={item.id} className="fin-item">
-                      <span className="fin-item-name">
-                        <FinEditable value={item.name} onSave={v=>updateItem(cat.id, item.id, { name:v })}/>
-                      </span>
-                      <span className="fin-item-cost">
-                        <FinEditable value={item.cost} onSave={v=>updateItem(cat.id, item.id, { cost:v })} isCost/>
-                      </span>
-                      {!item.locked && (
-                        <button className="fin-item-del" onClick={()=>removeItem(cat.id, item.id)} title="Remover">
-                          <Trash2 size={13}/>
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  <button className="fin-add-item-btn" onClick={()=>addItem(cat.id)}>
-                    <Plus size={12}/> Adicionar item
-                  </button>
-                </div>
+                {!isCollapsed && (
+                  <div className="fin-items">
+                    {cat.items.map(item => (
+                      <div key={item.id} className="fin-item">
+                        <span className="fin-item-name">
+                          <FinEditable value={item.name} onSave={v=>updateItem(cat.id, item.id, { name:v })}/>
+                        </span>
+                        <span className="fin-item-cost">
+                          <FinEditable value={item.cost} onSave={v=>updateItem(cat.id, item.id, { cost:v })} isCost/>
+                        </span>
+                        {!item.locked && (
+                          <button className="fin-item-del" onClick={()=>removeItem(cat.id, item.id)} title="Remover">
+                            <Trash2 size={13}/>
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button className="fin-add-item-btn" onClick={()=>addItem(cat.id)}>
+                      <Plus size={12}/> Adicionar item
+                    </button>
+                  </div>
+                )}
               </div>
-            ))}
+              );
+            })}
           </div>
           <div style={{textAlign:"center"}}>
             <button className="fin-add-cat-btn" onClick={addCategory}>
@@ -5280,6 +5694,141 @@ function FinancialPage({ onBack }) {
             </div>
           )}
         </>
+      )}
+      </>}
+      {/* === FIM MODO PLANILHA === */}
+
+      {/* === MODO APRESENTAÇÃO === */}
+      {viewMode === "presentation" && (
+        <div className="fin-pres">
+          {!apiKey ? (
+            <div className="fin-pres-center">
+              <div className="fin-pres-center-ico">🔑</div>
+              <h2>Configure sua chave da Gemini API</h2>
+              <p>O modo Apresentação usa IA para gerar uma análise consultiva premium do seu orçamento. É grátis no Google AI Studio — leva 30 segundos.</p>
+              <button className="fin-pres-center-btn" onClick={()=>setShowSettings(true)}>
+                <Sparkles size={15}/> Configurar agora
+              </button>
+            </div>
+          ) : isAnalyzing ? (
+            <div className="fin-pres-center">
+              <div className="fin-pres-loading-dots"><span/><span/><span/></div>
+              <h2>Analisando seu orçamento</h2>
+              <p>A IA está cruzando padrões, perfil comportamental e riscos invisíveis. Pode levar 10-30 segundos.</p>
+              <div className="fin-pres-loading-bar"/>
+            </div>
+          ) : analysisError ? (
+            <div className="fin-pres-center">
+              <div className="fin-pres-center-ico" style={{background:"linear-gradient(135deg,rgba(248,113,113,.2),rgba(248,113,113,.05))",borderColor:"rgba(248,113,113,.3)"}}>⚠</div>
+              <div className="fin-pres-err">
+                <h3>Algo deu errado</h3>
+                <p>{analysisError}</p>
+              </div>
+              <div style={{display:"flex",gap:10,marginTop:20}}>
+                <button className="fin-icon-btn" onClick={()=>setShowSettings(true)}>
+                  <Settings size={14}/> Configurações
+                </button>
+                <button className="fin-pres-center-btn" onClick={()=>analyzeWithGemini(true)}>
+                  <RefreshCw size={14}/> Tentar de novo
+                </button>
+              </div>
+            </div>
+          ) : !slides ? (
+            <div className="fin-pres-center">
+              <div className="fin-pres-center-ico">✨</div>
+              <h2>Pronto para a análise</h2>
+              <p>Clique abaixo para a IA gerar uma consultoria sob medida do seu orçamento.</p>
+              <button className="fin-pres-center-btn" onClick={()=>analyzeWithGemini(true)}>
+                <Sparkles size={15}/> Gerar análise
+              </button>
+            </div>
+          ) : (
+            <div className="fin-pres-viewer">
+              <div className="fin-pres-slide" key={currentSlide}>
+                <div className="fin-pres-slide-num">Slide {currentSlide + 1} / {slides.length}</div>
+                <div className="fin-pres-slide-title">{slides[currentSlide].title}</div>
+                {slides[currentSlide].subtitle && (
+                  <div className="fin-pres-slide-sub">{slides[currentSlide].subtitle}</div>
+                )}
+                <div className="fin-pres-slide-body">
+                  <div className="fin-pres-slide-content">{slides[currentSlide].content}</div>
+                  {Array.isArray(slides[currentSlide].bullets) && slides[currentSlide].bullets.length > 0 && (
+                    <div className="fin-pres-slide-bullets">
+                      {slides[currentSlide].bullets.map((b, i) => (
+                        <div key={i} className="fin-pres-slide-bullet">
+                          <div className="fin-pres-slide-bullet-mark"/>
+                          <div className="fin-pres-slide-bullet-text">{b}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="fin-pres-foot">
+                <div className="fin-pres-dots">
+                  {slides.map((_, i) => (
+                    <button key={i} className={`fin-pres-dot${i===currentSlide?" active":""}`}
+                      onClick={()=>setCurrentSlide(i)} title={`Slide ${i+1}`}/>
+                  ))}
+                </div>
+                <div className="fin-pres-nav">
+                  <span className="fin-pres-nav-hint">
+                    use <kbd>←</kbd> <kbd>→</kbd> ou <kbd>ESC</kbd>
+                  </span>
+                  <button className="fin-pres-nav-btn" onClick={()=>analyzeWithGemini(true)} title="Re-analisar">
+                    <RefreshCw size={13}/>
+                  </button>
+                  <button className="fin-pres-nav-btn" disabled={currentSlide === 0}
+                    onClick={()=>setCurrentSlide(s=>Math.max(0, s-1))}>
+                    <ChevronLeft size={14}/> Anterior
+                  </button>
+                  <button className="fin-pres-nav-btn primary" disabled={currentSlide === slides.length - 1}
+                    onClick={()=>setCurrentSlide(s=>Math.min(slides.length-1, s+1))}>
+                    Próximo <ChevronRight size={14}/>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      {/* === FIM MODO APRESENTAÇÃO === */}
+
+      {/* === MODAL DE CONFIGURAÇÕES (Gemini API key) === */}
+      {showSettings && (
+        <div className="fin-modal-bg" onClick={()=>setShowSettings(false)}>
+          <div className="fin-modal" onClick={e=>e.stopPropagation()}>
+            <div className="fin-modal-hdr">
+              <div className="fin-modal-hdr-ico"><Sparkles size={20}/></div>
+              <div>
+                <div className="fin-modal-title">Configurar IA Gemini</div>
+              </div>
+            </div>
+            <div className="fin-modal-sub">
+              Cole sua chave da Gemini API. A análise consultiva é gerada usando o modelo gemini-2.5-flash. A chave fica salva só no seu navegador (localStorage) — não vai pra nenhum servidor.
+            </div>
+            <label className="fin-modal-label">Chave da API</label>
+            <input
+              className="fin-modal-input"
+              type="password"
+              placeholder="AIza..."
+              value={apiKey}
+              onChange={e=>setApiKey(e.target.value)}
+              autoFocus
+            />
+            <div className="fin-modal-help">
+              Não tem chave? Pegue grátis em{" "}
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio →</a>{" "}
+              (30 segundos, sem cartão).
+            </div>
+            <div className="fin-modal-foot">
+              <button className="fin-modal-btn ghost" onClick={()=>setShowSettings(false)}>Cancelar</button>
+              <button className="fin-modal-btn primary" onClick={saveApiKey} disabled={!apiKey.trim()}>
+                <Check size={13} style={{display:"inline",marginRight:5,verticalAlign:"-2px"}}/> Salvar e analisar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
