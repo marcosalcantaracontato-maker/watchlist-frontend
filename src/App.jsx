@@ -5315,70 +5315,128 @@ ${JSON.stringify(budgetData, null, 2)}
 
 Retorne uma apresentação consultiva premium. Linguagem em português do Brasil, tom executivo, direto, perspicaz — sem genericidades. Use os números reais. Entre 5 e 8 slides, cada um com propósito claro: diagnóstico, alerta, oportunidade, recomendação tática, visão estratégica.`;
 
-    try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: "object",
-              properties: {
-                slides: {
-                  type: "array",
-                  minItems: 5, maxItems: 8,
-                  items: {
-                    type: "object",
-                    properties: {
-                      title:    { type: "string", description: "Título impactante de 4-7 palavras" },
-                      subtitle: { type: "string", description: "Subtítulo opcional de contexto, 10-15 palavras" },
-                      content:  { type: "string", description: "Análise densa de 2-4 parágrafos, tom de consultor sênior" },
-                      bullets:  { type: "array", items: { type: "string" }, description: "Pontos focais opcionais (3-5 itens)" }
-                    },
-                    required: ["title","content"]
-                  }
-                }
-              },
-              required: ["slides"]
+    // Cadeia de fallback: tenta modelos em ordem se um sobrecarregar/falhar.
+    // Quando o Google congestiona o flash-2.5, automaticamente vai pro pro, depois latest, depois 2.0.
+    const modelChain = [
+      "gemini-flash-latest",   // alias auto-routing, geralmente o mais resiliente
+      "gemini-2.5-flash",      // o "oficial" da spec
+      "gemini-2.5-pro",        // fallback "pro" da spec
+      "gemini-2.0-flash",      // último recurso estável
+    ];
+
+    const body = {
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "object",
+          properties: {
+            slides: {
+              type: "array",
+              minItems: 5, maxItems: 8,
+              items: {
+                type: "object",
+                properties: {
+                  title:    { type: "string", description: "Título impactante de 4-7 palavras" },
+                  subtitle: { type: "string", description: "Subtítulo opcional de contexto, 10-15 palavras" },
+                  content:  { type: "string", description: "Análise densa de 2-4 parágrafos, tom de consultor sênior" },
+                  bullets:  { type: "array", items: { type: "string" }, description: "Pontos focais opcionais (3-5 itens)" }
+                },
+                required: ["title","content"]
+              }
             }
+          },
+          required: ["slides"]
+        }
+      }
+    };
+
+    // Detecta erros transitórios (sobrecarga/timeout/server error) onde vale tentar outro modelo
+    const isTransient = (statusCode, errMsg) => {
+      if (statusCode === 503 || statusCode === 500 || statusCode === 502 || statusCode === 504) return true;
+      const m = (errMsg || "").toLowerCase();
+      return m.includes("overload") || m.includes("high demand") || m.includes("unavailable")
+          || m.includes("temporarily") || m.includes("try again") || m.includes("503");
+    };
+
+    let lastErr = null;
+    let succeededModel = null;
+    let parsedResult = null;
+
+    for (const model of modelChain) {
+      try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-goog-api-key": apiKey, // header em vez de query string (não fica em logs)
+          },
+          body: JSON.stringify(body),
+        });
+
+        if (response.status === 429) {
+          lastErr = new Error("RATE_LIMIT");
+          break; // 429 é cota: não adianta trocar de modelo, todos compartilham
+        }
+        if (response.status === 400) {
+          const errBody = await response.json().catch(()=>({}));
+          const msg = errBody.error?.message || "Requisição inválida";
+          if (msg.toLowerCase().includes("api key")) { lastErr = new Error("BAD_KEY"); break; }
+          lastErr = new Error(msg); break; // 400 = problema com a request, não adianta tentar outro modelo
+        }
+        if (!response.ok) {
+          const errBody = await response.json().catch(()=>({}));
+          const msg = errBody.error?.message || `HTTP ${response.status}`;
+          if (isTransient(response.status, msg)) {
+            console.warn(`[Gemini] ${model} sobrecarregado, tentando próximo modelo...`, msg);
+            lastErr = new Error(msg);
+            continue; // próximo modelo da cadeia
           }
-        })
-      });
+          lastErr = new Error(msg);
+          break;
+        }
 
-      if (response.status === 429) throw new Error("RATE_LIMIT");
-      if (!response.ok) {
-        const errBody = await response.json().catch(()=>({}));
-        throw new Error(errBody.error?.message || `HTTP ${response.status}`);
+        const data = await response.json();
+        const textOutput = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+        const parsed = JSON.parse(textOutput);
+        if (!parsed.slides || !Array.isArray(parsed.slides) || parsed.slides.length === 0) {
+          lastErr = new Error("Resposta da IA em formato inesperado.");
+          continue;
+        }
+        parsedResult = parsed;
+        succeededModel = model;
+        break;
+      } catch (e) {
+        // Erro de rede ou parse: tenta o próximo modelo
+        console.warn(`[Gemini] ${model} falhou:`, e.message);
+        lastErr = e;
+        if (e.message === "RATE_LIMIT" || e.message === "BAD_KEY") break;
+        continue;
       }
+    }
 
-      const data = await response.json();
-      const textOutput = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-      const parsed = JSON.parse(textOutput);
-      if (!parsed.slides || !Array.isArray(parsed.slides) || parsed.slides.length === 0) {
-        throw new Error("Resposta da IA em formato inesperado.");
-      }
-
-      setSlides(parsed.slides);
+    if (parsedResult && succeededModel) {
+      console.log(`[Gemini] análise gerada via ${succeededModel}`);
+      setSlides(parsedResult.slides);
       setCurrentSlide(0);
       setLastHash(currentHash);
       try {
-        localStorage.setItem("budgetSlides", JSON.stringify(parsed.slides));
+        localStorage.setItem("budgetSlides", JSON.stringify(parsedResult.slides));
         localStorage.setItem("budgetLastHash", currentHash);
       } catch {}
-    } catch (e) {
-      console.error("[Gemini] falhou:", e);
-      if (e.message === "RATE_LIMIT") {
-        setAnalysisError("A cota gratuita da API Gemini para hoje foi atingida. Tente novamente em algumas horas ou ative o billing no Google AI Studio.");
-      } else if (String(e.message).toLowerCase().includes("api key")) {
+    } else {
+      console.error("[Gemini] todos os modelos falharam. Último erro:", lastErr);
+      if (lastErr?.message === "RATE_LIMIT") {
+        setAnalysisError("A cota gratuita da API Gemini para hoje foi atingida. Tente novamente em algumas horas ou ative billing no Google AI Studio.");
+      } else if (lastErr?.message === "BAD_KEY") {
         setAnalysisError("Chave de API inválida ou expirada. Abra Configurações e cole uma nova.");
+      } else if (isTransient(0, lastErr?.message)) {
+        setAnalysisError("Todos os modelos Gemini estão sobrecarregados agora (pico de demanda no Google). Tente em 1-2 minutos — geralmente passa rápido.");
       } else {
-        setAnalysisError("Erro ao gerar análise: " + e.message);
+        setAnalysisError("Erro ao gerar análise: " + (lastErr?.message || "desconhecido"));
       }
-    } finally {
-      setIsAnalyzing(false);
     }
+    setIsAnalyzing(false);
   }, [apiKey, categories, inactiveTools, removedItems, activeTotal, removedTotal, lastHash, slides]);
 
   // Auto-analisa ao entrar no modo apresentação (se faltar análise ou dados mudaram)
