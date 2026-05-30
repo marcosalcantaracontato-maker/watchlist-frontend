@@ -5776,8 +5776,40 @@ function FinancialPage({ onBack }) {
   const [viewMode, setViewMode] = useState("spreadsheet"); // "spreadsheet" | "presentation"
   const [apiKey, setApiKey] = useState(() => { try { return localStorage.getItem("budgetGeminiKey") || ""; } catch { return ""; } });
   const [showSettings, setShowSettings] = useState(false);
+
+  // 🔄 Guard de versão: quando o schema dos slides muda (novos layouts/campos),
+  // limpa os slides cacheados pra forçar regeneração no formato novo.
+  // Bump aqui sempre que mudar o schema. v2 = vocabulário de layouts (hero-number, comparison, etc.)
+  const SLIDES_SCHEMA_VERSION = "v2-layouts-2025-05";
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("budgetSlidesVersion");
+      if (saved !== SLIDES_SCHEMA_VERSION) {
+        console.log("[FinPage] Schema atualizado, limpando slides em cache...");
+        localStorage.removeItem("budgetSlides");
+        localStorage.removeItem("budgetLastHash");
+        localStorage.setItem("budgetSlidesVersion", SLIDES_SCHEMA_VERSION);
+      }
+    } catch {}
+  }, []);
+
   const [slides, setSlides] = useState(() => {
-    try { const s = localStorage.getItem("budgetSlides"); return s ? JSON.parse(s) : null; } catch { return null; }
+    try {
+      // Verifica versão antes de carregar
+      const ver = localStorage.getItem("budgetSlidesVersion");
+      if (ver !== SLIDES_SCHEMA_VERSION) return null;
+      const s = localStorage.getItem("budgetSlides");
+      if (!s) return null;
+      const parsed = JSON.parse(s);
+      if (!Array.isArray(parsed) || parsed.length === 0) return null;
+      // Valida formato novo: TODO slide deve ter "type"
+      const allHaveType = parsed.every(slide => slide && typeof slide.type === "string");
+      if (!allHaveType) {
+        console.log("[FinPage] Slides em formato antigo (sem type). Forçando re-análise.");
+        return null;
+      }
+      return parsed;
+    } catch { return null; }
   });
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -5864,13 +5896,14 @@ ${JSON.stringify(budgetData, null, 2)}
 Gere uma apresentação consultiva premium com **5 a 7 slides**. Linguagem em português do Brasil, tom executivo direto, perspicaz, sem genericidades. **Use os números REAIS** do orçamento — nunca chute.
 
 # 🚨 REGRAS CRÍTICAS — LER ANTES DE GERAR
-1. **CADA SLIDE TEM UM TIPO** ("type"). Escolha o layout certo pro tipo de informação. NÃO repita o mesmo tipo em sequência.
-2. **HEADLINES SÃO CONCLUSÕES, NÃO TÓPICOS**:
+1. **CADA SLIDE TEM UM TIPO** ("type"). USE TIPOS DIFERENTES. **PROIBIDO** usar o mesmo type em 2 slides consecutivos. **PROIBIDO** usar o mesmo type mais de 2× na apresentação inteira.
+2. **ANTI-LOOP** (REGRA INVIOLÁVEL): NUNCA repita frases ou estruturas. Se você se pegar escrevendo "X de hoje em dia X de hoje em dia" ou "rápida brasileira contemporânea rápida brasileira" ou qualquer padrão repetitivo — **PARE IMEDIATAMENTE** e reescreva do zero com palavras totalmente diferentes. Texto-lixo repetitivo será **REJEITADO** pelo sistema.
+3. **HEADLINES SÃO CONCLUSÕES, NÃO TÓPICOS**:
    - ❌ "Alinhamento à Meta: A Otimização" ✅ "Você está R$ 106 acima da meta"
    - ❌ "Potencial Inexplorado" ✅ "R$ 1.200 dormindo em ferramentas de IA"
-3. **NÃO USE MARKDOWN** (sem **asteriscos**, sem _underscores_, sem listas com -). Texto puro.
-4. **NÃO REPITA FRASES**. Cada slide explora um ângulo NOVO. Se você se pegar usando a mesma estrutura ("X de hoje em dia X de hoje em dia"), pare e reformule.
-5. Conteúdo curto e denso. Cada parágrafo tem propósito.
+4. **NÃO USE MARKDOWN** (sem **asteriscos**, sem _underscores_, sem listas com -). Texto puro.
+5. **CONCISÃO**: cada campo tem limite. value máx 12 chars. label/eyebrow máx 4 palavras. detail máx 50 palavras. content de cards máx 8 palavras. Densidade > volume.
+6. **USE OS NÚMEROS REAIS** do orçamento — nunca chute.
 
 # 📐 TIPOS DE SLIDE DISPONÍVEIS
 
@@ -5936,7 +5969,7 @@ Campos: \`text\` (citação curta com peso, 10-25 palavras), \`attribution\` (op
               sideStats: { type: "array", items: { type:"object", properties:{ label:{type:"string"},value:{type:"string"},sub:{type:"string"} } } },
               // grid-cards
               heroValue: { type: "string" }, heroLabel: { type: "string" },
-              columns: { type: "integer", enum:[2,3] },
+              columns: { type: "integer" }, // 2 ou 3 — sem enum numérico (Gemini só aceita enum string)
               footerNote: { type: "string" },
               cards: { type: "array", items: { type:"object", properties:{ icon:{type:"string"}, title:{type:"string"}, sub:{type:"string"}, value:{type:"string"} } } },
               // timeline
