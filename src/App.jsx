@@ -5558,7 +5558,6 @@ function HeroNumberLayout({ s }) {
     <div className="layout-hero-number">
       <div className="hero-number-main">
         <div className="hero-number-left">
-          {s.eyebrow && <span className="hero-number-eyebrow">{s.eyebrow}</span>}
           <div className="hero-number-row">
             <div className="hero-number-value">{s.value}</div>
             {s.label && <div className="hero-number-label">{s.label}</div>}
@@ -5587,7 +5586,7 @@ function ComparisonLayout({ s }) {
   const targetPos = pct > 100 ? Math.round(10000 / pct) + "%" : "100%";
   return (
     <div className="layout-comparison">
-      {s.eyebrow && <div className="cmp-delta-eyebrow">{s.deltaLabel || s.eyebrow}</div>}
+      {s.deltaLabel && <div className="cmp-delta-eyebrow">{s.deltaLabel}</div>}
       <div className="cmp-delta-headline">
         {s.deltaValue ? (
           <>{s.deltaValue.split(/(\bR\$\s*[\d.,]+\b|\b\d+%\b)/).map((part, i) =>
@@ -5635,7 +5634,6 @@ function GridCardsLayout({ s }) {
     <div className="layout-grid-cards">
       <div className="gc-row">
         <div className="gc-hero">
-          {s.eyebrow && <span className="gc-hero-eyebrow">{s.eyebrow}</span>}
           {s.heroValue && <div className="gc-hero-value">{s.heroValue}</div>}
           {s.heroLabel && <div className="gc-hero-label">{s.heroLabel}</div>}
         </div>
@@ -5661,7 +5659,6 @@ function TimelineLayout({ s }) {
   const steps = (s.steps || []).slice(0,6);
   return (
     <div className="layout-timeline">
-      {s.eyebrow && <span className="hero-number-eyebrow">{s.eyebrow}</span>}
       {s.title && <div className="tl-title">{s.title}</div>}
       {s.subtitle && <div className="tl-subtitle">{s.subtitle}</div>}
       <div className="tl-steps">
@@ -5873,6 +5870,34 @@ function FinancialPage({ onBack }) {
     return false;
   }, [detectLoop]);
 
+  // Valida se um slide tem TODOS os campos críticos pro layout escolhido.
+  // Se vier vazio em campos-chave, o slide é descartado — melhor menos slides
+  // bem preenchidos do que mais slides meio vazios.
+  const slideIsComplete = useCallback((s) => {
+    if (!s || typeof s !== "object") return false;
+    const layout = s.layout || s.type;
+    if (!layout) return false;
+    const has = (v) => typeof v === "string" && v.trim().length > 0;
+    switch (layout) {
+      case "section-cover":
+        return has(s.title) && has(s.teaser);
+      case "hero-number":
+        return has(s.value) && has(s.label) && has(s.detail);
+      case "comparison":
+        return has(s.leftValue) && has(s.rightValue) && (has(s.deltaValue) || has(s.title));
+      case "grid-cards":
+        return has(s.heroValue) && Array.isArray(s.cards) && s.cards.length >= 2
+            && s.cards.every(c => c && has(c.title));
+      case "timeline":
+        return Array.isArray(s.steps) && s.steps.length >= 3
+            && s.steps.every(st => st && has(st.title) && has(st.description));
+      case "pull-quote":
+        return has(s.text);
+      default:
+        return false;
+    }
+  }, []);
+
   const analyzeWithGemini = useCallback(async (force=false) => {
     if (!apiKey) { setShowSettings(true); return; }
     const budgetData = { categories, inactiveTools, removedItems, activeTotal, removedTotal, targetMeta };
@@ -5897,50 +5922,90 @@ ${JSON.stringify(budgetData, null, 2)}
 Gere uma apresentação consultiva premium com **5 a 7 slides**. Linguagem em português do Brasil, tom executivo direto, perspicaz, sem genericidades. **Use os números REAIS** do orçamento — nunca chute.
 
 # 🚨 REGRAS CRÍTICAS — LER ANTES DE GERAR
-1. **CADA SLIDE TEM UM LAYOUT** ("layout"). USE TIPOS DIFERENTES. **PROIBIDO** usar o mesmo layout em 2 slides consecutivos. **PROIBIDO** usar o mesmo layout mais de 2× na apresentação inteira.
-2. **ANTI-LOOP** (REGRA INVIOLÁVEL): NUNCA repita frases ou estruturas. Se você se pegar escrevendo "X de hoje em dia X de hoje em dia" ou "rápida brasileira contemporânea rápida brasileira" ou qualquer padrão repetitivo — **PARE IMEDIATAMENTE** e reescreva do zero com palavras totalmente diferentes. Texto-lixo repetitivo será **REJEITADO** pelo sistema.
-3. **HEADLINES SÃO CONCLUSÕES, NÃO TÓPICOS**:
-   - ❌ "Alinhamento à Meta: A Otimização" ✅ "Você está R$ 106 acima da meta"
-   - ❌ "Potencial Inexplorado" ✅ "R$ 1.200 dormindo em ferramentas de IA"
-4. **NÃO USE MARKDOWN** (sem **asteriscos**, sem _underscores_, sem listas com -). Texto puro.
-5. **CONCISÃO**: cada campo tem limite. value máx 12 chars. label/eyebrow máx 4 palavras. detail máx 50 palavras. content de cards máx 8 palavras. Densidade > volume.
-6. **USE OS NÚMEROS REAIS** do orçamento — nunca chute.
 
-# 📐 TIPOS DE SLIDE DISPONÍVEIS
+## REGRA 1 — VARIEDADE DE LAYOUTS
+Cada slide tem um \`layout\`. **PROIBIDO** usar o mesmo layout em 2 slides consecutivos. **PROIBIDO** usar o mesmo layout mais de 2× na apresentação inteira.
 
-## layout:"section-cover" — abertura ou divisor de seção
-Campos: \`number\` (ex: "01"), \`title\` (frase épica, 6-10 palavras), \`teaser\` (1 linha resumindo a seção), \`accent\` ("red"|"amber"|"green"|"blue"|"purple")
+## REGRA 2 — CAMPOS OBRIGATÓRIOS POR LAYOUT 🔒
+Slides que não preencherem TODOS os campos obrigatórios do layout escolhido **SERÃO DESCARTADOS pelo sistema** — não vão aparecer pro usuário. Você terá feito trabalho à toa. PREENCHA TUDO ou escolha um layout mais simples.
 
-## layout:"hero-number" — 1 número que carrega a história
-Campos: \`eyebrow\` (badge curto, 1-3 palavras), \`value\` (o número GIGANTE: "R$ 106", "78%", "R$ 1.200"), \`label\` (frase ao lado do número, ex "acima da meta"), \`detail\` (parágrafo de contexto, 2-4 linhas), \`sideStats\` (opcional, array com ATÉ 3 stats {label, value, sub}), \`accent\`
+| Layout | Campos OBRIGATÓRIOS | Recomendados |
+|---|---|---|
+| section-cover | \`number\`, \`title\`, \`teaser\` | \`accent\` |
+| hero-number | \`value\`, \`label\`, \`detail\` | \`eyebrow\`, \`sideStats\` (3 itens), \`accent\` |
+| comparison | \`leftValue\`, \`rightValue\`, \`deltaValue\` | \`eyebrow\`, \`deltaLabel\`, \`leftLabel\`, \`rightLabel\`, \`progressPercent\`, \`cards\` (3), \`accent\` |
+| grid-cards | \`heroValue\`, \`cards\` (mínimo 4 com title) | \`eyebrow\`, \`heroLabel\`, cards.icon, cards.sub, \`accent\` |
+| timeline | \`steps\` (mínimo 4 com title+description) | \`eyebrow\`, \`title\`, \`subtitle\`, steps.icon, \`accent\` |
+| pull-quote | \`text\` | \`attribution\`, \`accent\` |
 
-## layout:"comparison" — atual vs meta, antes vs depois, A vs B
-Campos: \`eyebrow\`, \`deltaLabel\` (curto, ex "Você está"), \`deltaValue\` (impactante, ex "R$ 106 acima da meta"), \`leftLabel\` (ex "Orçamento atual"), \`leftValue\` (ex "R$ 3.606"), \`rightLabel\` (ex "Meta"), \`rightValue\` (ex "R$ 3.500"), \`progressPercent\` (number 0-200, ex 103 se atual é 3% acima da meta), \`cards\` (array opcional de ATÉ 3 cards {title, value, sub} com ajustes táticos), \`accent\`
+## REGRA 3 — HEADLINES SÃO CONCLUSÕES, NUNCA TÓPICOS 🎯
+Headlines academicistas **estão BANIDAS**. Toda headline tem que ser uma CONCLUSÃO com NÚMERO ou AÇÃO específica.
 
-## layout:"grid-cards" — número hero + grid de itens equivalentes
-Campos: \`eyebrow\`, \`heroValue\` (número grande à esquerda), \`heroLabel\` (descrição abaixo do número), \`cards\` (array de 2-6 cards {icon (emoji), title, sub, value (opcional)}), \`columns\` (2|3), \`footerNote\` (opcional, "+ X outros"), \`accent\`
+❌ BANIDAS (tópicos vagos):
+- "Risco de Latência" / "Risco de Concentração"
+- "Matriz de Ativos" / "Análise de Ativos"
+- "Alinhamento Perfeito com a Meta" / "Alinhamento à Meta"
+- "Gatilhos para Ativar" / "Diagnóstico do Orçamento"
+- Qualquer título com "Diagnóstico", "Análise", "Visão Geral", "Estrutura", "Matriz"
 
-## layout:"timeline" — sequência de N passos/ações
-Campos: \`eyebrow\`, \`title\` (headline da sequência), \`subtitle\` (1 linha), \`steps\` (array de 3-6 passos {icon (emoji), title, description}), \`accent\`
+✅ FORMATO CERTO (conclusão com número/ação):
+- "Você está R$ 106 acima da meta"
+- "R$ 1.200 dormindo em ferramentas inativas"
+- "78% do orçamento em uma única ferramenta"
+- "5 alavancas para fechar o gap em 30 dias"
+- "Tecnologia consome 17% do seu orçamento"
 
-## layout:"pull-quote" — frase de impacto / conclusão emocional
-Campos: \`text\` (citação curta com peso, 10-25 palavras), \`attribution\` (opcional), \`accent\`
+REGRA: se você não consegue colocar um número OU verbo de ação no título, o título está fraco.
 
-# 🎯 RECEITA DE BOA APRESENTAÇÃO
-- Slide 1: section-cover (diagnóstico macro) OU hero-number (o número mais marcante)
-- Slides 2-3: hero-number OU comparison (alertas, riscos, oportunidades — com números reais)
-- Slide 4: grid-cards (lista de ferramentas, categorias, itens correlacionados)
-- Slide 5: timeline (roteiro de ação, próximos passos)
-- Slide 6 (opcional): pull-quote (conclusão emocional)
-- Use ACENTOS estratégicos: red=alerta/gap, amber=potencial/cautela, green=meta-ok, blue=neutro/info, purple=estratégico
+## REGRA 4 — ACCENTS VARIADOS
+Não use apenas red. Distribua semanticamente:
+- \`red\` → gaps, riscos, "acima da meta"
+- \`amber\` → potencial represado, lista de desejos
+- \`green\` → conquistas, eficiência, "abaixo da meta"
+- \`blue\` → diagnóstico neutro, info
+- \`purple\` → estratégia, visão de longo prazo
 
-# ⚠️ ALERTAS FINAIS
-- accent="red" para gaps/riscos (ex: "acima da meta", "concentração de risco")
-- accent="amber" para oportunidades represadas (lista de desejos, alavancagem)
-- accent="green" pra conquistas (economia, eficiência)
-- Cada slide NÃO deve passar de 80 palavras de texto corrido. Densidade > volume.
-- Diferencie texto: use \`detail\` pra parágrafo, \`bullets\` é APENAS no slide grid-cards (e em cards.sub).
-- Se mencionar um número, ele deve aparecer COMO número, não no texto.`;
+Mínimo 3 cores diferentes na apresentação.
+
+## REGRA 5 — ANTI-LOOP (INVIOLÁVEL)
+NUNCA repita frases. Se você se pegar escrevendo "X de hoje em dia X de hoje em dia" ou padrão repetitivo, **PARE** e reescreva com palavras diferentes. Texto-lixo será REJEITADO.
+
+## REGRA 6 — SEM MARKDOWN E COM LIMITES DE TAMANHO
+- Sem **asteriscos**, sem _underscores_, sem listas com -. Texto puro.
+- value máx 12 chars · label/eyebrow máx 4 palavras · detail máx 50 palavras · cards.sub máx 8 palavras
+
+## REGRA 7 — NÚMEROS REAIS
+Use os valores reais do orçamento. Nunca invente.
+
+# 📐 ANATOMIA DETALHADA DOS LAYOUTS
+
+## section-cover — abertura/divisor
+\`number\` (ex: "01"), \`title\` (frase épica de conclusão, 6-10 palavras), \`teaser\` (1 linha explicando), \`accent\`
+
+## hero-number — 1 número que carrega a história
+\`eyebrow\` ("RISCO", "META", "POTENCIAL"), \`value\` (o número GIGANTE), \`label\` (texto ao lado: "acima da meta", "em uma ferramenta"), \`detail\` (parágrafo de 30-50 palavras explicando o significado e implicações), \`sideStats\` (3 stats relacionados: cada um com label+value+sub), \`accent\`
+
+## comparison — atual vs meta
+\`eyebrow\`, \`deltaLabel\` ("Você está", "Existe"), \`deltaValue\` ("R$ 106 acima da meta"), \`leftLabel\`+\`leftValue\` (atual), \`rightLabel\`+\`rightValue\` (meta), \`progressPercent\` (0-200, ex: 103 se está 3% acima), \`cards\` (3 cards com ajustes táticos: title+value+sub), \`accent\`
+
+## grid-cards — hero + grid de itens
+\`heroValue\` (número grande), \`heroLabel\` (descrição), \`cards\` (mínimo 4, cada um: icon emoji + title + sub de 5-8 palavras + value opcional), \`columns\` (2 ou 3), \`footerNote\` ("+ X outros") opcional, \`accent\`
+
+## timeline — sequência de ações
+\`title\` (headline da sequência), \`subtitle\` (1 linha de contexto), \`steps\` (4-5 passos: cada um com icon emoji + title curto + description de 8-15 palavras com ação concreta), \`accent\`
+
+## pull-quote — frase de impacto
+\`text\` (10-25 palavras, peso emocional/conclusivo), \`attribution\` opcional, \`accent\`
+
+# 🎯 ESTRUTURA RECOMENDADA (5-6 slides)
+1. section-cover (abertura conceitual)
+2. hero-number ou comparison (o número mais alarmante/relevante)
+3. hero-number ou grid-cards (outro ângulo: riscos, concentrações)
+4. grid-cards (mapeamento de itens/ferramentas)
+5. timeline (plano de ação concreto)
+6. pull-quote opcional (fecho conclusivo)
+
+LEMBRE: variedade de layouts > monotonia. Cada slide é uma chance de surpreender visualmente.`;
 
     // Schema permissivo: campos opcionais por tipo. Discriminator é o "type".
     const responseSchema = {
@@ -6057,20 +6122,23 @@ Campos: \`text\` (citação curta com peso, 10-25 palavras), \`attribution\` (op
             continue outerLoop;
           }
 
-          // 🔬 Validação anti-loop: se algum slide tem loop, tenta de novo no mesmo modelo
-          const hasLoop = parsed.slides.some(slideHasLoop);
-          if (hasLoop && attempt === 0) {
-            console.warn(`[Gemini] ${model} retornou texto em loop. Tentando de novo...`);
+          // 🔬 Validação anti-loop + completude: filtra slides com loop OU campos faltando
+          const isBadSlide = (s) => slideHasLoop(s) || !slideIsComplete(s);
+          const hasBadSlide = parsed.slides.some(isBadSlide);
+          if (hasBadSlide && attempt === 0) {
+            const badCount = parsed.slides.filter(isBadSlide).length;
+            console.warn(`[Gemini] ${model}: ${badCount}/${parsed.slides.length} slides ruins (loop ou incompletos). Tentando de novo...`);
             continue; // próxima tentativa no mesmo modelo
           }
-          if (hasLoop && attempt === 1) {
+          if (hasBadSlide && attempt === 1) {
             // Filtra os slides ruins. Se sobrar < 3, pula pro próximo modelo.
-            const clean = parsed.slides.filter(s => !slideHasLoop(s));
+            const clean = parsed.slides.filter(s => !isBadSlide(s));
+            const badCount = parsed.slides.length - clean.length;
             if (clean.length >= 3) {
-              console.warn(`[Gemini] ${model} ainda com loops, mas ${clean.length} slides limpos. Usando.`);
+              console.warn(`[Gemini] ${model}: descartando ${badCount} slides incompletos/com-loop. Usando ${clean.length} slides bons.`);
               parsed.slides = clean;
             } else {
-              console.warn(`[Gemini] ${model} loop persistente, próximo modelo.`);
+              console.warn(`[Gemini] ${model}: muitos slides ruins (${badCount}), só ${clean.length} aproveitáveis. Próximo modelo.`);
               continue outerLoop;
             }
           }
@@ -6109,7 +6177,7 @@ Campos: \`text\` (citação curta com peso, 10-25 palavras), \`attribution\` (op
       }
     }
     setIsAnalyzing(false);
-  }, [apiKey, categories, inactiveTools, removedItems, activeTotal, removedTotal, targetMeta, lastHash, slides, slideHasLoop]);
+  }, [apiKey, categories, inactiveTools, removedItems, activeTotal, removedTotal, targetMeta, lastHash, slides, slideHasLoop, slideIsComplete]);
 
   // Auto-analisa ao entrar no modo apresentação (se faltar análise ou dados mudaram)
   useEffect(() => {
