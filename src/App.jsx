@@ -5998,9 +5998,9 @@ Campos: \`text\` (citação curta com peso, 10-25 palavras), \`attribution\` (op
         temperature: 0.75,
         topP: 0.92,
         topK: 50,
-        // Penalidades para evitar loops repetitivos (suporte recente do Gemini v1beta)
-        frequencyPenalty: 0.4,
-        presencePenalty: 0.3,
+        // Nota: frequencyPenalty/presencePenalty removidos — vários modelos Gemini
+        // rejeitam essas flags com "Penalty is not enabled for this model".
+        // detectLoop() já cobre o caso de loops, com retry automático.
         maxOutputTokens: 8192,
         responseMimeType: "application/json",
         responseSchema,
