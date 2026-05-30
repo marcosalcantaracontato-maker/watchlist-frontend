@@ -2276,6 +2276,311 @@ html,body{overflow-x:hidden;max-width:100%;background:#0a0a0a;}
 }
 .fin-pres-slide-bullet-text{font-size:15px;color:rgba(255,255,255,.9);line-height:1.6;}
 
+/* ════════════════════════════════════════════════════════════════════════════
+   🎨 VOCABULÁRIO DE LAYOUTS — schema estruturado em vez de markdown solto
+   Cada layout tem sua identidade visual. IA escolhe o tipo certo pro conteúdo.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Sistema de acento por slide (CSS vars trocadas por classe modifier) */
+.fin-pres-slide{ --slide-accent:#e50914; --slide-accent-soft:rgba(229,9,20,.14); --slide-accent-glow:rgba(229,9,20,.32); }
+.fin-pres-slide.accent-amber{ --slide-accent:#f5a623; --slide-accent-soft:rgba(245,166,35,.14); --slide-accent-glow:rgba(245,166,35,.32); }
+.fin-pres-slide.accent-green{ --slide-accent:#22c55e; --slide-accent-soft:rgba(34,197,94,.14); --slide-accent-glow:rgba(34,197,94,.32); }
+.fin-pres-slide.accent-blue{  --slide-accent:#3b82f6; --slide-accent-soft:rgba(59,130,246,.14); --slide-accent-glow:rgba(59,130,246,.32); }
+.fin-pres-slide.accent-purple{ --slide-accent:#a855f7; --slide-accent-soft:rgba(168,85,247,.14); --slide-accent-glow:rgba(168,85,247,.32); }
+
+/* Cabeçalho universal: eyebrow (pill colorida) + meta direita */
+.slide-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:12px;}
+.slide-eyebrow{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--slide-accent-soft);color:var(--slide-accent);
+  border:1px solid var(--slide-accent-soft);
+  padding:5px 12px;border-radius:8px;
+  font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;
+}
+.slide-eyebrow svg{stroke-width:2.5;}
+.slide-meta{font-size:11px;color:rgba(255,255,255,.45);font-weight:500;letter-spacing:.5px;}
+
+/* Barra de progresso da apresentação (3px no topo do .fin-pres) */
+.fin-pres-progress-bar{
+  position:absolute;top:0;left:0;right:0;height:3px;
+  background:rgba(255,255,255,.04);
+  z-index:2;
+}
+.fin-pres-progress-fill{
+  height:100%;background:linear-gradient(90deg,#e50914,#ff3344);
+  border-radius:0 2px 2px 0;transition:width .35s cubic-bezier(.2,.8,.2,1);
+}
+
+/* ── Layout 1: hero-number ──
+   1 número GIGANTE que carrega a história. Stats opcionais ao lado. */
+.layout-hero-number{display:flex;flex-direction:column;flex:1;}
+.hero-number-main{display:flex;gap:48px;align-items:flex-start;flex:1;}
+.hero-number-left{flex:1;min-width:0;}
+.hero-number-eyebrow{
+  font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1.6px;
+  color:var(--slide-accent);margin-bottom:18px;display:block;
+}
+.hero-number-row{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-bottom:18px;}
+.hero-number-value{
+  font-size:118px;font-weight:900;color:#fff;
+  letter-spacing:-4px;line-height:.95;font-family:'Inter',sans-serif;
+}
+.hero-number-label{
+  font-size:18px;color:rgba(255,255,255,.85);
+  font-weight:500;letter-spacing:-.2px;line-height:1.3;max-width:260px;
+}
+.hero-number-detail{
+  font-size:15px;color:rgba(255,255,255,.78);line-height:1.65;
+  max-width:540px;font-weight:400;
+}
+.hero-number-detail strong{color:#fff;font-weight:700;}
+.hero-number-side{flex:0 0 auto;width:260px;display:flex;align-items:center;justify-content:center;position:relative;}
+.hero-number-stats{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:28px;
+}
+.hero-stat{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
+  border-radius:12px;padding:14px 16px;
+}
+.hero-stat-label{
+  display:flex;align-items:center;gap:6px;
+  font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.1px;
+  color:var(--slide-accent);margin-bottom:6px;
+}
+.hero-stat-value{font-size:22px;font-weight:800;color:#fff;letter-spacing:-.6px;line-height:1.1;}
+.hero-stat-sub{font-size:11px;color:rgba(255,255,255,.55);margin-top:3px;}
+
+/* Donut decorativo opcional no lado direito */
+.hero-donut{
+  width:200px;height:200px;border-radius:50%;
+  background:conic-gradient(var(--slide-accent) 0deg 280deg, rgba(255,255,255,.06) 280deg 360deg);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 40px var(--slide-accent-glow), inset 0 0 0 1px rgba(255,255,255,.04);
+}
+.hero-donut-inner{
+  width:140px;height:140px;border-radius:50%;background:#0a0a0a;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  border:1px solid rgba(255,255,255,.06);
+}
+.hero-donut-label{font-size:14px;font-weight:700;color:#fff;text-align:center;line-height:1.2;}
+.hero-donut-sub{font-size:11px;color:rgba(255,255,255,.55);margin-top:4px;text-align:center;}
+
+/* ── Layout 2: comparison ── 
+   Atual vs Meta lado a lado, barra de progresso, cards de ajuste. */
+.layout-comparison{display:flex;flex-direction:column;flex:1;text-align:center;}
+.cmp-delta-eyebrow{
+  font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1.6px;
+  color:var(--slide-accent);margin-top:8px;
+}
+.cmp-delta-headline{
+  font-size:48px;font-weight:900;color:#fff;
+  letter-spacing:-1.4px;line-height:1.1;margin:8px 0 24px;
+}
+.cmp-delta-headline .delta-num{color:var(--slide-accent);}
+.cmp-row{
+  display:flex;justify-content:center;align-items:center;gap:36px;margin-bottom:24px;
+  flex-wrap:wrap;
+}
+.cmp-side{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.cmp-side-label{
+  font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.3px;
+  color:rgba(255,255,255,.55);
+}
+.cmp-side-value{font-size:32px;font-weight:800;color:#fff;letter-spacing:-.6px;font-family:'Inter',sans-serif;}
+.cmp-side.target .cmp-side-value{color:#22c55e;}
+.cmp-arrow{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--slide-accent-soft);
+  display:flex;align-items:center;justify-content:center;color:var(--slide-accent);
+}
+.cmp-progress{
+  height:14px;background:rgba(255,255,255,.06);border-radius:7px;
+  position:relative;overflow:hidden;margin:0 8px 24px;
+}
+.cmp-progress-fill{
+  height:100%;background:linear-gradient(90deg,var(--slide-accent),#ff3344);
+  border-radius:7px;animation:cmpFill 1s cubic-bezier(.2,.8,.2,1) both;
+}
+.cmp-progress-target{
+  position:absolute;top:-3px;bottom:-3px;width:3px;
+  background:#22c55e;box-shadow:0 0 8px rgba(34,197,94,.5);
+}
+@keyframes cmpFill{from{width:0;}}
+.cmp-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;}
+.cmp-card{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);
+  border-radius:10px;padding:14px 16px;text-align:left;
+}
+.cmp-card-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:4px;}
+.cmp-card-title{font-size:14px;font-weight:700;color:#fff;}
+.cmp-card-value{font-size:14px;font-weight:800;color:var(--slide-accent);font-family:'Inter',sans-serif;}
+.cmp-card-sub{font-size:12px;color:rgba(255,255,255,.55);}
+
+/* ── Layout 3: grid-cards ──
+   Número hero à esquerda + grid 2x2 de cards à direita */
+.layout-grid-cards{display:flex;flex-direction:column;flex:1;}
+.gc-row{display:flex;gap:48px;align-items:flex-start;flex:1;flex-wrap:wrap;}
+.gc-hero{flex:0 0 auto;min-width:260px;}
+.gc-hero-eyebrow{
+  font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1.6px;
+  color:var(--slide-accent);margin-bottom:14px;display:block;
+}
+.gc-hero-value{
+  font-size:96px;font-weight:900;color:#fff;
+  letter-spacing:-3.5px;line-height:.95;margin-bottom:14px;font-family:'Inter',sans-serif;
+}
+.gc-hero-label{font-size:14px;color:rgba(255,255,255,.78);line-height:1.6;max-width:280px;}
+.gc-cards{flex:1;display:grid;grid-template-columns:repeat(2,1fr);gap:12px;align-content:start;}
+.gc-cards.cols-3{grid-template-columns:repeat(3,1fr);}
+.gc-cards.cols-4{grid-template-columns:repeat(4,1fr);}
+.gc-card{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;
+  transition:all .15s;
+}
+.gc-card:hover{background:rgba(255,255,255,.06);border-color:var(--slide-accent-soft);}
+.gc-card-head{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#fff;}
+.gc-card-icon{font-size:16px;flex-shrink:0;}
+.gc-card-sub{font-size:12px;color:rgba(255,255,255,.55);line-height:1.4;}
+.gc-card-value{font-size:13px;font-weight:800;color:var(--slide-accent);margin-top:4px;font-family:'Inter',sans-serif;}
+.gc-footer{
+  margin-top:16px;padding:10px 14px;border:1px dashed rgba(255,255,255,.1);
+  border-radius:8px;text-align:center;font-size:12px;color:rgba(255,255,255,.55);
+}
+
+/* ── Layout 4: timeline ──
+   Stepper horizontal numerado com conectores */
+.layout-timeline{display:flex;flex-direction:column;flex:1;}
+.tl-title{font-size:36px;font-weight:900;color:#fff;letter-spacing:-1px;line-height:1.1;margin-bottom:10px;}
+.tl-subtitle{font-size:15px;color:rgba(255,255,255,.7);line-height:1.5;margin-bottom:36px;max-width:680px;}
+.tl-steps{display:flex;gap:0;position:relative;justify-content:space-between;flex:1;align-items:flex-start;}
+.tl-step{flex:1;display:flex;flex-direction:column;align-items:flex-start;position:relative;padding-right:24px;min-width:0;}
+.tl-step:last-child{padding-right:0;}
+.tl-step-circle{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--slide-accent);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:800;
+  box-shadow:0 0 16px var(--slide-accent-glow);
+  position:relative;z-index:2;margin-bottom:14px;
+}
+.tl-step.future .tl-step-circle{background:rgba(255,255,255,.08);color:rgba(255,255,255,.55);box-shadow:none;}
+.tl-step-connector{
+  position:absolute;top:17px;left:34px;right:0;height:2px;
+  background:linear-gradient(90deg,var(--slide-accent),rgba(255,255,255,.08));
+  z-index:1;
+}
+.tl-step:last-child .tl-step-connector{display:none;}
+.tl-step.future .tl-step-connector{background:rgba(255,255,255,.08);}
+.tl-step-title{
+  display:flex;align-items:center;gap:7px;
+  font-size:14px;font-weight:700;color:#fff;margin-bottom:6px;
+}
+.tl-step-icon{font-size:15px;}
+.tl-step-desc{font-size:12.5px;color:rgba(255,255,255,.65);line-height:1.5;}
+
+/* ── Layout 5: section-cover ──
+   Abertura de seção: número + título épico + 1 linha de teaser */
+.layout-section-cover{
+  display:flex;flex-direction:column;flex:1;justify-content:center;align-items:flex-start;
+  padding-bottom:40px;
+}
+.sc-number{
+  font-size:14px;font-weight:800;letter-spacing:3px;color:var(--slide-accent);
+  margin-bottom:14px;font-family:'JetBrains Mono',ui-monospace,monospace;
+}
+.sc-title{
+  font-size:64px;font-weight:900;color:#fff;
+  letter-spacing:-2.4px;line-height:1.02;margin-bottom:18px;max-width:920px;
+}
+.sc-teaser{font-size:18px;color:rgba(255,255,255,.78);max-width:620px;line-height:1.5;font-weight:500;}
+
+/* ── Layout 6: pull-quote ── */
+.layout-pull-quote{
+  display:flex;flex-direction:column;flex:1;justify-content:center;align-items:center;text-align:center;
+  padding:0 40px;
+}
+.pq-text{
+  font-size:32px;font-weight:600;color:#fff;
+  line-height:1.35;letter-spacing:-.6px;font-style:italic;
+  max-width:780px;margin-bottom:18px;
+  border-left:3px solid var(--slide-accent);padding-left:24px;text-align:left;
+}
+.pq-attrib{
+  font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.6px;
+  color:var(--slide-accent);
+}
+
+/* ── Layout fallback (slide antigo, content+bullets) ──
+   Mantido pra retrocompat com decks gerados antes da spec. */
+.layout-text{display:flex;flex-direction:column;flex:1;}
+
+/* Tipo do layout no rodapé do slide (debug visual) */
+.slide-type-tag{
+  font-size:10px;color:rgba(255,255,255,.32);font-family:'JetBrains Mono',ui-monospace,monospace;
+  letter-spacing:.5px;
+}
+
+/* Overview mode (tecla O): grid de thumbnails */
+.fin-pres-overview{
+  position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(12px);
+  z-index:9999;padding:40px;overflow-y:auto;
+  animation:fadeIn .25s ease;
+}
+.fin-pres-overview-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:18px;max-width:1400px;margin:0 auto;
+}
+.fin-pres-overview-thumb{
+  background:rgba(15,15,15,.7);border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;padding:18px;cursor:pointer;aspect-ratio:16/10;
+  display:flex;flex-direction:column;justify-content:space-between;gap:10px;
+  transition:all .15s;
+}
+.fin-pres-overview-thumb:hover{border-color:#e50914;transform:translateY(-2px);box-shadow:0 12px 32px rgba(229,9,20,.2);}
+.fin-pres-overview-thumb.active{border-color:#e50914;box-shadow:0 0 0 2px rgba(229,9,20,.3);}
+.fin-pres-overview-thumb-num{font-size:11px;color:rgba(255,255,255,.4);font-family:'JetBrains Mono',ui-monospace,monospace;}
+.fin-pres-overview-thumb-title{font-size:15px;font-weight:700;color:#fff;line-height:1.25;letter-spacing:-.3px;}
+.fin-pres-overview-thumb-tag{font-size:10px;color:rgba(255,255,255,.32);font-family:'JetBrains Mono',ui-monospace,monospace;align-self:flex-start;background:rgba(255,255,255,.04);padding:3px 7px;border-radius:4px;}
+.fin-pres-overview-hint{
+  text-align:center;color:rgba(255,255,255,.55);font-size:13px;margin-bottom:24px;
+}
+.fin-pres-overview-hint kbd{background:rgba(255,255,255,.08);padding:3px 8px;border-radius:4px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px;}
+
+/* Erro de loop detectado no slide */
+.slide-loop-error{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:40px;gap:14px;
+}
+.slide-loop-error-ico{font-size:42px;opacity:.4;}
+.slide-loop-error h3{font-size:18px;color:#f5a623;font-weight:800;}
+.slide-loop-error p{font-size:14px;color:rgba(255,255,255,.62);max-width:440px;line-height:1.6;}
+
+/* Mobile adjustments */
+@media (max-width:767px){
+  .hero-number-main{flex-direction:column;gap:24px;}
+  .hero-number-value{font-size:72px;letter-spacing:-2.5px;}
+  .hero-number-side{width:100%;}
+  .hero-number-stats{grid-template-columns:1fr;}
+  .cmp-delta-headline{font-size:30px;}
+  .cmp-side-value{font-size:22px;}
+  .cmp-row{gap:18px;}
+  .cmp-cards{grid-template-columns:1fr;}
+  .gc-row{flex-direction:column;gap:24px;}
+  .gc-hero-value{font-size:64px;letter-spacing:-2px;}
+  .gc-cards{grid-template-columns:1fr;}
+  .tl-title{font-size:24px;}
+  .tl-steps{flex-direction:column;gap:18px;}
+  .tl-step{padding-right:0;padding-left:48px;}
+  .tl-step-circle{position:absolute;left:0;top:0;}
+  .tl-step-connector{display:none;}
+  .sc-title{font-size:36px;letter-spacing:-1.4px;}
+  .sc-teaser{font-size:15px;}
+  .pq-text{font-size:22px;padding-left:16px;}
+  .fin-pres-overview{padding:20px;}
+  .fin-pres-overview-grid{grid-template-columns:1fr;}
+}
+
 /* Footer com dots e navegação */
 .fin-pres-foot{
   display:flex;justify-content:space-between;align-items:center;gap:20px;
@@ -5243,6 +5548,217 @@ function FinEditable({ value, onSave, multiline=false, isCost=false, placeholder
   );
 }
 
+// ─── SLIDE RENDERER — dispatcher por tipo + 6 layouts ─────────────────────────
+// Em vez de markdown solto num único template, cada slide tem um tipo que escolhe
+// o layout certo. Mata o bug do markdown + destrava variedade visual.
+
+function HeroNumberLayout({ s }) {
+  const hasSide = (s.sideStats && s.sideStats.length > 0);
+  return (
+    <div className="layout-hero-number">
+      <div className="hero-number-main">
+        <div className="hero-number-left">
+          {s.eyebrow && <span className="hero-number-eyebrow">{s.eyebrow}</span>}
+          <div className="hero-number-row">
+            <div className="hero-number-value">{s.value}</div>
+            {s.label && <div className="hero-number-label">{s.label}</div>}
+          </div>
+          {s.detail && <div className="hero-number-detail">{s.detail}</div>}
+          {hasSide && (
+            <div className="hero-number-stats">
+              {s.sideStats.slice(0,3).map((st, i) => (
+                <div key={i} className="hero-stat">
+                  <div className="hero-stat-label">{st.label}</div>
+                  <div className="hero-stat-value">{st.value}</div>
+                  {st.sub && <div className="hero-stat-sub">{st.sub}</div>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ComparisonLayout({ s }) {
+  const pct = Math.min(200, Math.max(0, s.progressPercent || 100));
+  const fillWidth = pct >= 100 ? "100%" : pct + "%";
+  const targetPos = pct > 100 ? Math.round(10000 / pct) + "%" : "100%";
+  return (
+    <div className="layout-comparison">
+      {s.eyebrow && <div className="cmp-delta-eyebrow">{s.deltaLabel || s.eyebrow}</div>}
+      <div className="cmp-delta-headline">
+        {s.deltaValue ? (
+          <>{s.deltaValue.split(/(\bR\$\s*[\d.,]+\b|\b\d+%\b)/).map((part, i) =>
+            /(\bR\$\s*[\d.,]+\b|\b\d+%\b)/.test(part)
+              ? <span key={i} className="delta-num">{part}</span>
+              : <span key={i}>{part}</span>
+          )}</>
+        ) : s.title}
+      </div>
+      <div className="cmp-row">
+        <div className="cmp-side current">
+          <div className="cmp-side-label">{s.leftLabel || "Atual"}</div>
+          <div className="cmp-side-value">{s.leftValue}</div>
+        </div>
+        <div className="cmp-arrow"><ArrowRightCircle size={20}/></div>
+        <div className="cmp-side target">
+          <div className="cmp-side-label">{s.rightLabel || "Meta"}</div>
+          <div className="cmp-side-value">{s.rightValue}</div>
+        </div>
+      </div>
+      <div className="cmp-progress">
+        <div className="cmp-progress-fill" style={{ width: fillWidth }}/>
+        {pct > 100 && <div className="cmp-progress-target" style={{ left: targetPos }}/>}
+      </div>
+      {Array.isArray(s.cards) && s.cards.length > 0 && (
+        <div className="cmp-cards">
+          {s.cards.slice(0,4).map((c, i) => (
+            <div key={i} className="cmp-card">
+              <div className="cmp-card-row">
+                <span className="cmp-card-title">{c.title}</span>
+                {c.value && <span className="cmp-card-value">{c.value}</span>}
+              </div>
+              {c.sub && <div className="cmp-card-sub">{c.sub}</div>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GridCardsLayout({ s }) {
+  const cols = s.columns === 3 ? "cols-3" : "";
+  return (
+    <div className="layout-grid-cards">
+      <div className="gc-row">
+        <div className="gc-hero">
+          {s.eyebrow && <span className="gc-hero-eyebrow">{s.eyebrow}</span>}
+          {s.heroValue && <div className="gc-hero-value">{s.heroValue}</div>}
+          {s.heroLabel && <div className="gc-hero-label">{s.heroLabel}</div>}
+        </div>
+        <div className={`gc-cards ${cols}`}>
+          {(s.cards || []).slice(0,6).map((c, i) => (
+            <div key={i} className="gc-card">
+              <div className="gc-card-head">
+                {c.icon && <span className="gc-card-icon">{c.icon}</span>}
+                <span>{c.title}</span>
+              </div>
+              {c.sub && <div className="gc-card-sub">{c.sub}</div>}
+              {c.value && <div className="gc-card-value">{c.value}</div>}
+            </div>
+          ))}
+        </div>
+      </div>
+      {s.footerNote && <div className="gc-footer">{s.footerNote}</div>}
+    </div>
+  );
+}
+
+function TimelineLayout({ s }) {
+  const steps = (s.steps || []).slice(0,6);
+  return (
+    <div className="layout-timeline">
+      {s.eyebrow && <span className="hero-number-eyebrow">{s.eyebrow}</span>}
+      {s.title && <div className="tl-title">{s.title}</div>}
+      {s.subtitle && <div className="tl-subtitle">{s.subtitle}</div>}
+      <div className="tl-steps">
+        {steps.map((step, i) => (
+          <div key={i} className={`tl-step${i >= 3 ? " future" : ""}`}>
+            <div className="tl-step-circle">{i + 1}</div>
+            <div className="tl-step-connector"/>
+            <div className="tl-step-title">
+              {step.icon && <span className="tl-step-icon">{step.icon}</span>}
+              {step.title}
+            </div>
+            <div className="tl-step-desc">{step.description}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SectionCoverLayout({ s }) {
+  return (
+    <div className="layout-section-cover">
+      {s.number && <div className="sc-number">SEÇÃO {s.number}</div>}
+      {s.title && <div className="sc-title">{s.title}</div>}
+      {s.teaser && <div className="sc-teaser">{s.teaser}</div>}
+    </div>
+  );
+}
+
+function PullQuoteLayout({ s }) {
+  return (
+    <div className="layout-pull-quote">
+      <div className="pq-text">"{s.text}"</div>
+      {s.attribution && <div className="pq-attrib">— {s.attribution}</div>}
+    </div>
+  );
+}
+
+function FallbackTextLayout({ s }) {
+  // Retrocompat: slides antigos com title+subtitle+content+bullets
+  return (
+    <div className="layout-text">
+      {s.title && <div className="fin-pres-slide-title">{s.title}</div>}
+      {s.subtitle && <div className="fin-pres-slide-sub">{s.subtitle}</div>}
+      <div className="fin-pres-slide-body">
+        {s.content && <div className="fin-pres-slide-content">{s.content}</div>}
+        {Array.isArray(s.bullets) && s.bullets.length > 0 && (
+          <div className="fin-pres-slide-bullets">
+            {s.bullets.map((b, i) => (
+              <div key={i} className="fin-pres-slide-bullet">
+                <div className="fin-pres-slide-bullet-mark"/>
+                <div className="fin-pres-slide-bullet-text">{b}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SlideRenderer({ slide, index, total }) {
+  if (!slide) return null;
+  const accent = slide.accent || "red";
+  const type = slide.type || "text";
+
+  // Eyebrow label vai por cima do head universal pra layouts que não definem
+  const headEyebrow = (() => {
+    if (type === "section-cover") return null;
+    if (type === "pull-quote") return null;
+    return slide.eyebrow;
+  })();
+
+  return (
+    <div className={`fin-pres-slide accent-${accent}`} key={index}>
+      <div className="slide-head">
+        {headEyebrow ? (
+          <div className="slide-eyebrow">{headEyebrow}</div>
+        ) : <span/>}
+        <div className="slide-meta">{index + 1} / {total}</div>
+      </div>
+
+      <div className="fin-pres-slide-body">
+        {type === "hero-number"   && <HeroNumberLayout s={slide}/>}
+        {type === "comparison"    && <ComparisonLayout s={slide}/>}
+        {type === "grid-cards"    && <GridCardsLayout s={slide}/>}
+        {type === "timeline"      && <TimelineLayout s={slide}/>}
+        {type === "section-cover" && <SectionCoverLayout s={slide}/>}
+        {type === "pull-quote"    && <PullQuoteLayout s={slide}/>}
+        {!["hero-number","comparison","grid-cards","timeline","section-cover","pull-quote"].includes(type) && <FallbackTextLayout s={slide}/>}
+      </div>
+
+      <div className="slide-type-tag">layout · {type}</div>
+    </div>
+  );
+}
+
 function FinancialPage({ onBack }) {
   // ── Estado (idêntico ao BudgetContext original, simplificado para single component) ──
   const [categories, setCategories] = useState(()=>{
@@ -5268,6 +5784,7 @@ function FinancialPage({ onBack }) {
   const [analysisError, setAnalysisError] = useState(null);
   const [lastHash, setLastHash] = useState(() => { try { return localStorage.getItem("budgetLastHash") || ""; } catch { return ""; } });
   const [collapsedCats, setCollapsedCats] = useState(()=>new Set());
+  const [showOverview, setShowOverview] = useState(false);
 
   useEffect(()=>{ try { localStorage.setItem("budgetCategories", JSON.stringify(categories)); } catch{} }, [categories]);
   useEffect(()=>{ try { localStorage.setItem("budgetInactiveTools", JSON.stringify(inactiveTools)); } catch{} }, [inactiveTools]);
@@ -5290,6 +5807,39 @@ function FinancialPage({ onBack }) {
     return next;
   });
 
+  // Detector de colapso de LLM: trigrama 4× ou ratio único < 0.35.
+  // É a defesa em profundidade contra texto-lixo tipo "de hoje em dia de hoje em dia...".
+  const detectLoop = useCallback((text) => {
+    if (!text || typeof text !== "string" || text.length < 60) return false;
+    const words = text.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(Boolean);
+    if (words.length < 18) return false;
+    // Heurística 1: trigrama repetido ≥ 4×
+    const grams = {};
+    for (let i = 0; i < words.length - 2; i++) {
+      const g = words[i] + " " + words[i+1] + " " + words[i+2];
+      grams[g] = (grams[g] || 0) + 1;
+      if (grams[g] >= 4) return true;
+    }
+    // Heurística 2: razão de palavras únicas muito baixa em texto longo
+    if (words.length > 40) {
+      const ratio = new Set(words).size / words.length;
+      if (ratio < 0.35) return true;
+    }
+    return false;
+  }, []);
+
+  // Varre um slide inteiro procurando loops em qualquer campo de texto
+  const slideHasLoop = useCallback((s) => {
+    if (!s) return false;
+    const fields = [s.title, s.subtitle, s.content, s.detail, s.label,
+                    s.heroLabel, s.teaser, s.text, s.deltaValue, s.deltaLabel];
+    for (const f of fields) if (detectLoop(f)) return true;
+    if (Array.isArray(s.bullets))  for (const b of s.bullets)  if (detectLoop(b))            return true;
+    if (Array.isArray(s.steps))    for (const st of s.steps)   if (detectLoop(st?.description)) return true;
+    if (Array.isArray(s.cards))    for (const c of s.cards)    if (detectLoop(c?.sub) || detectLoop(c?.sublabel)) return true;
+    return false;
+  }, [detectLoop]);
+
   const analyzeWithGemini = useCallback(async (force=false) => {
     if (!apiKey) { setShowSettings(true); return; }
     const budgetData = { categories, inactiveTools, removedItems, activeTotal, removedTotal, targetMeta };
@@ -5299,59 +5849,131 @@ function FinancialPage({ onBack }) {
     setIsAnalyzing(true);
     setAnalysisError(null);
 
-    const prompt = `Você atua como um trio consultor de elite: (1) consultor financeiro sênior de pessoa física de alta complexidade, (2) analista comportamental que enxerga padrões emocionais nos gastos, (3) gestor de patrimônio focado em ativos que EXPANDEM vida vs ativos que apenas MANTÊM.
+    // Prompt com VOCABULÁRIO de layouts. IA escolhe o tipo certo pro conteúdo de cada slide.
+    const prompt = `Você atua como trio consultor de elite: (1) consultor financeiro sênior, (2) analista comportamental, (3) gestor de patrimônio focado em ativos que EXPANDEM vida vs MANTÊM.
 
-Analise profundamente este orçamento, considerando:
-- Padrões de consumo e o que revelam (concentrações, vazamentos invisíveis, dependências)
-- Perfil financeiro implícito (conservador, expansivo, em construção, alavancado, sobrevivência, etc.)
-- Riscos invisíveis (assinaturas pequenas que somam, single point of failure, fragilidades)
-- Onde o dinheiro MANTÉM (sobrevivência, status quo) vs onde EXPANDE (ativos, capacidade futura, alavancagem)
-- Itens cortados (Removidos) e o que isso indica sobre prioridades reais
-- Lista de desejos: o que está represado e o que isso significa
-- Meta de R$ ${targetMeta} e a distância dela
+# CONTEXTO DO USUÁRIO
+Orçamento atual: R$ ${activeTotal} · Meta: R$ ${targetMeta} · Diferença: R$ ${activeTotal - targetMeta}
+Lista de desejos: ${inactiveTools.length} itens (R$ ${inactiveTools.reduce((s,i)=>s+(i.cost||0),0)})
+Histórico removido: ${removedItems.length} itens (R$ ${removedTotal})
 
-DADOS REAIS DO ORÇAMENTO:
+DADOS COMPLETOS:
 ${JSON.stringify(budgetData, null, 2)}
 
-Retorne uma apresentação consultiva premium. Linguagem em português do Brasil, tom executivo, direto, perspicaz — sem genericidades. Use os números reais. Entre 5 e 8 slides, cada um com propósito claro: diagnóstico, alerta, oportunidade, recomendação tática, visão estratégica.`;
+# TAREFA
+Gere uma apresentação consultiva premium com **5 a 7 slides**. Linguagem em português do Brasil, tom executivo direto, perspicaz, sem genericidades. **Use os números REAIS** do orçamento — nunca chute.
+
+# 🚨 REGRAS CRÍTICAS — LER ANTES DE GERAR
+1. **CADA SLIDE TEM UM TIPO** ("type"). Escolha o layout certo pro tipo de informação. NÃO repita o mesmo tipo em sequência.
+2. **HEADLINES SÃO CONCLUSÕES, NÃO TÓPICOS**:
+   - ❌ "Alinhamento à Meta: A Otimização" ✅ "Você está R$ 106 acima da meta"
+   - ❌ "Potencial Inexplorado" ✅ "R$ 1.200 dormindo em ferramentas de IA"
+3. **NÃO USE MARKDOWN** (sem **asteriscos**, sem _underscores_, sem listas com -). Texto puro.
+4. **NÃO REPITA FRASES**. Cada slide explora um ângulo NOVO. Se você se pegar usando a mesma estrutura ("X de hoje em dia X de hoje em dia"), pare e reformule.
+5. Conteúdo curto e denso. Cada parágrafo tem propósito.
+
+# 📐 TIPOS DE SLIDE DISPONÍVEIS
+
+## type:"section-cover" — abertura ou divisor de seção
+Campos: \`number\` (ex: "01"), \`title\` (frase épica, 6-10 palavras), \`teaser\` (1 linha resumindo a seção), \`accent\` ("red"|"amber"|"green"|"blue"|"purple")
+
+## type:"hero-number" — 1 número que carrega a história
+Campos: \`eyebrow\` (badge curto, 1-3 palavras), \`value\` (o número GIGANTE: "R$ 106", "78%", "R$ 1.200"), \`label\` (frase ao lado do número, ex "acima da meta"), \`detail\` (parágrafo de contexto, 2-4 linhas), \`sideStats\` (opcional, array com ATÉ 3 stats {label, value, sub}), \`accent\`
+
+## type:"comparison" — atual vs meta, antes vs depois, A vs B
+Campos: \`eyebrow\`, \`deltaLabel\` (curto, ex "Você está"), \`deltaValue\` (impactante, ex "R$ 106 acima da meta"), \`leftLabel\` (ex "Orçamento atual"), \`leftValue\` (ex "R$ 3.606"), \`rightLabel\` (ex "Meta"), \`rightValue\` (ex "R$ 3.500"), \`progressPercent\` (number 0-200, ex 103 se atual é 3% acima da meta), \`cards\` (array opcional de ATÉ 3 cards {title, value, sub} com ajustes táticos), \`accent\`
+
+## type:"grid-cards" — número hero + grid de itens equivalentes
+Campos: \`eyebrow\`, \`heroValue\` (número grande à esquerda), \`heroLabel\` (descrição abaixo do número), \`cards\` (array de 2-6 cards {icon (emoji), title, sub, value (opcional)}), \`columns\` (2|3), \`footerNote\` (opcional, "+ X outros"), \`accent\`
+
+## type:"timeline" — sequência de N passos/ações
+Campos: \`eyebrow\`, \`title\` (headline da sequência), \`subtitle\` (1 linha), \`steps\` (array de 3-6 passos {icon (emoji), title, description}), \`accent\`
+
+## type:"pull-quote" — frase de impacto / conclusão emocional
+Campos: \`text\` (citação curta com peso, 10-25 palavras), \`attribution\` (opcional), \`accent\`
+
+# 🎯 RECEITA DE BOA APRESENTAÇÃO
+- Slide 1: section-cover (diagnóstico macro) OU hero-number (o número mais marcante)
+- Slides 2-3: hero-number OU comparison (alertas, riscos, oportunidades — com números reais)
+- Slide 4: grid-cards (lista de ferramentas, categorias, itens correlacionados)
+- Slide 5: timeline (roteiro de ação, próximos passos)
+- Slide 6 (opcional): pull-quote (conclusão emocional)
+- Use ACENTOS estratégicos: red=alerta/gap, amber=potencial/cautela, green=meta-ok, blue=neutro/info, purple=estratégico
+
+# ⚠️ ALERTAS FINAIS
+- accent="red" para gaps/riscos (ex: "acima da meta", "concentração de risco")
+- accent="amber" para oportunidades represadas (lista de desejos, alavancagem)
+- accent="green" pra conquistas (economia, eficiência)
+- Cada slide NÃO deve passar de 80 palavras de texto corrido. Densidade > volume.
+- Diferencie texto: use \`detail\` pra parágrafo, \`bullets\` é APENAS no slide grid-cards (e em cards.sub).
+- Se mencionar um número, ele deve aparecer COMO número, não no texto.`;
+
+    // Schema permissivo: campos opcionais por tipo. Discriminator é o "type".
+    const responseSchema = {
+      type: "object",
+      properties: {
+        slides: {
+          type: "array",
+          minItems: 5, maxItems: 7,
+          items: {
+            type: "object",
+            properties: {
+              type: { type: "string", enum: ["section-cover","hero-number","comparison","grid-cards","timeline","pull-quote"] },
+              accent: { type: "string", enum: ["red","amber","green","blue","purple"] },
+              // section-cover
+              number: { type: "string" },
+              // shared headers
+              eyebrow: { type: "string" },
+              title: { type: "string" },
+              subtitle: { type: "string" },
+              teaser: { type: "string" },
+              // hero-number / comparison
+              value: { type: "string" }, label: { type: "string" }, detail: { type: "string" },
+              deltaLabel: { type: "string" }, deltaValue: { type: "string" },
+              leftLabel: { type: "string" }, leftValue: { type: "string" },
+              rightLabel: { type: "string" }, rightValue: { type: "string" },
+              progressPercent: { type: "number" },
+              sideStats: { type: "array", items: { type:"object", properties:{ label:{type:"string"},value:{type:"string"},sub:{type:"string"} } } },
+              // grid-cards
+              heroValue: { type: "string" }, heroLabel: { type: "string" },
+              columns: { type: "integer", enum:[2,3] },
+              footerNote: { type: "string" },
+              cards: { type: "array", items: { type:"object", properties:{ icon:{type:"string"}, title:{type:"string"}, sub:{type:"string"}, value:{type:"string"} } } },
+              // timeline
+              steps: { type: "array", items: { type:"object", properties:{ icon:{type:"string"}, title:{type:"string"}, description:{type:"string"} } } },
+              // pull-quote
+              text: { type: "string" }, attribution: { type: "string" }
+            },
+            required: ["type"]
+          }
+        }
+      },
+      required: ["slides"]
+    };
 
     // Cadeia de fallback: tenta modelos em ordem se um sobrecarregar/falhar.
-    // Quando o Google congestiona o flash-2.5, automaticamente vai pro pro, depois latest, depois 2.0.
     const modelChain = [
-      "gemini-flash-latest",   // alias auto-routing, geralmente o mais resiliente
-      "gemini-2.5-flash",      // o "oficial" da spec
-      "gemini-2.5-pro",        // fallback "pro" da spec
-      "gemini-2.0-flash",      // último recurso estável
+      "gemini-flash-latest",
+      "gemini-2.5-flash",
+      "gemini-2.5-pro",
+      "gemini-2.0-flash",
     ];
 
     const body = {
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       generationConfig: {
+        temperature: 0.75,
+        topP: 0.92,
+        topK: 50,
+        // Penalidades para evitar loops repetitivos (suporte recente do Gemini v1beta)
+        frequencyPenalty: 0.4,
+        presencePenalty: 0.3,
+        maxOutputTokens: 8192,
         responseMimeType: "application/json",
-        responseSchema: {
-          type: "object",
-          properties: {
-            slides: {
-              type: "array",
-              minItems: 5, maxItems: 8,
-              items: {
-                type: "object",
-                properties: {
-                  title:    { type: "string", description: "Título impactante de 4-7 palavras" },
-                  subtitle: { type: "string", description: "Subtítulo opcional de contexto, 10-15 palavras" },
-                  content:  { type: "string", description: "Análise densa de 2-4 parágrafos, tom de consultor sênior" },
-                  bullets:  { type: "array", items: { type: "string" }, description: "Pontos focais opcionais (3-5 itens)" }
-                },
-                required: ["title","content"]
-              }
-            }
-          },
-          required: ["slides"]
-        }
+        responseSchema,
       }
     };
 
-    // Detecta erros transitórios (sobrecarga/timeout/server error) onde vale tentar outro modelo
     const isTransient = (statusCode, errMsg) => {
       if (statusCode === 503 || statusCode === 500 || statusCode === 502 || statusCode === 504) return true;
       const m = (errMsg || "").toLowerCase();
@@ -5363,60 +5985,75 @@ Retorne uma apresentação consultiva premium. Linguagem em português do Brasil
     let succeededModel = null;
     let parsedResult = null;
 
+    // Tenta cada modelo. Pra cada modelo, ainda tenta 1× se o resultado vier com loop.
+    outerLoop:
     for (const model of modelChain) {
-      try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-goog-api-key": apiKey, // header em vez de query string (não fica em logs)
-          },
-          body: JSON.stringify(body),
-        });
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-goog-api-key": apiKey },
+            body: JSON.stringify(body),
+          });
 
-        if (response.status === 429) {
-          lastErr = new Error("RATE_LIMIT");
-          break; // 429 é cota: não adianta trocar de modelo, todos compartilham
-        }
-        if (response.status === 400) {
-          const errBody = await response.json().catch(()=>({}));
-          const msg = errBody.error?.message || "Requisição inválida";
-          if (msg.toLowerCase().includes("api key")) { lastErr = new Error("BAD_KEY"); break; }
-          lastErr = new Error(msg); break; // 400 = problema com a request, não adianta tentar outro modelo
-        }
-        if (!response.ok) {
-          const errBody = await response.json().catch(()=>({}));
-          const msg = errBody.error?.message || `HTTP ${response.status}`;
-          if (isTransient(response.status, msg)) {
-            console.warn(`[Gemini] ${model} sobrecarregado, tentando próximo modelo...`, msg);
-            lastErr = new Error(msg);
-            continue; // próximo modelo da cadeia
+          if (response.status === 429) { lastErr = new Error("RATE_LIMIT"); break outerLoop; }
+          if (response.status === 400) {
+            const errBody = await response.json().catch(()=>({}));
+            const msg = errBody.error?.message || "Requisição inválida";
+            if (msg.toLowerCase().includes("api key")) { lastErr = new Error("BAD_KEY"); break outerLoop; }
+            lastErr = new Error(msg); break outerLoop;
           }
-          lastErr = new Error(msg);
-          break;
-        }
+          if (!response.ok) {
+            const errBody = await response.json().catch(()=>({}));
+            const msg = errBody.error?.message || `HTTP ${response.status}`;
+            if (isTransient(response.status, msg)) {
+              console.warn(`[Gemini] ${model} sobrecarregado, próximo modelo...`, msg);
+              lastErr = new Error(msg);
+              continue outerLoop;
+            }
+            lastErr = new Error(msg); break outerLoop;
+          }
 
-        const data = await response.json();
-        const textOutput = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-        const parsed = JSON.parse(textOutput);
-        if (!parsed.slides || !Array.isArray(parsed.slides) || parsed.slides.length === 0) {
-          lastErr = new Error("Resposta da IA em formato inesperado.");
-          continue;
+          const data = await response.json();
+          const textOutput = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+          const parsed = JSON.parse(textOutput);
+          if (!parsed.slides || !Array.isArray(parsed.slides) || parsed.slides.length === 0) {
+            lastErr = new Error("Resposta da IA em formato inesperado.");
+            continue outerLoop;
+          }
+
+          // 🔬 Validação anti-loop: se algum slide tem loop, tenta de novo no mesmo modelo
+          const hasLoop = parsed.slides.some(slideHasLoop);
+          if (hasLoop && attempt === 0) {
+            console.warn(`[Gemini] ${model} retornou texto em loop. Tentando de novo...`);
+            continue; // próxima tentativa no mesmo modelo
+          }
+          if (hasLoop && attempt === 1) {
+            // Filtra os slides ruins. Se sobrar < 3, pula pro próximo modelo.
+            const clean = parsed.slides.filter(s => !slideHasLoop(s));
+            if (clean.length >= 3) {
+              console.warn(`[Gemini] ${model} ainda com loops, mas ${clean.length} slides limpos. Usando.`);
+              parsed.slides = clean;
+            } else {
+              console.warn(`[Gemini] ${model} loop persistente, próximo modelo.`);
+              continue outerLoop;
+            }
+          }
+
+          parsedResult = parsed;
+          succeededModel = model;
+          break outerLoop;
+        } catch (e) {
+          console.warn(`[Gemini] ${model} tentativa ${attempt+1} falhou:`, e.message);
+          lastErr = e;
+          if (e.message === "RATE_LIMIT" || e.message === "BAD_KEY") break outerLoop;
+          if (attempt === 1) continue outerLoop;
         }
-        parsedResult = parsed;
-        succeededModel = model;
-        break;
-      } catch (e) {
-        // Erro de rede ou parse: tenta o próximo modelo
-        console.warn(`[Gemini] ${model} falhou:`, e.message);
-        lastErr = e;
-        if (e.message === "RATE_LIMIT" || e.message === "BAD_KEY") break;
-        continue;
       }
     }
 
     if (parsedResult && succeededModel) {
-      console.log(`[Gemini] análise gerada via ${succeededModel}`);
+      console.log(`[Gemini] análise gerada via ${succeededModel} (${parsedResult.slides.length} slides)`);
       setSlides(parsedResult.slides);
       setCurrentSlide(0);
       setLastHash(currentHash);
@@ -5425,7 +6062,7 @@ Retorne uma apresentação consultiva premium. Linguagem em português do Brasil
         localStorage.setItem("budgetLastHash", currentHash);
       } catch {}
     } else {
-      console.error("[Gemini] todos os modelos falharam. Último erro:", lastErr);
+      console.error("[Gemini] todos os modelos falharam:", lastErr);
       if (lastErr?.message === "RATE_LIMIT") {
         setAnalysisError("A cota gratuita da API Gemini para hoje foi atingida. Tente novamente em algumas horas ou ative billing no Google AI Studio.");
       } else if (lastErr?.message === "BAD_KEY") {
@@ -5437,7 +6074,7 @@ Retorne uma apresentação consultiva premium. Linguagem em português do Brasil
       }
     }
     setIsAnalyzing(false);
-  }, [apiKey, categories, inactiveTools, removedItems, activeTotal, removedTotal, lastHash, slides]);
+  }, [apiKey, categories, inactiveTools, removedItems, activeTotal, removedTotal, targetMeta, lastHash, slides, slideHasLoop]);
 
   // Auto-analisa ao entrar no modo apresentação (se faltar análise ou dados mudaram)
   useEffect(() => {
@@ -5455,15 +6092,24 @@ Retorne uma apresentação consultiva premium. Linguagem em português do Brasil
     if (viewMode !== "presentation" || !slides) return;
     const fn = (e) => {
       if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+      if (showOverview) {
+        if (e.key === "Escape" || e.key === "o" || e.key === "O") setShowOverview(false);
+        return;
+      }
       if (e.key === "ArrowRight" && currentSlide < slides.length - 1) setCurrentSlide(s => s + 1);
       else if (e.key === "ArrowLeft" && currentSlide > 0)             setCurrentSlide(s => s - 1);
       else if (e.key === "Escape") setViewMode("spreadsheet");
       else if (e.key === "Home") setCurrentSlide(0);
       else if (e.key === "End")  setCurrentSlide(slides.length - 1);
+      else if (e.key === "o" || e.key === "O") setShowOverview(true);
+      else if (/^[1-9]$/.test(e.key)) {
+        const n = parseInt(e.key, 10) - 1;
+        if (n < slides.length) setCurrentSlide(n);
+      }
     };
     document.addEventListener("keydown", fn);
     return () => document.removeEventListener("keydown", fn);
-  }, [viewMode, slides, currentSlide]);
+  }, [viewMode, slides, currentSlide, showOverview]);
 
   const saveApiKey = () => {
     try { localStorage.setItem("budgetGeminiKey", apiKey); } catch {}
@@ -5801,37 +6447,21 @@ Retorne uma apresentação consultiva premium. Linguagem em português do Brasil
               </button>
             </div>
           ) : (
-            <div className="fin-pres-viewer">
-              <div className="fin-pres-slide" key={currentSlide}>
-                <div className="fin-pres-slide-num">Slide {currentSlide + 1} / {slides.length}</div>
-                <div className="fin-pres-slide-title">{slides[currentSlide].title}</div>
-                {slides[currentSlide].subtitle && (
-                  <div className="fin-pres-slide-sub">{slides[currentSlide].subtitle}</div>
-                )}
-                <div className="fin-pres-slide-body">
-                  <div className="fin-pres-slide-content">{slides[currentSlide].content}</div>
-                  {Array.isArray(slides[currentSlide].bullets) && slides[currentSlide].bullets.length > 0 && (
-                    <div className="fin-pres-slide-bullets">
-                      {slides[currentSlide].bullets.map((b, i) => (
-                        <div key={i} className="fin-pres-slide-bullet">
-                          <div className="fin-pres-slide-bullet-mark"/>
-                          <div className="fin-pres-slide-bullet-text">{b}</div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+            <div className="fin-pres-viewer" style={{position:"relative"}}>
+              <div className="fin-pres-progress-bar">
+                <div className="fin-pres-progress-fill" style={{ width: `${((currentSlide+1)/slides.length)*100}%` }}/>
               </div>
+              <SlideRenderer slide={slides[currentSlide]} index={currentSlide} total={slides.length}/>
               <div className="fin-pres-foot">
                 <div className="fin-pres-dots">
-                  {slides.map((_, i) => (
+                  {slides.map((s, i) => (
                     <button key={i} className={`fin-pres-dot${i===currentSlide?" active":""}`}
-                      onClick={()=>setCurrentSlide(i)} title={`Slide ${i+1}`}/>
+                      onClick={()=>setCurrentSlide(i)} title={s.title || s.eyebrow || `Slide ${i+1}`}/>
                   ))}
                 </div>
                 <div className="fin-pres-nav">
                   <span className="fin-pres-nav-hint">
-                    use <kbd>←</kbd> <kbd>→</kbd> ou <kbd>ESC</kbd>
+                    <kbd>←</kbd> <kbd>→</kbd> · <kbd>O</kbd> overview · <kbd>ESC</kbd>
                   </span>
                   <button className="fin-pres-nav-btn" onClick={()=>analyzeWithGemini(true)} title="Re-analisar">
                     <RefreshCw size={13}/>
@@ -5839,6 +6469,9 @@ Retorne uma apresentação consultiva premium. Linguagem em português do Brasil
                   <button className="fin-pres-nav-btn" disabled={currentSlide === 0}
                     onClick={()=>setCurrentSlide(s=>Math.max(0, s-1))}>
                     <ChevronLeft size={14}/> Anterior
+                  </button>
+                  <button className="fin-pres-nav-btn" onClick={()=>setShowOverview(true)} title="Overview (O)">
+                    <LayoutGrid size={13}/> Overview
                   </button>
                   <button className="fin-pres-nav-btn primary" disabled={currentSlide === slides.length - 1}
                     onClick={()=>setCurrentSlide(s=>Math.min(slides.length-1, s+1))}>
@@ -5851,6 +6484,30 @@ Retorne uma apresentação consultiva premium. Linguagem em português do Brasil
         </div>
       )}
       {/* === FIM MODO APRESENTAÇÃO === */}
+
+      {/* === OVERVIEW MODE (tecla O) — thumbnails de todos os slides === */}
+      {showOverview && slides && viewMode === "presentation" && (
+        <div className="fin-pres-overview" onClick={()=>setShowOverview(false)}>
+          <div className="fin-pres-overview-hint">
+            Clique em qualquer slide pra pular. <kbd>O</kbd> ou <kbd>ESC</kbd> pra fechar · <kbd>1-9</kbd> pula direto
+          </div>
+          <div className="fin-pres-overview-grid">
+            {slides.map((s, i) => (
+              <div
+                key={i}
+                className={`fin-pres-overview-thumb${i===currentSlide?" active":""}`}
+                onClick={(e)=>{ e.stopPropagation(); setCurrentSlide(i); setShowOverview(false); }}
+              >
+                <div className="fin-pres-overview-thumb-num">slide {i+1} / {slides.length}</div>
+                <div className="fin-pres-overview-thumb-title">
+                  {s.title || s.text || s.eyebrow || s.deltaValue || s.heroValue || `(${s.type})`}
+                </div>
+                <span className="fin-pres-overview-thumb-tag">{s.type || "text"}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* === MODAL DE CONFIGURAÇÕES (Gemini API key) === */}
       {showSettings && (
