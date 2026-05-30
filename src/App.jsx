@@ -5726,12 +5726,13 @@ function FallbackTextLayout({ s }) {
 function SlideRenderer({ slide, index, total }) {
   if (!slide) return null;
   const accent = slide.accent || "red";
-  const type = slide.type || "text";
+  // Aceita tanto "layout" (novo, schema v3) quanto "type" (compat com decks gerados antes)
+  const layout = slide.layout || slide.type || "text";
 
   // Eyebrow label vai por cima do head universal pra layouts que não definem
   const headEyebrow = (() => {
-    if (type === "section-cover") return null;
-    if (type === "pull-quote") return null;
+    if (layout === "section-cover") return null;
+    if (layout === "pull-quote") return null;
     return slide.eyebrow;
   })();
 
@@ -5745,16 +5746,16 @@ function SlideRenderer({ slide, index, total }) {
       </div>
 
       <div className="fin-pres-slide-body">
-        {type === "hero-number"   && <HeroNumberLayout s={slide}/>}
-        {type === "comparison"    && <ComparisonLayout s={slide}/>}
-        {type === "grid-cards"    && <GridCardsLayout s={slide}/>}
-        {type === "timeline"      && <TimelineLayout s={slide}/>}
-        {type === "section-cover" && <SectionCoverLayout s={slide}/>}
-        {type === "pull-quote"    && <PullQuoteLayout s={slide}/>}
-        {!["hero-number","comparison","grid-cards","timeline","section-cover","pull-quote"].includes(type) && <FallbackTextLayout s={slide}/>}
+        {layout === "hero-number"   && <HeroNumberLayout s={slide}/>}
+        {layout === "comparison"    && <ComparisonLayout s={slide}/>}
+        {layout === "grid-cards"    && <GridCardsLayout s={slide}/>}
+        {layout === "timeline"      && <TimelineLayout s={slide}/>}
+        {layout === "section-cover" && <SectionCoverLayout s={slide}/>}
+        {layout === "pull-quote"    && <PullQuoteLayout s={slide}/>}
+        {!["hero-number","comparison","grid-cards","timeline","section-cover","pull-quote"].includes(layout) && <FallbackTextLayout s={slide}/>}
       </div>
 
-      <div className="slide-type-tag">layout · {type}</div>
+      <div className="slide-type-tag">layout · {layout}</div>
     </div>
   );
 }
@@ -5780,7 +5781,7 @@ function FinancialPage({ onBack }) {
   // 🔄 Guard de versão: quando o schema dos slides muda (novos layouts/campos),
   // limpa os slides cacheados pra forçar regeneração no formato novo.
   // Bump aqui sempre que mudar o schema. v2 = vocabulário de layouts (hero-number, comparison, etc.)
-  const SLIDES_SCHEMA_VERSION = "v2-layouts-2025-05";
+  const SLIDES_SCHEMA_VERSION = "v3-layout-field-2025-05";
   useEffect(() => {
     try {
       const saved = localStorage.getItem("budgetSlidesVersion");
@@ -5802,10 +5803,10 @@ function FinancialPage({ onBack }) {
       if (!s) return null;
       const parsed = JSON.parse(s);
       if (!Array.isArray(parsed) || parsed.length === 0) return null;
-      // Valida formato novo: TODO slide deve ter "type"
-      const allHaveType = parsed.every(slide => slide && typeof slide.type === "string");
-      if (!allHaveType) {
-        console.log("[FinPage] Slides em formato antigo (sem type). Forçando re-análise.");
+      // Valida formato novo: TODO slide deve ter "layout" (ou "type" legado)
+      const allHaveLayout = parsed.every(slide => slide && (typeof slide.layout === "string" || typeof slide.type === "string"));
+      if (!allHaveLayout) {
+        console.log("[FinPage] Slides em formato antigo (sem layout). Forçando re-análise.");
         return null;
       }
       return parsed;
@@ -5896,7 +5897,7 @@ ${JSON.stringify(budgetData, null, 2)}
 Gere uma apresentação consultiva premium com **5 a 7 slides**. Linguagem em português do Brasil, tom executivo direto, perspicaz, sem genericidades. **Use os números REAIS** do orçamento — nunca chute.
 
 # 🚨 REGRAS CRÍTICAS — LER ANTES DE GERAR
-1. **CADA SLIDE TEM UM TIPO** ("type"). USE TIPOS DIFERENTES. **PROIBIDO** usar o mesmo type em 2 slides consecutivos. **PROIBIDO** usar o mesmo type mais de 2× na apresentação inteira.
+1. **CADA SLIDE TEM UM LAYOUT** ("layout"). USE TIPOS DIFERENTES. **PROIBIDO** usar o mesmo layout em 2 slides consecutivos. **PROIBIDO** usar o mesmo layout mais de 2× na apresentação inteira.
 2. **ANTI-LOOP** (REGRA INVIOLÁVEL): NUNCA repita frases ou estruturas. Se você se pegar escrevendo "X de hoje em dia X de hoje em dia" ou "rápida brasileira contemporânea rápida brasileira" ou qualquer padrão repetitivo — **PARE IMEDIATAMENTE** e reescreva do zero com palavras totalmente diferentes. Texto-lixo repetitivo será **REJEITADO** pelo sistema.
 3. **HEADLINES SÃO CONCLUSÕES, NÃO TÓPICOS**:
    - ❌ "Alinhamento à Meta: A Otimização" ✅ "Você está R$ 106 acima da meta"
@@ -5907,22 +5908,22 @@ Gere uma apresentação consultiva premium com **5 a 7 slides**. Linguagem em po
 
 # 📐 TIPOS DE SLIDE DISPONÍVEIS
 
-## type:"section-cover" — abertura ou divisor de seção
+## layout:"section-cover" — abertura ou divisor de seção
 Campos: \`number\` (ex: "01"), \`title\` (frase épica, 6-10 palavras), \`teaser\` (1 linha resumindo a seção), \`accent\` ("red"|"amber"|"green"|"blue"|"purple")
 
-## type:"hero-number" — 1 número que carrega a história
+## layout:"hero-number" — 1 número que carrega a história
 Campos: \`eyebrow\` (badge curto, 1-3 palavras), \`value\` (o número GIGANTE: "R$ 106", "78%", "R$ 1.200"), \`label\` (frase ao lado do número, ex "acima da meta"), \`detail\` (parágrafo de contexto, 2-4 linhas), \`sideStats\` (opcional, array com ATÉ 3 stats {label, value, sub}), \`accent\`
 
-## type:"comparison" — atual vs meta, antes vs depois, A vs B
+## layout:"comparison" — atual vs meta, antes vs depois, A vs B
 Campos: \`eyebrow\`, \`deltaLabel\` (curto, ex "Você está"), \`deltaValue\` (impactante, ex "R$ 106 acima da meta"), \`leftLabel\` (ex "Orçamento atual"), \`leftValue\` (ex "R$ 3.606"), \`rightLabel\` (ex "Meta"), \`rightValue\` (ex "R$ 3.500"), \`progressPercent\` (number 0-200, ex 103 se atual é 3% acima da meta), \`cards\` (array opcional de ATÉ 3 cards {title, value, sub} com ajustes táticos), \`accent\`
 
-## type:"grid-cards" — número hero + grid de itens equivalentes
+## layout:"grid-cards" — número hero + grid de itens equivalentes
 Campos: \`eyebrow\`, \`heroValue\` (número grande à esquerda), \`heroLabel\` (descrição abaixo do número), \`cards\` (array de 2-6 cards {icon (emoji), title, sub, value (opcional)}), \`columns\` (2|3), \`footerNote\` (opcional, "+ X outros"), \`accent\`
 
-## type:"timeline" — sequência de N passos/ações
+## layout:"timeline" — sequência de N passos/ações
 Campos: \`eyebrow\`, \`title\` (headline da sequência), \`subtitle\` (1 linha), \`steps\` (array de 3-6 passos {icon (emoji), title, description}), \`accent\`
 
-## type:"pull-quote" — frase de impacto / conclusão emocional
+## layout:"pull-quote" — frase de impacto / conclusão emocional
 Campos: \`text\` (citação curta com peso, 10-25 palavras), \`attribution\` (opcional), \`accent\`
 
 # 🎯 RECEITA DE BOA APRESENTAÇÃO
@@ -5947,11 +5948,10 @@ Campos: \`text\` (citação curta com peso, 10-25 palavras), \`attribution\` (op
       properties: {
         slides: {
           type: "array",
-          minItems: 5, maxItems: 7,
           items: {
             type: "object",
             properties: {
-              type: { type: "string", enum: ["section-cover","hero-number","comparison","grid-cards","timeline","pull-quote"] },
+              layout: { type: "string", enum: ["section-cover","hero-number","comparison","grid-cards","timeline","pull-quote"] },
               accent: { type: "string", enum: ["red","amber","green","blue","purple"] },
               // section-cover
               number: { type: "string" },
@@ -5977,7 +5977,7 @@ Campos: \`text\` (citação curta com peso, 10-25 palavras), \`attribution\` (op
               // pull-quote
               text: { type: "string" }, attribution: { type: "string" }
             },
-            required: ["type"]
+            required: ["layout"]
           }
         }
       },
@@ -6032,9 +6032,11 @@ Campos: \`text\` (citação curta com peso, 10-25 palavras), \`attribution\` (op
           if (response.status === 429) { lastErr = new Error("RATE_LIMIT"); break outerLoop; }
           if (response.status === 400) {
             const errBody = await response.json().catch(()=>({}));
+            console.error(`[Gemini] ${model} retornou 400 — detalhes:`, JSON.stringify(errBody, null, 2));
             const msg = errBody.error?.message || "Requisição inválida";
+            const details = errBody.error?.details ? " · " + JSON.stringify(errBody.error.details).slice(0, 200) : "";
             if (msg.toLowerCase().includes("api key")) { lastErr = new Error("BAD_KEY"); break outerLoop; }
-            lastErr = new Error(msg); break outerLoop;
+            lastErr = new Error(msg + details); break outerLoop;
           }
           if (!response.ok) {
             const errBody = await response.json().catch(()=>({}));
@@ -6533,9 +6535,9 @@ Campos: \`text\` (citação curta com peso, 10-25 palavras), \`attribution\` (op
               >
                 <div className="fin-pres-overview-thumb-num">slide {i+1} / {slides.length}</div>
                 <div className="fin-pres-overview-thumb-title">
-                  {s.title || s.text || s.eyebrow || s.deltaValue || s.heroValue || `(${s.type})`}
+                  {s.title || s.text || s.eyebrow || s.deltaValue || s.heroValue || `(${s.layout || s.type})`}
                 </div>
-                <span className="fin-pres-overview-thumb-tag">{s.type || "text"}</span>
+                <span className="fin-pres-overview-thumb-tag">{s.layout || s.type || "text"}</span>
               </div>
             ))}
           </div>
